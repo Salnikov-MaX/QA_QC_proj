@@ -35,14 +35,15 @@ class QA_QC_kern:
             Returns:
                 bool: результат выполнения теста
         """
-        if np.isnan(self.data).any():
-            return False
+
         if not isinstance(self.data, list):
             return False
         if len(self.data) == 0:
             return False
         for element in self.data:
             if not isinstance(element, (int, float)):
+                return False
+            if np.isnan(element):
                 return False
         return True
 
@@ -373,7 +374,7 @@ class QA_QC_kern:
         self.file.write("Test 'dependence rn kn ': {}\n".format(result))
         return result
 
-    def general_dependency_checking(self) -> bool:
+    def test_general_dependency_checking(self) -> bool:
         """Функция для проверки теста
         Для всех зависимостей
 
@@ -448,7 +449,7 @@ class QA_QC_kern:
             self.file.write("Test 'general dependency checking': {}\n".format(result))
             return result
 
-    def coring_depths_first(self):
+    def test_coring_depths_first(self):
         """Функция для проверки теста
         Глубины отбора керна_1
 
@@ -470,7 +471,7 @@ class QA_QC_kern:
         self.file.write("Test 'coring depths first': {}\n".format(result))
         return result
 
-    def coring_depths_second(self):
+    def test_coring_depths_second(self):
         """Функция для проверки теста
         Глубины отбора керна_2
 
@@ -492,7 +493,7 @@ class QA_QC_kern:
         self.file.write("Test 'coring depths second': {}\n".format(result))
         return result
 
-    def coring_depths_third(self):
+    def test_coring_depths_third(self):
         """Функция для проверки теста
         Глубины отбора керна_3
 
@@ -518,7 +519,7 @@ class QA_QC_kern:
         self.file.write("Test 'coring depths third': {}\n".format(result))
         return result
 
-    def coring_depths_four(self):
+    def test_coring_depths_four(self):
         """Функция для проверки теста
         Глубины отбора керна_4
 
@@ -541,7 +542,7 @@ class QA_QC_kern:
         self.file.write("Test 'coring depths four': {}\n".format(result))
         return result
 
-    def data_tampering(self):
+    def test_data_tampering(self):
         """Функция для проверки теста
         Подлог данных
 
@@ -588,7 +589,7 @@ class QA_QC_kern:
         self.file.write("Test 'data tampering': {}\n".format(result))
         return result
 
-    def estimated_values_in_core_data(self, pv=1):
+    def test_estimated_values_in_core_data(self, pv=1):
         """Функция для проверки теста
         Расчетные величины в данных керна
 
@@ -628,7 +629,7 @@ class QA_QC_kern:
         self.file.write("Test 'estimated values in core data': {}\n".format(result))
         return result
 
-    def kp_in_surface_and_reservoir_conditions(self):
+    def test_kp_in_surface_and_reservoir_conditions(self):
         """Функция для проверки теста
         Кп в поверхностных и пластовых условиях
 
@@ -651,7 +652,7 @@ class QA_QC_kern:
         self.file.write("Test 'kp in surface and reservoir conditions': {}\n".format(result))
         return result
 
-    def table_notes(self):
+    def test_table_notes(self):
         """Функция для проверки теста
         Примечания в таблицах
 
@@ -671,7 +672,7 @@ class QA_QC_kern:
         self.file.write("Test 'table notes': {}\n".format(indexes))
         return indexes
 
-    def quo_and_qno(self):
+    def test_quo_and_qno(self):
         """Функция для проверки теста
         Кво и Кно
 
@@ -708,7 +709,7 @@ class QA_QC_kern:
         self.file.write("Test 'quo and qno': {}\n".format(result))
         return result
 
-    def correctness_of_p_sk_kp(self):
+    def test_correctness_of_p_sk_kp(self):
         """Функция для проверки теста
           ρ, Ск и Кп1
 
@@ -786,3 +787,6 @@ class QA_QC_kern:
         shutil.copy(self.filename, new_filepath)  # Копирование файла
         os.remove(self.filename)  # Удаление исходного файла
         return new_filepath
+
+qa=QA_QC_kern()
+print(qa.get_list_of_tests())
