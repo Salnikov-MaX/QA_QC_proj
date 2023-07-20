@@ -1,6 +1,7 @@
 import os
 import shutil
 import numpy as np
+from numpy import int32, float64, int64, float32
 from scipy.stats import t
 from sklearn.metrics import r2_score
 from matplotlib import pyplot as plt
@@ -17,7 +18,7 @@ class QA_QC_kern:
                  kpp=None, intervals=None, sole=None, percentage=None, outreach_in_meters=None, sampling_depth=None,
                  kvo=None, core_sampling=None, kpr=None, parallel_density=None, parallel_porosity=None, parallel=None,
                  rp=None, pmu=None, rn=None,
-                 filename="test_report.txt") -> None:
+                 file_name="test_report.txt", file_path="D:\\") -> None:
         """_summary_
 
         Args:
@@ -59,7 +60,8 @@ class QA_QC_kern:
         self.perpendicular_density = perpendicular_density
         self.data = array_for_first_order_tests
         self.perpendicular = perpendicular
-        self.filename = filename
+        self.filename = file_name
+        self.file_path = file_path
         self.table = note
         self.y = second_array_for_dependency_testing
         self.x = first_array_for_dependency_testing
@@ -82,15 +84,14 @@ class QA_QC_kern:
             Returns:
                 bool: результат выполнения теста
         """
-
-        if not isinstance(array, list):
+        if not isinstance(array, np.ndarray):
             self.file.write(f"Тест {test_name} не запускался. Причина {param_name} не является массивом\n")
             return False
         if len(array) == 0:
             self.file.write(f"Тест {test_name} не запускался. Причина {param_name} пустой\n")
             return False
         for element in array:
-            if not isinstance(element, (int, float)):
+            if not isinstance(element, (int32, float64, int64, float32)):
                 self.file.write(
                     f"Тест {test_name} не запускался. Причина {param_name} содержит данные типа не int/float\n")
                 return False
@@ -231,6 +232,7 @@ class QA_QC_kern:
             y_trend = a * x_trend + b
 
             # Построение кроссплота
+            plt.title("test quo kp dependence")
             plt.scatter(self.x, self.y, color='b', label='Данные')
             plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
             plt.xlabel('X')
@@ -275,6 +277,7 @@ class QA_QC_kern:
                 result = False
 
             self.file.write("Test 'dependence obblnas kp': {}\n".format(result))
+            plt.title("test obblnas kp dependence")
             plt.scatter(self.x1, self.y1, color='red', label='Обплнас-Кп')
             plt.scatter(self.x2, self.y2, color='blue', label='Минпл-Кп')
             plt.plot(self.x1, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
@@ -321,6 +324,7 @@ class QA_QC_kern:
                 result = False
 
             self.file.write("Test 'dependence minple kp': {}\n".format(result))
+            plt.title("test minple kp dependence")
             plt.scatter(self.x1, self.y1, color='red', label='Обплнас-Кп')
             plt.scatter(self.x2, self.y2, color='blue', label='Минпл-Кп')
             plt.plot(self.x1, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
@@ -361,6 +365,7 @@ class QA_QC_kern:
             self.file.write("Test 'dependence kpf kpdin': {}\n".format(result))
             x_trend = np.linspace(np.min(self.x), np.max(self.x), 100)
             y_trend = a * x_trend + b
+            plt.title("test kpf kpdin dependence")
             plt.scatter(self.x, self.y, color='b', label='Данные')
             plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
             plt.xlabel('X')
@@ -398,6 +403,7 @@ class QA_QC_kern:
             self.file.write("Test 'dependence kpff kp': {}\n".format(result))
             x_trend = np.linspace(np.min(self.x), np.max(self.x), 100)
             y_trend = a * x_trend + b
+            plt.title("test kpff kp dependence")
             plt.scatter(self.x, self.y, color='b', label='Данные')
             plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
             plt.xlabel('X')
@@ -435,6 +441,7 @@ class QA_QC_kern:
             self.file.write("Test 'dependence kpc kp': {}\n".format(result))
             x_trend = np.linspace(np.min(self.x), np.max(self.x), 100)
             y_trend = a * x_trend + b
+            plt.title("test dependence kpc kp")
             plt.scatter(self.x, self.y, color='b', label='Данные')
             plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
             plt.xlabel('X')
@@ -472,6 +479,7 @@ class QA_QC_kern:
             y_trend = a * x_trend + b
 
             # Построение кроссплота
+            plt.title("test dependence quo qp")
             plt.scatter(self.x, self.y, color='b', label='Данные')
             plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
             plt.xlabel('X')
@@ -505,6 +513,7 @@ class QA_QC_kern:
                 result = False
 
             self.file.write("Test 'dependence rn kv': {}\n".format(result))
+            plt.title("test rn kv dependencies")
             plt.scatter(self.x, self.y, color='blue', label='Исходные данные')
             plt.plot(self.x, b / (self.x ** n), color='red', label='Линия тренда')
             plt.xlabel('кп')
@@ -540,6 +549,7 @@ class QA_QC_kern:
 
             plt.scatter(self.x, self.y, color='blue', label='Исходные данные')
             plt.plot(self.x, a / (self.x ** m), color='red', label='Линия тренда')
+            plt.title("test rn kn dependencies")
             plt.xlabel('кп')
             plt.ylabel('y')
             plt.legend()
@@ -988,7 +998,8 @@ class QA_QC_kern:
             str: _description_
         """
         self.file.close()
-        new_filepath = "D:\\" + self.filename  # Путь для сохранения файла на диске D:
+        new_filepath = self.file_path + "\\" + self.filename  # Путь для сохранения файла на диске D:
         shutil.copy(self.filename, new_filepath)  # Копирование файла
         os.remove(self.filename)  # Удаление исходного файла
         return new_filepath
+
