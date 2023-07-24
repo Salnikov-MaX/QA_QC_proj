@@ -1,5 +1,658 @@
 import numpy as np
 
+import lasio
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+
+
+class QA_QC_GIS:
+    def __init__(self, las_path: str, bounds: tuple, poro_open: np.ndarray=None, perm: np.ndarray=None, poro_eff: np.ndarray=None, lithology: np.ndarray=None, depth: np.ndarray=None) -> None:
+        """_summary_
+
+        Args:
+            las_path (str): Путь к .las файлу с каротажами
+            bounds (tuple): Отбивки рассматриваемого пласта в формате (top, bottom).
+            poro_open (np.array, optional): Открытая пористость по керну. Defaults to None.
+            perm (np.array, optional): Проницаемость по керну. Defaults to None.
+            poro_eff (np.array, optional): Эффективная пористость по керну. Defaults to None.
+            lithology (np.array, optional): Литологическое описание по керну. Defaults to None.
+            depth (np.array, optional): Глубина отбора керна.
+        """
+        self.file = open('test_result.txt', 'w')           
+        self.las = lasio.read(las_path).df()
+        self.gis = self.gis_preparing(top = bounds[0], bottom = bounds[1])
+        self.depth = depth
+        self.poro_open = poro_open
+        self.perm = perm
+        self.poro_eff = poro_eff
+        self.lithology = lithology
+        self.bounds = bounds
+
+    def check_input(self, array, param_name, test_name):
+        """Функция для проверки входных данных для тестов первого порядка
+        Проверяет, что на вход подается не нулевой массив массив, содержащий только int и float
+
+            Args:
+                self.data (array[T]): входной массив для проверки данных
+
+            Returns:
+                bool: результат выполнения теста
+        """
+
+        if not isinstance(array, np.ndarray):
+            self.file.write(f"Тест {test_name} не запускался. Причина {param_name} не является массивом\n")
+            return False
+        if len(array) == 0:
+            self.file.write(f"Тест {test_name} не запускался. Причина {param_name} пустой\n")
+            return False
+        if False not in np.isnan(array): 
+            self.file.write(f"Тест {test_name} некорректен. Причина: {param_name} состоит из NaN\n")
+        for element in array:
+            if not isinstance(element, (int, float)):
+                self.file.write(
+                    f"Тест {test_name} не запускался. Причина {param_name} содержит данные типа не int/float\n")
+                return False
+        return True
+
+
+    def check_input_lithology(self, array, param_name, test_name):
+        """Функция для проверки входных данных для тестов первого порядка
+        Проверяет, что на вход подается не нулевой массив массив, содержащий только int и float
+
+            Args:
+                self.data (array[T]): входной массив для проверки данных
+
+            Returns:
+                bool: результат выполнения теста
+        """
+
+        if not isinstance(array, np.ndarray):
+            self.file.write(f"Тест {test_name} не запускался. Причина {param_name} не является массивом\n")
+            return False
+        if len(array) == 0:
+            self.file.write(f"Тест {test_name} не запускался. Причина {param_name} пустой\n")
+            return False
+        if False not in pd.isnull(array): 
+            self.file.write(f"Тест {test_name} некорректен. Причина: {param_name} состоит из NaN\n")
+            return False
+        for element in array:
+            if not isinstance(element, (str)):
+                self.file.write(
+                    f"Тест {test_name} не запускался. Причина {param_name} содержит данные типа не str\n")
+                return False
+        return True
+
+    def gis_preparing(self, top: float, bottom: float, mnemonics_path: str ='../Данные/qaqc/Мнемоники.xlsx'):
+        """Функция, используя мнемоники, определяет, какие каротажи есть в .las файле. Обрезает каротажи по отбивкам кровли и подошвы пласта
+
+        Args:
+            top (float): Глубина верхней границы интересующего интервала
+            bottom (float): Глубина нижней границы интересующего интервала
+            mnemonics_path (str, optional): Путь к файлу с мнемониками. Defaults to '../../Данные/qaqc/Мнемоники.xlsx'.
+
+        Returns:
+            dict: Словарь в формате key: Мнемоника каротажа, value: Каротаж.
+        """           
+        data = self.las[(self.las.index > top) & (self.las.index < bottom)]
+        units_list = [i.upper() for i in data]
+        mnemonics = pd.read_excel(mnemonics_path).to_dict(orient='list')
+        gis = {}
+
+        for mnemonic in mnemonics.keys():
+            for unit in units_list:
+                if unit in mnemonics.get(mnemonic):
+                    gis[mnemonic] = np.array(data[unit])
+
+        gis['depth'] = data.index.to_numpy()
+
+        if gis['depth'][1] - gis['depth'][0] != 0.01:
+            start = round(gis['depth'][0], 2)
+            stop = round(gis['depth'][-1], 2)
+            step = round(gis['depth'][1] - gis['depth'][0],2)
+            interp_linspace = np.linspace(start, stop, round((step)/0.01*len(gis['depth']))-round((step/0.01-1)))
+            for i in gis.keys():
+                if i != 'depth':
+                    gis[i] = np.interp(interp_linspace, gis['depth'], gis[i])
+        gis['depth'] = np.array([round(x,2) for x in interp_linspace])
+
+
+        return gis
+    
+    
+    def kernpreproc(self):
+        """
+            Функция заменяет буквенное наименование литологии по керну на численное
+        """
+        kern_lithology = []
+
+        for i in self.lithology:
+            if i[0] == 'П':
+                kern_lithology.append(1)
+            elif i[0:2] == 'Ал':
+                kern_lithology.append(2)
+            elif i[0:2] == 'Ар' or i[0:2] == 'Гл': 
+                kern_lithology.append(3)
+            else:
+                kern_lithology.append(0)
+
+        return kern_lithology
+    
+    def test_lithology(self, siltmin: float = 0.4, siltmax: float = 0.7, sandmin: float = 0, sandmax: float = 0.4, argillitemin: float = 0.7, argillitemax: float = 1, distance: float=50):
+        """Тест проверяет качество увязки литологии по керновым данным и литологии по SP или GR каротажам.
+
+        Args:
+            siltmin (float, optional): Левая граница интервала амплитуд ПС и ГК, соответствующая алевролитам,\n . Defaults to 0.4.
+            siltmax (float, optional): Правая граница интервала амплитуд ПС и ГК, соответствующая алевролитам,\n. Defaults to 0.7.
+            sandmin (float, optional): Левая граница интервала амплитуд ПС и ГК, соответствующая песчанику,\n. Defaults to 0.
+            sandmax (float, optional): Правая граница интервала амплитуд ПС и ГК, соответствующая песчанику,\n. Defaults to 0.4.
+            argillitemin (float, optional): Левая граница интервала амплитуд ПС и ГК, соответствующая аргиллиту,\n. Defaults to 0.7.
+            argillitemax (float, optional): Правая граница интервала амплитуд ПС и ГК, соответствующая аргиллиту,\n. Defaults to 1.
+            distance (float, optional): Для нормализации значений каротажа необходимо взять значения выше и ниже рассматриваемого пласта, данный атрибут показывает, на сколько выше и ниже. Defaults to 50.
+        """      
+        if ('sp' or 'gr' in self.gis.keys()) and self.check_input_lithology(self.lithology, 'Литология по керну', 'Увязка керн и ГИС по литологии') and self.check_input(self.depth, 'Глубина отбора керна', 'Увязка керн и ГИС по литологии'):
+             
+            kern_lithology = self.kernpreproc()
+            gis_lithology = self.gis_preparing(top=self.bounds[0]-distance, bottom=self.bounds[1]+distance)
+            scaler = MinMaxScaler()
+
+            if 'sp' in self.gis.keys():
+                log_for_lithology = scaler.fit_transform(gis_lithology['sp'].reshape(-1,1))
+            elif 'gr' in self.gis.keys(): 
+                log_for_lithology = scaler.fit_transform(gis_lithology['gr'].reshape(-1,1))
+            
+            depth_gis = gis_lithology['depth']
+            litho = []
+            count_matches = 0
+            count = 0
+            grforplot = []
+            transparency = []
+
+            for i in range(len(self.depth)):
+                index = np.where(depth_gis == round(self.depth[i], 1))[0][0]
+                if self.depth[i] > 0 and log_for_lithology[index] >= 0:
+                    if round(self.depth[i], 1) < depth_gis[-1]:
+                            count = count + 1
+                            if sandmin <= log_for_lithology[index] < sandmax and kern_lithology[i] == 1:
+                                count_matches = count_matches + 1
+                                litho.append(1)
+                                grforplot.append(log_for_lithology[index])
+                                transparency.append(0.001)
+                            elif siltmin < log_for_lithology[index] < siltmax and kern_lithology[i] == 2:
+                                count_matches = count_matches + 1
+                                litho.append(2)
+                                grforplot.append(log_for_lithology[index])
+                                transparency.append(0.001)
+                            elif argillitemin < log_for_lithology[index] <= argillitemax and kern_lithology[i] == 3:
+                                count_matches = count_matches + 1
+                                litho.append(3)
+                                grforplot.append(log_for_lithology[index])
+                                transparency.append(0.001)
+                            else:
+                                litho.append(0)
+                                grforplot.append(log_for_lithology[index])
+                                transparency.append(1)
+            
+            self.lithology_test_visualization(grforplot, transparency, kern_lithology, count_matches, count)
+    
+    
+    def lithology_test_visualization(self, grforplot: list, prozr: list, kern_lithology: list, count: int, count1: int):
+            """Функция визуализирует результаты теста увязки литологии по керну и по ГИС. Отображает каротаж ГИС и отмечает на нем точки, в которых литология не увязана. Также отображает литологию по керну. Атрибуты функции указывать не нужно
+
+            Args:
+                grforplot (list): 
+                prozr (list): _description_
+                kern_lithology (list): _description_
+                count (int): _description_
+                count1 (int): _description_
+            """          
+            print('Тестирование качества увязки литологии по ГИС и литологии по керну')
+            print('')
+            print('Процент совпавших литотипов по ГИС и по керну равен ', str(count/count1*100), '%')
+            self.file.write('Тестирование качества увязки литологии по ГИС и литологии по керну.\n Процент совпавших литотипов по ГИС и по керну равен ' + str(count/count1*100) + ' %.\n')
+            print('Оранжевыми точками отмечены глубины, в которых литология не увязана. В литологии по керну 1 - песчаник, 2 - алевролит, 3 - аргиллит')
+
+            
+            plt.figure(figsize=(4,10))
+            plt.subplot(1,3,1)
+
+            if 'sp' in self.gis.keys():
+                plt.title('SP')
+            else:
+                plt.title('GR')
+            
+            plt.plot(grforplot, np.linspace(len(grforplot)-1, 0, len(grforplot)))
+            plt.scatter(grforplot, np.linspace(len(grforplot)-1, 0, len(grforplot)), c = 'orange', alpha = prozr)
+            plt.ylim(0,501)
+            plt.xticks([])
+            plt.yticks([])
+            plt.subplot(1,3,2)
+            plt.title('Литология по керну')
+            plt.ylim(0,501)
+            plt.xticks([])
+            plt.yticks([])
+            plt.plot(kern_lithology, np.linspace(len(kern_lithology)-1, 0, len(kern_lithology)))
+            plt.subplot(1,3,3)
+            plt.xticks([])
+            plt.yticks([])
+            plt.imshow(np.array(kern_lithology).reshape(-1, 1),  aspect='auto')
+            plt.show()
+
+    def properties(self, poro_model = None, poroeff_model = None, perm_model = None, gis_type = 'rhob' ) -> pd.core.frame.DataFrame:
+        """
+            Данная функция создает РИГИС пористости, эффективной пористости и проницаемости
+        Args:
+            poro_model (function): петрофизическая модель пористости,\n
+            poroeff_model (function): петрофизическая модель эффективной пористости,\n
+            perm_model(function): петрофизическая модель проницаемости,\n
+            gis_type (str): мнемоника каротажа ГИС, по которой построена модель пористости.\n 
+        Returns:\n
+            DataFrame: таблица  с РИГИСами пористости, эффективной пористости и проницаемости.
+        """
+        
+        if not poro_model:
+            poro_model = self.poro_model
+
+        if not poroeff_model:
+            poroeff_model = self.poroeff_model
+
+        if not perm_model:
+            perm_model = self.perm_model
+
+        rigis = pd.DataFrame(columns=['poro', 'poroeff', 'perm', 'depth'])
+        depth = self.gis['depth']
+        gis_for_properties = self.gis[gis_type]
+        kern_poro = []
+        rigis_poro = []
+        
+        for i in range(len(self.depth)):
+            if self.depth[i] > 0:
+                    depthindex = np.where(depth == round(self.depth[i], 2))[0][0]
+                    if gis_for_properties[depthindex] > 0 and self.poro_open[i] > 0:
+                        o = len(rigis['poro'])
+                        rigis.at[o, 'poro'] = poro_model(gis_for_properties[depthindex])
+                        rigis.at[o, 'depth'] = depth[depthindex]
+                        kern_poro.append(self.poro_open[i])
+                        rigis_poro.append(float(poro_model(gis_for_properties[depthindex])))
+                        rigis.at[o, 'poroeff'] = poroeff_model(rigis.loc[o]['poro'])
+                        rigis.at[o, 'perm'] = perm_model(rigis.loc[o]['poroeff'])
+
+        return rigis, kern_poro, rigis_poro
+        
+    
+    def poro_model(self, rhob, poro_koeff1 = -49.72, poro_koeff2 = 135.69) -> float:
+        """
+            Функция представляет собой петрофизическую модель пористости вида poro = poro_koeff1*rhob + poro_koeff2
+        Args:
+            poro_koeff1 (float): Множитель перед RHOB,\n
+            poro_koeff2 (float): Свободный член уравнения.
+        Returns:
+            float: значение РИГИС пористости
+        """
+        return poro_koeff1*rhob + poro_koeff2
+
+    def poroeff_model(self, poro, poroeff_koeff1 = 1/0.5674, poroeff_koeff2 = -12.7827/0.5674) -> float:
+        """
+            Функция представляет собой петрофизическую модель эффективной пористости вида poroeff = poro_koeff1*poro + poro_koeff2
+        Args:
+            poroeff_koeff1 (float): Множитель перед poro,\n
+            poroeff_koeff2 (float): Свободный член уравнения.
+        Returns:
+            float: значение РИГИС эффективной пористости
+        """
+        return poroeff_koeff1*poro + poroeff_koeff2
+
+    def perm_model(self, poroeff, perm_koeff1 = 0.065, perm_koeff2 = 0.44) -> float:
+        """
+            Функция представляет собой петрофизическую модель проницаемости вида perm = perm_koeff1*poroeff + perm_koeff2
+        Args:
+            perm_koeff1 (float): Множитель перед poroeff,\n
+            perm_koeff2 (float): Свободный член уравнения.
+        Returns:
+            float: значение РИГИС проницаемости
+        """
+        return perm_koeff1*np.exp(perm_koeff2*poroeff)
+
+    def trendline(self, prop1, prop2):
+        """
+            Функция строит аппроксимацию для кроссплота с выбранными данными по осям X, Y
+        Args:
+            prop1 (list): Данные по оси X,\n
+            prop2 (list): Данные по оси Y.
+        """
+        k, b, r, p, se = stats.linregress(prop1, prop2)
+        return k, b, r
+
+    def test_properties(self, poro_model = None, poroeff_model = None, perm_model = None, gis_type = 'rhob') -> None:
+        """ 
+            Тест нацелен на проверку качества увязки пористости, эффективной пористости и проницаемости по РИГИС с этими же данными по керну
+        Args:
+            poro_model (function): петрофизическая модель пористости,\n
+            poroeff_model (function): петрофизическая модель эффективной пористости,\n
+            perm_model(function): петрофизическая модель проницаемости,\n
+            gis_type (str): мнемоника каротажа ГИС, по которой построена модель пористости.\n 
+        """
+        
+        
+        if self.check_input(self.depth, 'Глубина отбора керна', 'увязка керна и ГИС по свойствам') and self.check_input(self.poro_open, 'Открытая пористость по керну', 'Увязка керна и ГИС по открытой пористости') and \
+            self.check_input(self.poro_eff, 'Эффективная пористость по керну', 'увязка керна и ГИС по эффективной пористости') and self.check_input(self.perm, 'Проницаемость по керну', 'Увязка керна и ГИС по проницаемости') and gis_type in self.gis.keys():
+            
+            rigis, kern_poro, rigis_poro = self.properties(poro_model = poro_model, poroeff_model = poroeff_model, perm_model = perm_model, gis_type = gis_type)
+
+            if len(rigis.values) > 0:
+                kern_poroeff = []
+                rigis_poroeff = []
+
+                for i in range(len(self.poro_eff)):
+                    if self.poro_eff[i] > 0 and round(self.depth[i], 2) in list(self.rigis['depth']):
+                        rigis_poroeff.append(float(rigis.loc[np.where(rigis['depth'] == round(self.depth[i], 2))[0][0]]['poroeff']))
+                        kern_poroeff.append(self.poro_eff[i])
+                
+                kern_perm = []
+                rigis_perm = []
+
+                for i in range(len(self.perm)):
+                    if self.perm[i] > 0 and round(self.depth[i], 2) in list(rigis['depth']):
+                        rigis_perm.append(float(rigis.loc[np.where(rigis['depth'] == round(self.depth[i], 2))[0][0]]['perm']))
+                        kern_perm.append(self.perm[i])
+                
+            self.properties_visualization(kern_poro, rigis_poro, kern_poroeff, rigis_poroeff, kern_perm, rigis_perm)
+            
+            pass
+
+    def properties_visualization(self, kern_poro: list, rigis_poro: list, kern_poroeff: list, rigis_poroeff: list, kern_perm: list, rigis_perm: list) -> None :
+        """ Функция визуализирует результаты теста на увязку пористости, эффективной пористости и проницаемости по керну и по ГИС.
+
+        Args:
+            kern_poro (_type_): _description_
+            rigis_poro (_type_): _description_
+            kern_poroeff (_type_): _description_
+            rigis_poroeff (_type_): _description_
+            kern_perm (_type_): _description_
+            rigis_perm (_type_): _description_
+        """
+        print('')
+        print('Тестирование качества увязки открытой пористости, эффективной пористости и проницаемости по керну с этими же свойствами по РИГИС')
+        print('')
+        self.file.write('Тестирование качества увязки открытой пористости, эффективной пористости и проницаемости по керну с этими же свойствами по РИГИС.\n')
+
+        if list(kern_poro):
+            k_poro, b_poro, r_poro = self.trendline(rigis_poro, kern_poro)
+            plt.scatter(rigis_poro, kern_poro)
+            plt.plot([0, sorted(rigis_poro)[-1]], [b_poro, k_poro*list(sorted(rigis_poro))[-1]+b_poro], c='orange')
+            plt.xlabel('Пористость по керну')
+            plt.ylabel('РИГИС пористости')
+            plt.title('Коэффициент k = ' + str(k_poro) + ', коэффициент R^2 = ' + str(r_poro))
+            plt.show()
+            self.file.write('Пористость: Коэффициент k = ' + str(k_poro) + ', коэффициент R^2 = ' + str(r_poro) + '\n')
+
+        else:
+            print('В файле с керном нет данных по пористости')
+            self.file.write('В файле с керном нет данных по пористости\n')
+
+        if list(kern_poroeff):
+            k_poroeff, b_poroeff, r_poroeff = self.trendline(rigis_poroeff, kern_poroeff)
+            plt.scatter(rigis_poroeff, kern_poroeff)
+            plt.plot([0, sorted(rigis_poroeff)[-1]], [b_poroeff, k_poroeff*sorted(rigis_poroeff)[-1]+b_poroeff], c='orange')
+            plt.xlabel('РИГИС эффективной пористости')
+            plt.ylabel('Эффективная пористость по керну')
+            plt.title('Коэффициент k = ', str(k_poroeff), ', коэффициент R^2 = ', str(r_poroeff))
+            plt.show()
+            self.file.write('Эффективная пористость: Коэффициент k = ' + str(k_poro) + ', коэффициент R^2 = ' + str(r_poro) + '\n')
+
+        else:
+            print('')
+            print('В файле с керном нет таких глубин, на которых были бы данные по эффективной пористости и по открытой пористости')
+            self.file.write('В файле с керном нет таких глубин, на которых были бы данные по эффективной пористости и по открытой пористости\n')
+            print('')
+            
+
+        if list(kern_perm):
+            k_perm, b_perm, r_perm = self.trendline(rigis_perm, kern_perm)
+            plt.scatter(rigis_perm, kern_perm)
+            plt.plot([0, sorted(rigis_perm)[-1]], [b_perm, k_perm*sorted(rigis_perm)[-1]+b_perm], c='orange')
+            plt.xlabel('РИГИС проницаемости')
+            plt.ylabel('Проницаемость по керну')
+            plt.title('Коэффициент k = ' + str(k_perm) + ', коэффициент R^2 = ' + str(r_perm))
+            plt.show()
+            self.file.write('Проницаемость: Коэффициент k = ' + str(k_perm) + ', коэффициент R^2 = ' + str(r_perm) + '\n')
+            
+        else:
+            print('В файле с керном нет таких глубин, на которых были бы данные по открытой пористости и по проницаемости')
+            self.file.write('В файле с керном нет таких глубин, на которых были бы данные по открытой пористости и по проницаемости.\n')
+        
+        
+
+        pass
+    
+    def test_skipped_gis(self, delta: float=0.5):
+        """Тест направлен на поиск пропусков в записи ГИС, и, в случае интервала пропусков меньше delta м, их заполнения интерполяцией.
+
+        Args:
+            delta (float, optional): Атрибут задает максимальный интервал в метрах, в пределах которого пропуски будут заполняться интерполяцией . Defaults to 0.5.
+        """
+        for gis in self.gis.keys():
+            is_missing = np.isnan(self.gis[gis])
+            split_indices = np.where(np.diff(np.concatenate(([0], is_missing, [0]))) != 0)[0]
+            difference = 1/(self.gis['depth'][1] - self.gis['depth'][0]) * delta
+
+            if list(split_indices) and all(np.diff(np.array(split_indices))[::2] <= difference):
+                print('В каротаже ' + gis + ' пропуски на следующих глубинах:')
+                self.file.write('В каротаже ' + gis + ' пропуски на следующих глубинах:\n')
+
+                for i in range(1,int((len(split_indices))/2+1)):
+                    print(str(self.gis['depth'][split_indices[i*2-2]]) + ' - ' + str(self.gis['depth'][split_indices[i*2-1]]))
+                    self.file.write(str(self.gis['depth'][split_indices[i*2-2]]) + ' - ' + str(self.gis['depth'][split_indices[i*2-1]]) + '\n')
+                    new = self.interpolation_gis(split_indices[i*2-2], split_indices[i*2-1], gis)
+                    self.gis[gis][split_indices[i*2-2]:split_indices[i*2-1]-1] = new
+                    
+            elif list(split_indices):
+                print('В каротаже ' + gis + ' пропуски больше 0.5м. \n') 
+                self.file.write('В каротаже ' + gis + ' пропуски больше 0.5м. \n') 
+    
+    def interpolation_gis(self, start, stop, i):
+        """Интерполяция пропущенного интервала ГИС
+
+        Args:
+            start (_type_): _description_
+            stop (_type_): _description_
+            i (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        gismin = self.gis['depth'][start]
+        gismax = self.gis['depth'][stop]
+        diff = self.gis['depth'][1] - self.gis['depth'][0]
+        new = np.interp(np.linspace(gismin, gismax - diff, int((gismax-gismin)/diff)), [self.gis['depth'][start-1], gismax], [self.gis[i][start-1], self.gis[i][stop]])
+        return new
+    
+    def test_repeat(self):
+        """Тест направлен на поиск интервалов замещения ГИС. Если такие есть, то значение каротажа в этом промежутке задается как среднее.
+        """        
+        units_list = [i.upper() for i in self.las]
+            
+        repeat = {}
+
+        for i in  units_list:
+            if i+'1' in units_list:
+                repeat[i] = i+'1'
+            elif i+'2' in units_list:
+                repeat[i] = i+'2'
+            elif i+'_1' in units_list:
+                repeat[i] = i+'_1'
+            elif i+'_2' in units_list:
+                repeat[i] = i+'_2'
+
+        if repeat:
+            for i in repeat.keys():
+                gis = []
+                for o in len(self.gis['depth']):
+                    if not np.isnan(self.gis[i][o]) and not np.isnan(self.gis[repeat.get(i)][o]):
+                        gis.append(np.average([self.gis[i][o],self.gis[repeat.get(i)][o]]))
+                    elif not np.isnan(self.gis[i][o]):
+                        gis.append(self.gis[i][o])
+                    elif not np.isnan(self.gis[repeat.get(i)][o]):
+                        gis.append(self.gis[repeat.get(i)][o])
+                    else:
+                        gis.append(np.nan)
+                self.gis[i] = gis
+        
+            print('Перекрытие интервалов есть в каротажах: ')
+            self.file.write('Перекрытие интервалов есть в каротажах: \n')
+            for keys, values in repeat.items():
+                print(keys, values)
+                self.file.write(keys, values)
+        else:
+            print('Перекрытия интервалов в данных нет')
+            self.file.write('Перекрытия интервалов в данных нет\n')
+
+    def test_max_value_gis(self) -> None:
+        """
+        Тестирование на сходство максимальных отметок глубин по отбивкам и по ГИС
+        """
+        depth = self.las.index
+        print('')
+        print('Тестирование на сходство максимальных отметок глубин по отбивкам и по ГИС')
+        print('')
+        if depth[-1] <= self.bounds[1]:
+            print('Максимальная глубина по отбивке ' + str(self.bounds[1]) + ', максимальная глубина по ГИС ' + str(depth[-1]) + str('. Тест не пройден'))
+            self.file.write('Тестирование на сходство максимальных отметок глубин по отбивкам и по ГИС.\nМаксимальная глубина по отбивке ' + str(self.bounds[1]) + ', максимальная глубина по ГИС ' + str(depth[-1]) + str('. Тест не пройден\n'))
+        else:
+            print('Максимальная глубина по отбивке ' + str(self.bounds[1]) + ', максимальная глубина по ГИС ' + str(depth[-1]) + str('. Тест пройден'))
+            self.file.write('Тестирование на сходство максимальных отметок глубин по отбивкам и по ГИС. \nМаксимальная глубина по отбивке ' + str(self.bounds[1]) + ', максимальная глубина по ГИС ' + str(depth[-1]) + str('. Тест пройден\n'))
+            
+
+    def test_saturation(self, Archi_model= None, J_model = None, gis_type1: str = 'ild', Pc: float= None, sigma: float= None, tetta: float= None, poro_model = None, poroeff_model = None, perm_model = None, gis_type: str= 'rhob'):
+        """Тест направлен на проверку качества увязки моделей водонасыщенности по J функции, по Арчи и по ОФП между собой.
+
+        Args:
+            Archi_model (function, optional): Модель водонасыщенности Арчи. Defaults to None.
+            J_model (function, optional): Уравнение аппроксимации кроссплота, где x-J, y-Sw. Defaults to None.
+            gis_type1 (str, optional): Мнемоника каротажа ГИС, который используется в модели Арчи. Defaults to 'ild'.
+            Pc (float, optional): Капиллярное давление. Defaults to None.
+            sigma (float, optional): sigma. Defaults to None.
+            tetta (float, optional): Угол смачивания. Defaults to None.
+            poro_model (function, optional): Модель пористости. Defaults to None.
+            poroeff_model (function, optional): Модель эффективной пористости. Defaults to None.
+            perm_model (function, optional): Модель проницаемости. Defaults to None.
+            gis_type (str, optional): Мнемоника каротажа ГИС, по которому считается пористость. Defaults to 'rhob'.
+        """        
+        if Pc and sigma and tetta:
+
+            rigis = self.properties(poro_model = poro_model, poroeff_model = poroeff_model, perm_model = perm_model, gis_type = gis_type)
+            
+            if not Archi_model:
+                Archi_model = self.Archi_model
+            
+            if not J_model:
+                J_model = self.J_function
+            
+            Archi = []
+            J_func = []
+
+            for i in len(rigis.values()):
+                porosity = rigis.loc[i]['poro']
+                permeability = rigis.loc[i]['perm']
+                Archi.append(Archi_model(self.gis[gis_type1][np.where(self.gis['depth'] == rigis.loc[i]['depth'])], porosity))
+                J_func.append(J_model(Pc*(permeability/porosity)**0.5/(sigma*np.cos(tetta))))
+
+            
+            print('')
+            print('Тестирование качества увязки открытой пористости, эффективной пористости и проницаемости по керну с этими же свойствами по РИГИС')
+            print('')
+
+            if list(Archi) and list(J_func):
+                plt.scatter(Archi, J_func)
+                k, b, r = self.trendline(Archi, J_func)
+                plt.plot([0, sorted(Archi)[-1]], [b, k*list(sorted(Archi))[-1]+b], c='orange')
+                plt.xlabel('Пористость по керну')
+                plt.ylabel('РИГИС пористости')
+                plt.title('Коэффициент k = ' + str(k) + ', коэффициент R^2 = ' + str(r))
+                plt.show()
+                
+            else:
+                print('В файле с керном нет данных по пористости')
+
+            self.saturation_report(Archi, J_func)
+
+    def saturation_report(self, Archi, J_func):
+            """ Результат тестирования качества увязки моделей водонасыщенности.
+
+            Args:
+                Archi (_type_): _description_
+                J_func (_type_): _description_
+            """            
+            print('')
+            print('Тестирование качества увязки моделей водонасыщенность')
+            print('')
+
+            if list(Archi) and list(J_func):
+                plt.scatter(Archi, J_func)
+                k, b, r = self.trendline(Archi, J_func)
+                plt.plot([0, sorted(Archi)[-1]], [b, k*list(sorted(Archi))[-1]+b], c='orange')
+                plt.xlabel('Пористость по керну')
+                plt.ylabel('РИГИС пористости')
+                plt.title('Коэффициент k = ' + str(k) + ', коэффициент R^2 = ' + str(r))
+                plt.show()
+                
+            else:
+                print('В файле с керном нет данных по пористости')
+
+    def Archi_model(self, ild, poro):
+        """_summary_
+
+        Args:
+            ild (_type_): _description_
+            poro (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """        
+        return  (1.7456*1.0387*0.24/(ild*poro**1.3197))**(1/1.5885)
+
+    def J_function(self, J):
+        """_summary_
+
+        Args:
+            J (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """        
+        return 1*J-1
+
+    def get_list_of_tests(self) -> list:
+        """Функция выводит список доступных тестов.
+
+        Returns:
+            list: Список доступных тестов
+        """
+
+        test_methods = [method for method in dir(self) if
+                        callable(getattr(self, method)) and method.startswith("test")]
+        return test_methods
+    
+    def generate_test_result(self):
+        self.file.close()
+
+    
+    def start_tests(self, list_of_tests: list = None) -> None:
+        """Функция запускает заданные тесты
+
+        Args:
+            list_of_tests (list): Список тестов, которые необходимо запустить.
+        """
+        if not list_of_tests:
+            list_of_tests = self.get_list_of_tests()
+        for method_name in list_of_tests:
+            method = getattr(self, method_name)
+            method()
+        self.generate_test_result()
+        pass
+
 class QA_QC_gis(): 
     def __init__(self, file_path:str) -> None:
         """_summary_
