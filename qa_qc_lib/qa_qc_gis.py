@@ -85,7 +85,7 @@ class QA_QC_GIS:
                 return False
         return True
 
-    def gis_preparing(self, top: float, bottom: float, mnemonics_path: str ='../Данные/qaqc/Мнемоники.xlsx') -> dict:
+    def gis_preparing(self, top: float, bottom: float) -> dict:
         """Функция, используя мнемоники, определяет, какие каротажи есть в .las файле. Обрезает каротажи по отбивкам кровли и подошвы пласта
 
         Args:
@@ -95,10 +95,31 @@ class QA_QC_GIS:
 
         Returns:
             dict: Словарь в формате key: Мнемоника каротажа, value: Каротаж.
-        """           
+        """      
+        mnemonics = {'sp': ['SP', 'PS', 'ПС', 'СП', 'PS_1', 'PS_2'],
+                    'gr': ['GR', 'GK', 'ГК', 'ECGR', 'GK_1', 'GK_2'],
+                    'ds': ['DS', 'CALI', 'HCAL', 'CALIP', 'DCAV', 'DSN', 'DS_1', 'DS2'],
+                    'mds': ['MCAL', 'MDS'],
+                    'minv': ['МГЗ', 'MGZ'],
+                    'mnor': ['МПЗ', 'MPZ'],
+                    'mll': ['MLL', 'MBK', 'МБК', 'МКЗ', 'MSFL', 'RXOZ'],
+                    'rhob': ['RHOB', 'PL', 'GGKP', 'RHOZ', 'DRHB', 'ROBB'],
+                    'pef': ['PEF', 'PE', 'PEFZ', 'ZEFF'],
+                    'dt': ['AK', 'DT', 'DTp', 'DTP', 'АК', 'AK_2', 'DTL', 'DTS', 'DTP1'],
+                    'ild': ['IK', 'ILD', 'ИК', 'CILD', 'IKA', 'ILDA', 'IK_1', 'R27PC_46PH'],
+                    'ildr': ['IKR', 'ILDR'],
+                    'vikiz': ['ВИКИЗ', 'VIKIZ', 'F05', 'F07', 'F10', 'F14', 'F20', 'R05', 'R07', 'R10', 'R14', 'R20', 'С05', 'С07', 'С10', 'С14', 'С20', 'AT10', 'AT20', 'AT30', 'AT60', 'AT90', 'AF10', 'AF20', 'AF30', 'AF60',
+                        'AF90', 'ILDVG1', 'ILDVG2', 'ILDVG3', 'ILDVG4', 'ILDVG5', 'ILDVR1', 'ILDVR2', 'ILDVR3', 'ILDVR4', 'ILDVR5', 'R1', 'R2', 'R3', 'R4', 'R5', 'VIK1', 'VIK2', 'VIK3', 'VIK4', 'VIK5', 'RO05', 'RO07',
+                        'RO10', 'RO14', 'RO20', 'IK1', 'IK2', 'IK3', 'IK4', 'IK5', 'С07', 'С10', 'С14', 'С20', 'AT10', 'AT20', 'AT30', 'AT60', 'AT90', 'AF10', 'AF20', 'AF30', 'AF60', 'AF90', 'ILDVG1', 'ILDVG2',
+                        'ILDVG3', 'ILDVG4', 'ILDVG5', 'ILDVR1', 'ILDVR2', 'ILDVR3', 'ILDVR4', 'ILDVR5', 'R1', 'R2', 'R3', 'R4', 'R5', 'VIK1', 'VIK2', 'VIK3', 'VIK4', 'VIK5', 'RO05', 'RO07', 'RO10', 'RO14', 'RO20',
+                        'IK1', 'IK2', 'IK3', 'IK4', 'IK5'],
+                    'ngr': ['NEUT', 'NGR', 'NGK', 'NGK_1'],
+                    'nktd': ['NKTD', 'CFTC', 'NKT', 'NKTB', 'NKT_1', 'NKTB2'],
+                    'nkts': ['NKTS', 'CNTC', 'NKTM', 'NKT_2'],
+                    'w': ['NPHI','W','TNPH','NPLS','NPSS','TNPD','TNPL','TNPS','TNPH','TNPH_DOL','TNPH_LIM','TNPH_SAN'],
+                    'depth': ['DEPT']}     
         data = self.las[(self.las.index > top) & (self.las.index < bottom)]
         units_list = [i.upper() for i in data]
-        mnemonics = pd.read_excel(mnemonics_path).to_dict(orient='list')
         gis = {}
 
         for mnemonic in mnemonics.keys():
@@ -240,7 +261,7 @@ class QA_QC_GIS:
             plt.imshow(np.array(kern_lithology).reshape(-1, 1),  aspect='auto')
             plt.show()
 
-    def properties(self, poro_model = None, poroeff_model = None, perm_model = None, gis_type = 'rhob' ) -> pd.core.frame.DataFrame, :
+    def properties(self, poro_model = None, poroeff_model = None, perm_model = None, gis_type = 'rhob' ) -> pd.core.frame.DataFrame:
         """
             Данная функция создает РИГИС пористости, эффективной пористости и проницаемости
         Args:
