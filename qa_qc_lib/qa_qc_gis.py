@@ -31,7 +31,7 @@ class QA_QC_GIS:
         self.lithology = lithology
         self.bounds = bounds
 
-    def check_input(self, array, param_name, test_name):
+    def check_input(self, array, param_name, test_name) -> bool:
         """Функция для проверки входных данных для тестов первого порядка
         Проверяет, что на вход подается не нулевой массив массив, содержащий только int и float
 
@@ -58,7 +58,7 @@ class QA_QC_GIS:
         return True
 
 
-    def check_input_lithology(self, array, param_name, test_name):
+    def check_input_lithology(self, array, param_name, test_name) -> bool:
         """Функция для проверки входных данных для тестов первого порядка
         Проверяет, что на вход подается не нулевой массив массив, содержащий только int и float
 
@@ -85,7 +85,7 @@ class QA_QC_GIS:
                 return False
         return True
 
-    def gis_preparing(self, top: float, bottom: float, mnemonics_path: str ='../Данные/qaqc/Мнемоники.xlsx'):
+    def gis_preparing(self, top: float, bottom: float, mnemonics_path: str ='../Данные/qaqc/Мнемоники.xlsx') -> dict:
         """Функция, используя мнемоники, определяет, какие каротажи есть в .las файле. Обрезает каротажи по отбивкам кровли и подошвы пласта
 
         Args:
@@ -122,7 +122,7 @@ class QA_QC_GIS:
         return gis
     
     
-    def kernpreproc(self):
+    def kernpreproc(self) -> np.ndarray:
         """
             Функция заменяет буквенное наименование литологии по керну на численное
         """
@@ -138,9 +138,9 @@ class QA_QC_GIS:
             else:
                 kern_lithology.append(0)
 
-        return kern_lithology
+        return np.array(kern_lithology)
     
-    def test_lithology(self, siltmin: float = 0.4, siltmax: float = 0.7, sandmin: float = 0, sandmax: float = 0.4, argillitemin: float = 0.7, argillitemax: float = 1, distance: float=50):
+    def test_lithology(self, siltmin: float = 0.4, siltmax: float = 0.7, sandmin: float = 0, sandmax: float = 0.4, argillitemin: float = 0.7, argillitemax: float = 1, distance: float=50) -> None:
         """Тест проверяет качество увязки литологии по керновым данным и литологии по SP или GR каротажам.
 
         Args:
@@ -240,7 +240,7 @@ class QA_QC_GIS:
             plt.imshow(np.array(kern_lithology).reshape(-1, 1),  aspect='auto')
             plt.show()
 
-    def properties(self, poro_model = None, poroeff_model = None, perm_model = None, gis_type = 'rhob' ) -> pd.core.frame.DataFrame:
+    def properties(self, poro_model = None, poroeff_model = None, perm_model = None, gis_type = 'rhob' ) -> pd.core.frame.DataFrame, :
         """
             Данная функция создает РИГИС пористости, эффективной пористости и проницаемости
         Args:
@@ -279,7 +279,7 @@ class QA_QC_GIS:
                         rigis.at[o, 'poroeff'] = poroeff_model(rigis.loc[o]['poro'])
                         rigis.at[o, 'perm'] = perm_model(rigis.loc[o]['poroeff'])
 
-        return rigis, kern_poro, rigis_poro
+        return rigis, np.array(kern_poro), np.array(rigis_poro)
         
     
     def poro_model(self, rhob, poro_koeff1 = -49.72, poro_koeff2 = 135.69) -> float:
@@ -427,7 +427,7 @@ class QA_QC_GIS:
 
         pass
     
-    def test_skipped_gis(self, delta: float=0.5):
+    def test_skipped_gis(self, delta: float=0.5) -> None:
         """Тест направлен на поиск пропусков в записи ГИС, и, в случае интервала пропусков меньше delta м, их заполнения интерполяцией.
 
         Args:
@@ -451,8 +451,9 @@ class QA_QC_GIS:
             elif list(split_indices):
                 print('В каротаже ' + gis + ' пропуски больше 0.5м. \n') 
                 self.file.write('В каротаже ' + gis + ' пропуски больше 0.5м. \n') 
+        pass
     
-    def interpolation_gis(self, start, stop, i):
+    def interpolation_gis(self, start: int, stop: int, i: str) -> np.ndarray:
         """Интерполяция пропущенного интервала ГИС
 
         Args:
@@ -469,7 +470,7 @@ class QA_QC_GIS:
         new = np.interp(np.linspace(gismin, gismax - diff, int((gismax-gismin)/diff)), [self.gis['depth'][start-1], gismax], [self.gis[i][start-1], self.gis[i][stop]])
         return new
     
-    def test_repeat(self):
+    def test_repeat(self) -> None:
         """Тест направлен на поиск интервалов замещения ГИС. Если такие есть, то значение каротажа в этом промежутке задается как среднее.
         """        
         units_list = [i.upper() for i in self.las]
@@ -508,6 +509,7 @@ class QA_QC_GIS:
         else:
             print('Перекрытия интервалов в данных нет')
             self.file.write('Перекрытия интервалов в данных нет\n')
+        pass
 
     def test_max_value_gis(self) -> None:
         """
@@ -576,9 +578,10 @@ class QA_QC_GIS:
             else:
                 print('В файле с керном нет данных по пористости')
 
-            self.saturation_report(Archi, J_func)
+            self.saturation_report(np.array(Archi), np.array(J_func))
+            pass
 
-    def saturation_report(self, Archi, J_func):
+    def saturation_report(self, Archi: np.ndarray, J_func: np.ndarray) -> None:
             """ Результат тестирования качества увязки моделей водонасыщенности.
 
             Args:
@@ -600,8 +603,10 @@ class QA_QC_GIS:
                 
             else:
                 print('В файле с керном нет данных по пористости')
+            
+            pass
 
-    def Archi_model(self, ild, poro):
+    def Archi_model(self, ild: float, poro: float) -> float:
         """_summary_
 
         Args:
@@ -613,7 +618,7 @@ class QA_QC_GIS:
         """        
         return  (1.7456*1.0387*0.24/(ild*poro**1.3197))**(1/1.5885)
 
-    def J_function(self, J):
+    def J_function(self, J: float) -> None:
         """_summary_
 
         Args:
@@ -637,6 +642,7 @@ class QA_QC_GIS:
     
     def generate_test_result(self):
         self.file.close()
+        pass
 
     
     def start_tests(self, list_of_tests: list = None) -> None:
@@ -652,57 +658,3 @@ class QA_QC_GIS:
             method()
         self.generate_test_result()
         pass
-
-class QA_QC_gis(): 
-    def __init__(self, file_path:str) -> None:
-        """_summary_
-
-        Args:
-            data (str): _description_
-        """ 
-        pass
-
-
-    def first_test(self) -> bool:
-        """_summary_
-
-        Returns:
-            bool: _description_
-        """        
-        return True
-
-
-    def second_test(self) -> bool:
-        """_summary_
-
-        Returns:
-            bool: _description_
-        """        
-        return True
-
-
-    def get_list_of_tests(self) -> list:
-        """_summary_
-
-        Returns:
-            list: _description_
-        """        
-        return ['first_test', 'second_test']
-
-
-    def start_tests(self, list_of_tests:list) -> None:
-        """_summary_
-
-        Args:
-            list_of_tests (list): _description_
-        """        
-        pass
-
-
-    def generate_test_report(self) -> str:
-        """_summary_
-
-        Returns:
-            str: _description_
-        """        
-        return 'test results'
