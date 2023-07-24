@@ -193,8 +193,11 @@ class QA_QC_kern:
                 file: запись результата теста для сохранения состояния
         """
         if self.check_input(self.data, "array for first order tests", "test monotony"):
-            series = pd.Series(self.data)
-            result = series.is_monotonic_increasing
+            arr = np.diff(self.data)
+            result = True
+            if len(arr[arr <= 0]):
+                result = False
+
             self.file.write("Test 'monotony': {}\n".format(result))
             return result
 
@@ -1002,4 +1005,3 @@ class QA_QC_kern:
         shutil.copy(self.filename, new_filepath)  # Копирование файла
         os.remove(self.filename)  # Удаление исходного файла
         return new_filepath
-
