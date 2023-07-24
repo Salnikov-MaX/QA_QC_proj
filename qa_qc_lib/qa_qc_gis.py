@@ -679,3 +679,244 @@ class QA_QC_GIS:
             method()
         self.generate_test_result()
         pass
+
+class QA_QC_GIS_first():
+    def __init__(self, filename="file.txt", las_path = '../Данные/qaqc/ГИС/9281PL.las',) -> None:
+        """_summary_
+
+        Args:
+            data (str): _description_
+        """
+        self.filename = filename
+        self.file = open(self.filename, "w")
+
+        self.las = lasio.read(las_path).df()
+        self.data = lasio.read(las_path)
+        self.gis, self.unit = self.gis_preparing(top = self.las.index[0], bottom = self.las.index[-1])
+
+        pass
+
+    def gis_preparing(self, top: float = 0, bottom: float = 3000, mnemonics_path: str ='../Данные/qaqc/Мнемоники.xlsx'):
+        """Функция, используя мнемоники, определяет, какие каротажи есть в .las файле. Обрезает каротажи по отбивкам кровли и подошвы пласта
+
+        Args:
+            top (float): Глубина верхней границы интересующего интервала
+            bottom (float): Глубина нижней границы интересующего интервала
+            mnemonics_path (str, optional): Путь к файлу с мнемониками. Defaults to '../../Данные/qaqc/Мнемоники.xlsx'.
+
+        Returns:
+            dict: Словарь в формате key: Мнемоника каротажа, value: Каротаж.
+        """           
+        data = self.las[(self.las.index > top) & (self.las.index < bottom)]
+        units_list = [i.upper() for i in data]
+        mnemonics = pd.read_excel(mnemonics_path).to_dict(orient='list')
+        gis = {}
+        units = {}
+        for mnemonic in mnemonics.keys():
+            for unit in units_list:
+                if unit in  mnemonics.get(mnemonic):
+                    gis[mnemonic] = np.array(data[unit])
+                    units[mnemonic] = self.data.curves[unit].unit
+
+        gis['depth'] = data.index.to_numpy()
+        units['depth'] = self.data.curves['DEPT'].unit
+
+        return gis, units
+
+    def check_input(self, array, param_name, test_name):
+        """Функция для проверки входных данных для тестов первого порядка
+        Проверяет, что на вход подается не нулевой массив массив, содержащий только int и float
+
+            Args:
+                self.data (array[T]): входной массив для проверки данных
+
+            Returns:
+                bool: результат выполнения теста
+        """
+
+        if not isinstance(array, np.ndarray):
+            self.file.write(f"Тест {test_name} не запускался. Причина {param_name} не является массивом\n")
+            return False
+        if len(array) == 0:
+            self.file.write(f"Тест {test_name} не запускался. Причина {param_name} пустой\n")
+            return False
+        for element in array:
+            if not isinstance(element, (int, float)):
+                self.file.write(
+                    f"Тест {test_name} не запускался. Причина {param_name} содержит данные типа не int/float\n")
+                return False
+        return True
+    
+
+    def test_all(self) -> bool:
+        """Проверка для всех каротажей, кроме SP, DS, MDS, RHOB, DT, PEF, DT, W, БК, ИК"""
+        gis_for_another_test = ['sp', 'ds', 'mds', 'rhob', 'dt', 'pef', 'dt', 'w', 'bk', 'ild']
+        for i in self.gis.keys():
+            result = None
+            if i not in gis_for_another_test and self.check_input(self.gis[i], self.gis[i], 'тест на физичность'):
+                if all(x > 0 or x == -9999 or x == -46425 or x == -999.25 or np.isnan(x)  for x in self.gis[i]):
+                    result = True
+                else:
+                    result = False
+                self.file.write(f"Test for {i}: {result}\n")
+                print(result)
+        return result
+    
+    def test_sp(self) -> bool:
+        if 'sp' in self.gis.keys() and self.check_input(self.gis['sp'], self.gis['sp'], 'тест на физичность параметров'):
+                if self.unit['sp'] == 'mV':
+                    metric = 1
+                    if all(-1500 < x*metric < 1500 or x == -9999 or x == -46425 or np.isnan(x)  for x in self.gis['sp']):
+                        result = True
+                    else:
+                        result = False
+                    self.file.write("Test 'SP': {}\n".format(result))
+                elif self.unit['sp'] == 'V':
+                    metric = 0.001
+                    if all(-1500 < x*metric < 1500 or x == -9999 or x == -46425 or np.isnan(x)  for x in self.gis['sp']):
+                        result = True
+                    else:
+                        result = False
+                    self.file.write("Test 'SP': {}\n".format(result))
+                else:
+                    result = False
+                    self.file.write("Test 'SP': {}\n".format(result) + ', так как единица измерения ' + self.unit['sp'])
+                return result
+    
+    def test_ds(self) -> bool:
+        if 'ds' in self.gis.keys() and self.check_input(self.gis['ds'], self.gis['ds'], 'тест на физичность параметров'):
+            if self.unit['ds'] == 'm' or 'м':
+                if all(0.1 < x < 0.5 or x == -9999 or x == -46425 or x == -999.25 or np.isnan(x) for x in self.gis['ds']):
+                    result = True
+                else:
+                    result = False
+            else:
+                result = False
+            self.file.write("Test 'DS': {}\n".format(result))
+            return result
+    
+    def test_mds(self) -> bool:
+        if 'mds' in self.gis.keys() and self.check_input(self.gis['mds'], self.gis['mds'], 'тест на физичность параметров'):
+            if self.unit['mds'] == 'm' or 'м':
+                if all(0.1 < x < 0.5 or x == -9999 or x == -46425 or x == -999.25 or np.isnan(x) for x in self.gis['mds']):
+                    result = True
+                else:
+                    result = False
+            else:
+                result = False
+            self.file.write("Test 'MDS': {}\n".format(result))
+            return result
+    
+    def test_rhob(self) -> bool:
+        if 'rhob' in self.gis.keys() and self.check_input(self.gis['rhob'], self.gis['rhob'], 'тест на физичность параметров'):
+            if self.unit['rhob'] == 'g/cc' or self.unit['rhob'] == 'g/cm3':
+                if all(1.5 < x < 3.5 or x == -9999 or x == -46425 or x == -999.25 or np.isnan(x) for x in self.gis['rhob']):
+                    result = True
+                else:
+                    result = False
+            else:
+                result = False
+            self.file.write("Test 'RHOB': {}\n".format(result))
+            return result
+    
+    def test_pef(self) -> bool:
+        if 'pef' in self.gis.keys() and self.check_input(self.gis['pef'], self.gis['pef'], 'тест на физичность параметров'):
+            if self.unit['pef'] == 'b/e':
+                if all(0 < x < 10 or x == -9999 or x == -46425 or x == -999.25 or np.isnan(x)for x in self.gis['pef']):
+                    result = True
+                else:
+                    result = False
+            else:
+                result = False
+            self.file.write("Test 'PEF': {}\n".format(result))
+            return result
+    
+    def test_dt(self) -> bool:
+        if 'dt' in self.gis.keys() and self.check_input(self.gis['dt'], self.gis['dt'], 'тест на физичность параметров'):
+            if self.unit['dt'] == 'us/m':
+                if all(100 < x < 800 or x == -9999 or x == -46425 or x == -999.25 or np.isnan(x) for x in self.gis['dt']):
+                    result = True
+                else:
+                    result = False
+            else:
+                result = False
+            self.file.write("Test 'DT': {}\n".format(result))
+            return result
+    
+    def test_W(self) -> bool:
+        if 'w' in self.gis.keys() and self.check_input(self.gis['w'], self.gis['w'], 'тест на физичность параметров'):
+            if self.unit['w'] == 'v/v':
+                if all(-0.15 < x < 1 or x == -9999 or x == -46425 or x == -999.25 or np.isnan(x) for x in self.gis['w']):
+                    result = True
+                else:
+                    result = False
+            else:
+                result = False
+            self.file.write("Test 'W': {}\n".format(result))
+            return result
+    
+    def test_bk(self, metric=1) -> bool:
+        """
+        Args:
+            metric (int): По умолчанию принимается единица измерения Omm, но если в данных она другая, то в гиперпараметре нужно указать множитель, переводящий в Omm 
+            
+        """
+        if 'bk' in self.gis.keys() and self.check_input(self.gis['bk'], self.gis['bk'], 'тест на физичность параметров'):
+            if self.unit['bk'] == 'Omm':
+                if all( x*metric > 0.3 or x == -9999 or x == -46425 or x == -999.25 or np.isnan(x) for x in self.gis['bk']):
+                    result = True
+                else:
+                    result = False
+            else: 
+                result = False
+            self.file.write("Test 'BK': {}\n".format(result))
+            return result
+        
+    def test_ik(self, metric=1) -> bool:
+        """
+        Args:
+            metric (int): По умолчанию принимается единица измерения mS/m, но если в данных она другая, то в гиперпараметре нужно указать множитель, переводящий в mS/m 
+            
+        """
+        if 'ild' in self.gis.keys() and self.check_input(self.gis['ild'], self.gis['ild'], 'тест на физичность параметров'):
+            if self.unit['ild'] == 'ohmm' or self.unit['ild'] == 'ohm.m':
+                if all( x*metric > 0.2 or x == -9999 or x == -46425 or x == -999.25 or np.isnan(x) for x in self.gis['ild']):
+                    result = True
+                else:
+                    result = False
+            else:
+                result = False
+            self.file.write("Test 'ILD': {}\n".format(result))
+            return result
+    
+    def get_list_of_tests(self) -> list:
+        """_summary_
+
+        Returns:
+            list: _description_
+        """
+
+        test_methods = [method for method in dir(self) if
+                        callable(getattr(self, method)) and method.startswith("test")]
+        return test_methods
+
+    def start_tests(self, list_of_tests: list) -> None:
+        """_summary_
+
+        Args:
+            list_of_tests (list): _description_
+        """
+        for method_name in list_of_tests:
+            method = getattr(self, method_name)
+            method()
+        
+        self.generate_test_report()
+        pass
+
+    def generate_test_report(self) -> str:
+        """_summary_
+
+        Returns:
+            str: _description_
+        """
+        self.file.close()
