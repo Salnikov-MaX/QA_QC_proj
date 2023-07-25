@@ -13,16 +13,17 @@ class QA_QC_GIS_second:
         """_summary_
 
         Args:
-            las_path (str): Путь к .las файлу с каротажами
-            bounds (tuple): Отбивки рассматриваемого пласта в формате (top, bottom).
-            poro_open (np.array, optional): Открытая пористость по керну. Defaults to None.
-            perm (np.array, optional): Проницаемость по керну. Defaults to None.
-            poro_eff (np.array, optional): Эффективная пористость по керну. Defaults to None.
-            lithology (np.array, optional): Литологическое описание по керну. Defaults to None.
-            depth (np.array, optional): Глубина отбора керна.
+            las_path (str): Путь к .las файлу с каротажами\n
+            bounds (tuple): Отбивки рассматриваемого пласта в формате (top, bottom).\n
+            poro_open (np.array, optional): Открытая пористость по керну. Defaults to None.\n
+            perm (np.array, optional): Проницаемость по керну. Defaults to None.\n
+            poro_eff (np.array, optional): Эффективная пористость по керну. Defaults to None.\n
+            lithology (np.array, optional): Литологическое описание по керну. Defaults to None.\n
+            depth (np.array, optional): Глубина отбора керна.\n
         """
         self.file = open('test_result.txt', 'w')           
         self.las = lasio.read(las_path).df()
+        self.las_depth_unit = lasio.read(las_path).curves['dept'].unit
         self.gis = self.gis_preparing(top = bounds[0], bottom = bounds[1])
         self.depth = depth
         self.poro_open = poro_open
@@ -32,8 +33,7 @@ class QA_QC_GIS_second:
         self.bounds = bounds
 
     def check_input(self, array, param_name, test_name) -> bool:
-        """Функция для проверки входных данных для тестов первого порядка
-        Проверяет, что на вход подается не нулевой массив массив, содержащий только int и float
+        """Функция для проверки входных данных
 
             Args:
                 self.data (array[T]): входной массив для проверки данных
@@ -59,11 +59,10 @@ class QA_QC_GIS_second:
 
 
     def check_input_lithology(self, array, param_name, test_name) -> bool:
-        """Функция для проверки входных данных для тестов первого порядка
-        Проверяет, что на вход подается не нулевой массив массив, содержащий только int и float
+        """Функция для проверки входных данных
 
             Args:
-                self.data (array[T]): входной массив для проверки данных
+                array (array[T]): входной массив для проверки данных
 
             Returns:
                 bool: результат выполнения теста
@@ -89,10 +88,8 @@ class QA_QC_GIS_second:
         """Функция, используя мнемоники, определяет, какие каротажи есть в .las файле. Обрезает каротажи по отбивкам кровли и подошвы пласта
 
         Args:
-            top (float): Глубина верхней границы интересующего интервала
-            bottom (float): Глубина нижней границы интересующего интервала
-            mnemonics_path (str, optional): Путь к файлу с мнемониками. Defaults to '../../Данные/qaqc/Мнемоники.xlsx'.
-
+            top (float): Глубина верхней границы интересующего интервала\n
+            bottom (float): Глубина нижней границы интересующего интервала\n
         Returns:
             dict: Словарь в формате key: Мнемоника каротажа, value: Каротаж.
         """      
@@ -165,12 +162,12 @@ class QA_QC_GIS_second:
         """Тест проверяет качество увязки литологии по керновым данным и литологии по SP или GR каротажам.
 
         Args:
-            siltmin (float, optional): Левая граница интервала амплитуд ПС и ГК, соответствующая алевролитам,\n . Defaults to 0.4.
-            siltmax (float, optional): Правая граница интервала амплитуд ПС и ГК, соответствующая алевролитам,\n. Defaults to 0.7.
-            sandmin (float, optional): Левая граница интервала амплитуд ПС и ГК, соответствующая песчанику,\n. Defaults to 0.
-            sandmax (float, optional): Правая граница интервала амплитуд ПС и ГК, соответствующая песчанику,\n. Defaults to 0.4.
-            argillitemin (float, optional): Левая граница интервала амплитуд ПС и ГК, соответствующая аргиллиту,\n. Defaults to 0.7.
-            argillitemax (float, optional): Правая граница интервала амплитуд ПС и ГК, соответствующая аргиллиту,\n. Defaults to 1.
+            siltmin (float, optional): Левая граница интервала амплитуд ПС и ГК, соответствующая алевролитам. Defaults to 0.4.\n
+            siltmax (float, optional): Правая граница интервала амплитуд ПС и ГК, соответствующая алевролитам. Defaults to 0.7.\n
+            sandmin (float, optional): Левая граница интервала амплитуд ПС и ГК, соответствующая песчанику. Defaults to 0.\n
+            sandmax (float, optional): Правая граница интервала амплитуд ПС и ГК, соответствующая песчанику. Defaults to 0.4.\n
+            argillitemin (float, optional): Левая граница интервала амплитуд ПС и ГК, соответствующая аргиллиту. Defaults to 0.7.\n
+            argillitemax (float, optional): Правая граница интервала амплитуд ПС и ГК, соответствующая аргиллиту. Defaults to 1.\n
             distance (float, optional): Для нормализации значений каротажа необходимо взять значения выше и ниже рассматриваемого пласта, данный атрибут показывает, на сколько выше и ниже. Defaults to 50.
         """      
         if ('sp' or 'gr' in self.gis.keys()) and self.check_input_lithology(self.lithology, 'Литология по керну', 'Увязка керн и ГИС по литологии') and self.check_input(self.depth, 'Глубина отбора керна', 'Увязка керн и ГИС по литологии'):
@@ -223,21 +220,21 @@ class QA_QC_GIS_second:
             """Функция визуализирует результаты теста увязки литологии по керну и по ГИС. Отображает каротаж ГИС и отмечает на нем точки, в которых литология не увязана. Также отображает литологию по керну. Атрибуты функции указывать не нужно
 
             Args:
-                grforplot (list): 
-                prozr (list): _description_
-                kern_lithology (list): _description_
-                count (int): _description_
-                count1 (int): _description_
+                grforplot (list): \n
+                prozr (list): _description_\n
+                kern_lithology (list): _description_\n
+                count (int): _description_\n
+                count1 (int): _description_\n
             """          
             print('Тестирование качества увязки литологии по ГИС и литологии по керну')
             print('')
             print('Процент совпавших литотипов по ГИС и по керну равен ', str(count/count1*100), '%')
-            self.file.write('Тестирование качества увязки литологии по ГИС и литологии по керну.\n Процент совпавших литотипов по ГИС и по керну равен ' + str(count/count1*100) + ' %.\n')
-            print('Оранжевыми точками отмечены глубины, в которых литология не увязана. В литологии по керну 1 - песчаник, 2 - алевролит, 3 - аргиллит')
+            self.file.write('Тестирование качества увязки литологии по ГИС и литологии по керну.\nПроцент совпавших литотипов по ГИС и по керну равен ' + str(count/count1*100) + ' %.\n')
+            print('Оранжевыми точками отмечены глубины, в которых литология не увязана. В литологии по керну: песчаник - ф, алевролит - з, аргиллит/глина - ж')
 
             
             plt.figure(figsize=(4,10))
-            plt.subplot(1,3,1)
+            plt.subplot(1,2,1)
 
             if 'sp' in self.gis.keys():
                 plt.title('SP')
@@ -249,13 +246,8 @@ class QA_QC_GIS_second:
             plt.ylim(0,501)
             plt.xticks([])
             plt.yticks([])
-            plt.subplot(1,3,2)
+            plt.subplot(1,2,2)
             plt.title('Литология по керну')
-            plt.ylim(0,501)
-            plt.xticks([])
-            plt.yticks([])
-            plt.plot(kern_lithology, np.linspace(len(kern_lithology)-1, 0, len(kern_lithology)))
-            plt.subplot(1,3,3)
             plt.xticks([])
             plt.yticks([])
             plt.imshow(np.array(kern_lithology).reshape(-1, 1),  aspect='auto')
@@ -308,7 +300,7 @@ class QA_QC_GIS_second:
             Функция представляет собой петрофизическую модель пористости вида poro = poro_koeff1*rhob + poro_koeff2
         Args:
             poro_koeff1 (float): Множитель перед RHOB,\n
-            poro_koeff2 (float): Свободный член уравнения.
+            poro_koeff2 (float): Свободный член уравнения.\n
         Returns:
             float: значение РИГИС пористости
         """
@@ -330,7 +322,7 @@ class QA_QC_GIS_second:
             Функция представляет собой петрофизическую модель проницаемости вида perm = perm_koeff1*poroeff + perm_koeff2
         Args:
             perm_koeff1 (float): Множитель перед poroeff,\n
-            perm_koeff2 (float): Свободный член уравнения.
+            perm_koeff2 (float): Свободный член уравнения.\n
         Returns:
             float: значение РИГИС проницаемости
         """
@@ -341,7 +333,7 @@ class QA_QC_GIS_second:
             Функция строит аппроксимацию для кроссплота с выбранными данными по осям X, Y
         Args:
             prop1 (list): Данные по оси X,\n
-            prop2 (list): Данные по оси Y.
+            prop2 (list): Данные по оси Y.\n
         """
         k, b, r, p, se = stats.linregress(prop1, prop2)
         return k, b, r
@@ -387,12 +379,12 @@ class QA_QC_GIS_second:
         """ Функция визуализирует результаты теста на увязку пористости, эффективной пористости и проницаемости по керну и по ГИС.
 
         Args:
-            kern_poro (_type_): _description_
-            rigis_poro (_type_): _description_
-            kern_poroeff (_type_): _description_
-            rigis_poroeff (_type_): _description_
-            kern_perm (_type_): _description_
-            rigis_perm (_type_): _description_
+            kern_poro (_type_): _description_\n
+            rigis_poro (_type_): _description_\n
+            kern_poroeff (_type_): _description_\n
+            rigis_poroeff (_type_): _description_\n
+            kern_perm (_type_): _description_\n
+            rigis_perm (_type_): _description_\n
         """
         print('')
         print('Тестирование качества увязки открытой пористости, эффективной пористости и проницаемости по керну с этими же свойствами по РИГИС')
@@ -403,8 +395,8 @@ class QA_QC_GIS_second:
             k_poro, b_poro, r_poro = self.trendline(rigis_poro, kern_poro)
             plt.scatter(rigis_poro, kern_poro)
             plt.plot([0, sorted(rigis_poro)[-1]], [b_poro, k_poro*list(sorted(rigis_poro))[-1]+b_poro], c='orange')
-            plt.xlabel('Пористость по керну')
-            plt.ylabel('РИГИС пористости')
+            plt.xlabel('Пористость по керну, %')
+            plt.ylabel('РИГИС пористости, %')
             plt.title('Коэффициент k = ' + str(k_poro) + ', коэффициент R^2 = ' + str(r_poro))
             plt.show()
             self.file.write('Пористость: Коэффициент k = ' + str(k_poro) + ', коэффициент R^2 = ' + str(r_poro) + '\n')
@@ -417,8 +409,8 @@ class QA_QC_GIS_second:
             k_poroeff, b_poroeff, r_poroeff = self.trendline(rigis_poroeff, kern_poroeff)
             plt.scatter(rigis_poroeff, kern_poroeff)
             plt.plot([0, sorted(rigis_poroeff)[-1]], [b_poroeff, k_poroeff*sorted(rigis_poroeff)[-1]+b_poroeff], c='orange')
-            plt.xlabel('РИГИС эффективной пористости')
-            plt.ylabel('Эффективная пористость по керну')
+            plt.xlabel('РИГИС эффективной пористости, %')
+            plt.ylabel('Эффективная пористость по керну, %')
             plt.title('Коэффициент k = ', str(k_poroeff), ', коэффициент R^2 = ', str(r_poroeff))
             plt.show()
             self.file.write('Эффективная пористость: Коэффициент k = ' + str(k_poro) + ', коэффициент R^2 = ' + str(r_poro) + '\n')
@@ -434,8 +426,8 @@ class QA_QC_GIS_second:
             k_perm, b_perm, r_perm = self.trendline(rigis_perm, kern_perm)
             plt.scatter(rigis_perm, kern_perm)
             plt.plot([0, sorted(rigis_perm)[-1]], [b_perm, k_perm*sorted(rigis_perm)[-1]+b_perm], c='orange')
-            plt.xlabel('РИГИС проницаемости')
-            plt.ylabel('Проницаемость по керну')
+            plt.xlabel('РИГИС проницаемости, мД')
+            plt.ylabel('Проницаемость по керну, мД')
             plt.title('Коэффициент k = ' + str(k_perm) + ', коэффициент R^2 = ' + str(r_perm))
             plt.show()
             self.file.write('Проницаемость: Коэффициент k = ' + str(k_perm) + ', коэффициент R^2 = ' + str(r_perm) + '\n')
@@ -478,9 +470,9 @@ class QA_QC_GIS_second:
         """Интерполяция пропущенного интервала ГИС
 
         Args:
-            start (_type_): _description_
-            stop (_type_): _description_
-            i (_type_): _description_
+            start (_type_): _description_\n
+            stop (_type_): _description_\n
+            i (_type_): _description_\n
 
         Returns:
             _type_: _description_
@@ -552,16 +544,16 @@ class QA_QC_GIS_second:
         """Тест направлен на проверку качества увязки моделей водонасыщенности по J функции, по Арчи и по ОФП между собой.
 
         Args:
-            Archi_model (function, optional): Модель водонасыщенности Арчи. Defaults to None.
-            J_model (function, optional): Уравнение аппроксимации кроссплота, где x-J, y-Sw. Defaults to None.
-            gis_type1 (str, optional): Мнемоника каротажа ГИС, который используется в модели Арчи. Defaults to 'ild'.
-            Pc (float, optional): Капиллярное давление. Defaults to None.
-            sigma (float, optional): sigma. Defaults to None.
-            tetta (float, optional): Угол смачивания. Defaults to None.
-            poro_model (function, optional): Модель пористости. Defaults to None.
-            poroeff_model (function, optional): Модель эффективной пористости. Defaults to None.
-            perm_model (function, optional): Модель проницаемости. Defaults to None.
-            gis_type (str, optional): Мнемоника каротажа ГИС, по которому считается пористость. Defaults to 'rhob'.
+            Archi_model (function, optional): Модель водонасыщенности Арчи. Defaults to None.\n
+            J_model (function, optional): Уравнение аппроксимации кроссплота, где x-J, y-Sw. Defaults to None.\n
+            gis_type1 (str, optional): Мнемоника каротажа ГИС, который используется в модели Арчи. Defaults to 'ild'.\n
+            Pc (float, optional): Капиллярное давление. Defaults to None.\n
+            sigma (float, optional): sigma. Defaults to None.\n
+            tetta (float, optional): Угол смачивания. Defaults to None.\n
+            poro_model (function, optional): Модель пористости. Defaults to None.\n
+            poroeff_model (function, optional): Модель эффективной пористости. Defaults to None.\n
+            perm_model (function, optional): Модель проницаемости. Defaults to None.\n
+            gis_type (str, optional): Мнемоника каротажа ГИС, по которому считается пористость. Defaults to 'rhob'.\n
         """        
         if Pc and sigma and tetta:
 
@@ -591,8 +583,8 @@ class QA_QC_GIS_second:
                 plt.scatter(Archi, J_func)
                 k, b, r = self.trendline(Archi, J_func)
                 plt.plot([0, sorted(Archi)[-1]], [b, k*list(sorted(Archi))[-1]+b], c='orange')
-                plt.xlabel('Пористость по керну')
-                plt.ylabel('РИГИС пористости')
+                plt.xlabel('Пористость по керну, %')
+                plt.ylabel('Водонасыщенность, д.е.')
                 plt.title('Коэффициент k = ' + str(k) + ', коэффициент R^2 = ' + str(r))
                 plt.show()
                 
@@ -606,8 +598,8 @@ class QA_QC_GIS_second:
             """ Результат тестирования качества увязки моделей водонасыщенности.
 
             Args:
-                Archi (_type_): _description_
-                J_func (_type_): _description_
+                Archi (_type_): _description_\n
+                J_func (_type_): _description_\n
             """            
             print('')
             print('Тестирование качества увязки моделей водонасыщенность')
@@ -631,8 +623,8 @@ class QA_QC_GIS_second:
         """_summary_
 
         Args:
-            ild (_type_): _description_
-            poro (_type_): _description_
+            ild (_type_): _description_\n
+            poro (_type_): _description_\n
 
         Returns:
             _type_: _description_
@@ -649,6 +641,27 @@ class QA_QC_GIS_second:
             _type_: _description_
         """        
         return 1*J-1
+    
+
+    def test_units(self, depth_unit: str= 'м'):
+        """ Тест направлен на проверку соответствия единиц измерения глубины по ГИС и по керну
+
+        Args:
+            depth_unit (str): Единица измерения глубины по керну.
+        """
+        if depth_unit:
+            if (self.las_depth_unit == 'м' or 'm') and (depth_unit == 'm' or 'м'):
+                self.file.write('В ГИС и в керне глубина измеряется в метрах')
+                print('В ГИС и в керне глубина измеряется в метрах')
+            elif (self.las_depth_unit == 'фут' or 'ft') and (depth_unit == 'фут' or 'ft'):
+                self.file.write('В ГИС и в керне глубина измеряется в футах')
+                print('В ГИС и в керне глубина измеряется в футах')
+            elif self.las_depth_unit == depth_unit:
+                self.file.write('В ГИС и в керне глубина измеряется в ' + depth_unit)
+                print('В ГИС и в керне глубина измеряется в ' + depth_unit)
+            else:
+                self.file.write('В ГИС глубина измеряется в ' + self.las_depth_unit + ', в керне глубина измеряется в ' + depth_unit)
+                print('В ГИС глубина измеряется в ' + self.las_depth_unit + ', в керне глубина измеряется в ' + depth_unit)
 
     def get_list_of_tests(self) -> list:
         """Функция выводит список доступных тестов.
@@ -698,9 +711,8 @@ class QA_QC_GIS_first():
         """Функция, используя мнемоники, определяет, какие каротажи есть в .las файле. Обрезает каротажи по отбивкам кровли и подошвы пласта
 
         Args:
-            top (float): Глубина верхней границы интересующего интервала
-            bottom (float): Глубина нижней границы интересующего интервала
-            mnemonics_path (str, optional): Путь к файлу с мнемониками. Defaults to '../../Данные/qaqc/Мнемоники.xlsx'.
+            top (float): Глубина верхней границы интересующего интервала\n
+            bottom (float): Глубина нижней границы интересующего интервала\n
 
         Returns:
             dict: Словарь в формате key: Мнемоника каротажа, value: Каротаж.
@@ -745,7 +757,6 @@ class QA_QC_GIS_first():
 
     def check_input(self, array, param_name, test_name) -> bool:
         """Функция для проверки входных данных для тестов первого порядка
-        Проверяет, что на вход подается не нулевой массив массив, содержащий только int и float
 
             Args:
                 self.data (array[T]): входной массив для проверки данных
