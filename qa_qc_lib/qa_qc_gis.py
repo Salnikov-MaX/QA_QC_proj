@@ -1,11 +1,11 @@
 import numpy as np
-
 import lasio
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import scipy.stats as stats
+
 
 
 class QA_QC_GIS_second:
@@ -162,7 +162,7 @@ class QA_QC_GIS_second:
 
         return np.array(kern_lithology)
     
-    def test_lithology(self, siltmin: float = 0.4, siltmax: float = 0.7, sandmin: float = 0, sandmax: float = 0.4, argillitemin: float = 0.7, argillitemax: float = 1, distance: float=50) -> None:
+    def test_lithology(self, siltmin: float = 0.4, siltmax: float = 0.7, sandmin: float = 0, sandmax: float = 0.4, argillitemin: float = 0.7, argillitemax: float = 1, distance: float=50, minimum=None, maximum=None) -> None:
         """Тест проверяет качество увязки литологии по керновым данным и литологии по SP или GR каротажам.
 
         Args:
@@ -178,15 +178,22 @@ class QA_QC_GIS_second:
              
             kern_lithology = self.kernpreproc()
             gis_lithology = self.gis_preparing(top=self.bounds[0]-distance, bottom=self.bounds[1]+distance)
-            scaler = MinMaxScaler()
 
             if 'sp' in self.gis.keys():
-                log_for_lithology = scaler.fit_transform(gis_lithology['sp'].reshape(-1,1))
+                if not minimum:
+                    minimum = min(gis_lithology['sp'])
+                if not maximum:
+                    maximum = max(gis_lithology['sp'])
+                log_for_lithology = np.array([(x-minimum)/(maximum-minimum) for x in gis_lithology['sp']])
             elif 'gr' in self.gis.keys(): 
-                log_for_lithology = scaler.fit_transform(gis_lithology['gr'].reshape(-1,1))
+                if not minimum:
+                    minimum = min(gis_lithology['gr'])
+                if not maximum:
+                    maximum = max(gis_lithology['gr'])
+                log_for_lithology = np.array([(x-minimum)/(maximum-minimum) for x in gis_lithology['gr']])
             
             depth_gis = gis_lithology['depth']
-            litho = []
+            lithology_rigis = []
             count_matches = 0
             count = 0
             grforplot = []
@@ -199,28 +206,34 @@ class QA_QC_GIS_second:
                             count = count + 1
                             if sandmin <= log_for_lithology[index] < sandmax and kern_lithology[i] == 1:
                                 count_matches = count_matches + 1
-                                litho.append(1)
                                 grforplot.append(log_for_lithology[index])
                                 transparency.append(0.001)
                             elif siltmin < log_for_lithology[index] < siltmax and kern_lithology[i] == 2:
                                 count_matches = count_matches + 1
-                                litho.append(2)
                                 grforplot.append(log_for_lithology[index])
                                 transparency.append(0.001)
                             elif argillitemin < log_for_lithology[index] <= argillitemax and kern_lithology[i] == 3:
                                 count_matches = count_matches + 1
-                                litho.append(3)
                                 grforplot.append(log_for_lithology[index])
                                 transparency.append(0.001)
                             else:
-                                litho.append(0)
                                 grforplot.append(log_for_lithology[index])
                                 transparency.append(1)
+
+                            if sandmin <= log_for_lithology[index] < sandmax:
+                                lithology_rigis.append(1)
+                            elif siltmin < log_for_lithology[index] < siltmax:
+                                lithology_rigis.append(2)
+                            elif argillitemin < log_for_lithology[index] <= argillitemax:
+                                lithology_rigis.append(3)
+                            else:
+                                lithology_rigis.append(0)
+                            
             
-            self.lithology_test_visualization(grforplot, transparency, kern_lithology, count_matches, count)
+            self.lithology_test_visualization(grforplot, transparency, kern_lithology, lithology_rigis, count_matches, count)
     
     
-    def lithology_test_visualization(self, grforplot: list, prozr: list, kern_lithology: list, count: int, count1: int):
+    def lithology_test_visualization(self, grforplot: list, prozr: list, kern_lithology: list, litho: list, count: int, count1: int):
             """Функция визуализирует результаты теста увязки литологии по керну и по ГИС. Отображает каротаж ГИС и отмечает на нем точки, в которых литология не увязана. Также отображает литологию по керну. Атрибуты функции указывать не нужно
 
             Args:
@@ -233,12 +246,12 @@ class QA_QC_GIS_second:
             print('Тестирование качества увязки литологии по ГИС и литологии по керну')
             print('')
             print('Процент совпавших литотипов по ГИС и по керну равен ', str(count/count1*100), '%')
-            self.file.write('Тестирование качества увязки литологии по ГИС и литологии по керну.\nПроцент совпавших литотипов по ГИС и по керну равен ' + str(count/count1*100) + ' %.\n')
+            self.file.write('1. Тестирование качества увязки литологии по ГИС и литологии по керну.\nПроцент совпавших литотипов по ГИС и по керну равен ' + str(count/count1*100) + ' %.\n')
             print('Оранжевыми точками отмечены глубины, в которых литология не увязана. В литологии по керну: песчаник - ф, алевролит - з, аргиллит/глина - ж')
 
             
-            plt.figure(figsize=(4,10))
-            plt.subplot(1,2,1)
+            plt.figure(figsize=(6,10))
+            plt.subplot(1,3,1)
 
             if 'sp' in self.gis.keys():
                 plt.title('SP')
@@ -250,11 +263,16 @@ class QA_QC_GIS_second:
             plt.ylim(0,501)
             plt.xticks([])
             plt.yticks([])
-            plt.subplot(1,2,2)
+            plt.subplot(1,3,2)
             plt.title('Литология по керну')
             plt.xticks([])
             plt.yticks([])
             plt.imshow(np.array(kern_lithology).reshape(-1, 1),  aspect='auto')
+            plt.subplot(1,3,3)
+            plt.title('Литология по РИГИС')
+            plt.xticks([])
+            plt.yticks([])
+            plt.imshow(np.array(litho).reshape(-1, 1),  aspect='auto')
             plt.show()
 
     def properties(self, poro_model = None, poroeff_model = None, perm_model = None, gis_type = 'rhob' ) -> pd.core.frame.DataFrame:
@@ -372,8 +390,8 @@ class QA_QC_GIS_second:
 
                 for i in range(len(self.perm)):
                     if self.perm[i] > 0 and round(self.depth[i], 2) in list(rigis['depth']):
-                        rigis_perm.append(float(rigis.loc[np.where(rigis['depth'] == round(self.depth[i], 2))[0][0]]['perm']))
-                        kern_perm.append(self.perm[i])
+                        rigis_perm.append(np.log10(float(rigis.loc[np.where(rigis['depth'] == round(self.depth[i], 2))[0][0]]['perm'])))
+                        kern_perm.append(np.log10(self.perm[i]))
                 
             self.properties_visualization(kern_poro, rigis_poro, kern_poroeff, rigis_poroeff, kern_perm, rigis_perm)
             
@@ -393,17 +411,23 @@ class QA_QC_GIS_second:
         print('')
         print('Тестирование качества увязки открытой пористости, эффективной пористости и проницаемости по керну с этими же свойствами по РИГИС')
         print('')
-        self.file.write('Тестирование качества увязки открытой пористости, эффективной пористости и проницаемости по керну с этими же свойствами по РИГИС.\n')
+        self.file.write('3. Тестирование качества увязки открытой пористости, эффективной пористости и проницаемости по керну с этими же свойствами по РИГИС.\n')
 
         if list(kern_poro):
             k_poro, b_poro, r_poro = self.trendline(rigis_poro, kern_poro)
             plt.scatter(rigis_poro, kern_poro)
             plt.plot([0, sorted(rigis_poro)[-1]], [b_poro, k_poro*list(sorted(rigis_poro))[-1]+b_poro], c='orange')
+            if max(rigis_poro) > max(kern_poro):
+                plt.xlim(0, max(rigis_poro))
+                plt.ylim(0, max(rigis_poro))
+            else:
+                plt.xlim(0, max(kern_poro))
+                plt.ylim(0, max(kern_poro))
             plt.xlabel('Пористость по керну, %')
             plt.ylabel('РИГИС пористости, %')
-            plt.title('Коэффициент k = ' + str(k_poro) + ', коэффициент R^2 = ' + str(r_poro))
+            plt.title('Коэффициент k = ' + str(round(k_poro, 3)) + ', коэффициент R^2 = ' + str(round(r_poro, 3)))
             plt.show()
-            self.file.write('Пористость: Коэффициент k = ' + str(k_poro) + ', коэффициент R^2 = ' + str(r_poro) + '\n')
+            self.file.write('Пористость: Коэффициент k = ' + str(round(k_poro, 3)) + ', коэффициент R^2 = ' + str(round(r_poro, 3)) + '\n')
 
         else:
             print('В файле с керном нет данных по пористости')
@@ -413,11 +437,17 @@ class QA_QC_GIS_second:
             k_poroeff, b_poroeff, r_poroeff = self.trendline(rigis_poroeff, kern_poroeff)
             plt.scatter(rigis_poroeff, kern_poroeff)
             plt.plot([0, sorted(rigis_poroeff)[-1]], [b_poroeff, k_poroeff*sorted(rigis_poroeff)[-1]+b_poroeff], c='orange')
+            if max(rigis_poroeff) > max(kern_poroeff):
+                plt.xlim(0, max(rigis_poroeff))
+                plt.ylim(0, max(rigis_poroeff))
+            else:
+                plt.xlim(0, max(kern_poroeff))
+                plt.ylim(0, max(kern_poroeff))
             plt.xlabel('РИГИС эффективной пористости, %')
             plt.ylabel('Эффективная пористость по керну, %')
-            plt.title('Коэффициент k = ', str(k_poroeff), ', коэффициент R^2 = ', str(r_poroeff))
+            plt.title('Коэффициент k = ', str(round(k_poroeff, 3)), ', коэффициент R^2 = ', str(round(r_poroeff, 3)))
             plt.show()
-            self.file.write('Эффективная пористость: Коэффициент k = ' + str(k_poro) + ', коэффициент R^2 = ' + str(r_poro) + '\n')
+            self.file.write('Эффективная пористость: Коэффициент k = ' + str(round(k_poro, 3)) + ', коэффициент R^2 = ' + str(round(r_poro, 3)) + '\n')
 
         else:
             print('')
@@ -430,11 +460,17 @@ class QA_QC_GIS_second:
             k_perm, b_perm, r_perm = self.trendline(rigis_perm, kern_perm)
             plt.scatter(rigis_perm, kern_perm)
             plt.plot([0, sorted(rigis_perm)[-1]], [b_perm, k_perm*sorted(rigis_perm)[-1]+b_perm], c='orange')
+            if max(rigis_perm) > max(kern_perm):
+                plt.xlim(0, max(rigis_perm))
+                plt.ylim(0, max(rigis_perm))
+            else:
+                plt.xlim(0, max(kern_perm))
+                plt.ylim(0, max(kern_perm))
             plt.xlabel('РИГИС проницаемости, мД')
             plt.ylabel('Проницаемость по керну, мД')
-            plt.title('Коэффициент k = ' + str(k_perm) + ', коэффициент R^2 = ' + str(r_perm))
+            plt.title('Коэффициент k = ' + str(round(k_perm, 3)) + ', коэффициент R^2 = ' + str(round(r_perm, 3)))
             plt.show()
-            self.file.write('Проницаемость: Коэффициент k = ' + str(k_perm) + ', коэффициент R^2 = ' + str(r_perm) + '\n')
+            self.file.write('Проницаемость: Коэффициент k = ' + str(round(k_perm, 3)) + ', коэффициент R^2 = ' + str(round(r_perm, 3)) + '\n')
             
         else:
             print('В файле с керном нет таких глубин, на которых были бы данные по открытой пористости и по проницаемости')
@@ -519,13 +555,13 @@ class QA_QC_GIS_second:
                 self.gis[i] = gis
         
             print('Перекрытие интервалов есть в каротажах: ')
-            self.file.write('Перекрытие интервалов есть в каротажах: \n')
+            self.file.write('4. Перекрытие интервалов есть в каротажах: \n')
             for keys, values in repeat.items():
                 print(keys, values)
                 self.file.write(keys, values)
         else:
             print('Перекрытия интервалов в данных нет')
-            self.file.write('Перекрытия интервалов в данных нет\n')
+            self.file.write('4. Перекрытия интервалов в данных нет\n')
         
 
     def test_max_value_gis(self) -> None:
@@ -538,10 +574,10 @@ class QA_QC_GIS_second:
         print('')
         if depth[-1] <= self.bounds[1]:
             print('Максимальная глубина по отбивке ' + str(self.bounds[1]) + ', максимальная глубина по ГИС ' + str(depth[-1]) + str('. Тест не пройден'))
-            self.file.write('Тестирование на сходство максимальных отметок глубин по отбивкам и по ГИС.\nМаксимальная глубина по отбивке ' + str(self.bounds[1]) + ', максимальная глубина по ГИС ' + str(depth[-1]) + str('. Тест не пройден\n'))
+            self.file.write('2. Тестирование на сходство максимальных отметок глубин по отбивкам и по ГИС.\nМаксимальная глубина по отбивке ' + str(self.bounds[1]) + ', максимальная глубина по ГИС ' + str(depth[-1]) + str('. Тест не пройден\n'))
         else:
             print('Максимальная глубина по отбивке ' + str(self.bounds[1]) + ', максимальная глубина по ГИС ' + str(depth[-1]) + str('. Тест пройден'))
-            self.file.write('Тестирование на сходство максимальных отметок глубин по отбивкам и по ГИС. \nМаксимальная глубина по отбивке ' + str(self.bounds[1]) + ', максимальная глубина по ГИС ' + str(depth[-1]) + str('. Тест пройден\n'))
+            self.file.write('2. Тестирование на сходство максимальных отметок глубин по отбивкам и по ГИС. \nМаксимальная глубина по отбивке ' + str(self.bounds[1]) + ', максимальная глубина по ГИС ' + str(depth[-1]) + str('. Тест пройден\n'))
             
 
     def test_saturation(self, Archi_model= None, J_model = None, gis_type1: str = 'ild', Pc: float= None, sigma: float= None, tetta: float= None, poro_model = None, poroeff_model = None, perm_model = None, gis_type: str= 'rhob'):
