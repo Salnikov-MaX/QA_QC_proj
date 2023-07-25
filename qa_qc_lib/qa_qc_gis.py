@@ -381,7 +381,7 @@ class QA_QC_GIS_second:
                 
             self.properties_visualization(kern_poro, rigis_poro, kern_poroeff, rigis_poroeff, kern_perm, rigis_perm)
             
-            pass
+            
 
     def properties_visualization(self, kern_poro: list, rigis_poro: list, kern_poroeff: list, rigis_poroeff: list, kern_perm: list, rigis_perm: list) -> None :
         """ Функция визуализирует результаты теста на увязку пористости, эффективной пористости и проницаемости по керну и по ГИС.
@@ -446,7 +446,7 @@ class QA_QC_GIS_second:
         
         
 
-        pass
+        
     
     def test_skipped_gis(self, delta: float=0.5) -> None:
         """Тест направлен на поиск пропусков в записи ГИС, и, в случае интервала пропусков меньше delta м, их заполнения интерполяцией.
@@ -472,7 +472,7 @@ class QA_QC_GIS_second:
             elif list(split_indices):
                 print('В каротаже ' + gis + ' пропуски больше 0.5м. \n') 
                 self.file.write('В каротаже ' + gis + ' пропуски больше 0.5м. \n') 
-        pass
+        
     
     def interpolation_gis(self, start: int, stop: int, i: str) -> np.ndarray:
         """Интерполяция пропущенного интервала ГИС
@@ -530,7 +530,7 @@ class QA_QC_GIS_second:
         else:
             print('Перекрытия интервалов в данных нет')
             self.file.write('Перекрытия интервалов в данных нет\n')
-        pass
+        
 
     def test_max_value_gis(self) -> None:
         """
@@ -600,7 +600,7 @@ class QA_QC_GIS_second:
                 print('В файле с керном нет данных по пористости')
 
             self.saturation_report(np.array(Archi), np.array(J_func))
-            pass
+            
 
     def saturation_report(self, Archi: np.ndarray, J_func: np.ndarray) -> None:
             """ Результат тестирования качества увязки моделей водонасыщенности.
@@ -625,7 +625,7 @@ class QA_QC_GIS_second:
             else:
                 print('В файле с керном нет данных по пористости')
             
-            pass
+            
 
     def Archi_model(self, ild: float, poro: float) -> float:
         """_summary_
@@ -663,22 +663,20 @@ class QA_QC_GIS_second:
     
     def generate_test_result(self):
         self.file.close()
-        pass
+        
 
     
-    def start_tests(self, list_of_tests: list = None) -> None:
+    def start_tests(self, list_of_tests: list) -> None:
         """Функция запускает заданные тесты
 
         Args:
             list_of_tests (list): Список тестов, которые необходимо запустить.
         """
-        if not list_of_tests:
-            list_of_tests = self.get_list_of_tests()
         for method_name in list_of_tests:
             method = getattr(self, method_name)
             method()
-        self.generate_test_result()
-        pass
+
+        
 
 class QA_QC_GIS_first():
     def __init__(self, filename="file.txt", las_path = '../Данные/qaqc/ГИС/9281PL.las',) -> None:
@@ -694,7 +692,7 @@ class QA_QC_GIS_first():
         self.data = lasio.read(las_path)
         self.gis, self.unit = self.gis_preparing(top = self.las.index[0], bottom = self.las.index[-1])
 
-        pass
+        
 
     def gis_preparing(self, top: float = 0, bottom: float = 3000) -> dict:
         """Функция, используя мнемоники, определяет, какие каротажи есть в .las файле. Обрезает каротажи по отбивкам кровли и подошвы пласта
@@ -932,8 +930,7 @@ class QA_QC_GIS_first():
             method = getattr(self, method_name)
             method()
         
-        self.generate_test_report()
-        pass
+        
 
     def generate_test_report(self) -> str:
         """_summary_
