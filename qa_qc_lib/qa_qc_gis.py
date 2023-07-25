@@ -9,7 +9,7 @@ import scipy.stats as stats
 
 
 class QA_QC_GIS_second:
-    def __init__(self, las_path: str, bounds: tuple, poro_open: np.ndarray=None, perm: np.ndarray=None, poro_eff: np.ndarray=None, lithology: np.ndarray=None, depth: np.ndarray=None) -> None:
+    def __init__(self, las_path: str, bounds: tuple, poro_open: np.ndarray=None, perm: np.ndarray=None, poro_eff: np.ndarray=None, lithology: np.ndarray=None, depth: np.ndarray=None, **mnemonics_add) -> None:
         """_summary_
 
         Args:
@@ -22,8 +22,10 @@ class QA_QC_GIS_second:
             depth (np.array, optional): Глубина отбора керна.\n
         """
         self.file = open('test_result.txt', 'w')           
-        self.las = lasio.read(las_path).df()
-        self.las_depth_unit = lasio.read(las_path).curves['dept'].unit
+        self.las = lasio.read(las_path)
+        self.las_depth_unit = self.las.curves['dept'].unit
+        self.las = self.las.df()
+        self.mnemonics_add = mnemonics_add
         self.gis = self.gis_preparing(top = bounds[0], bottom = bounds[1])
         self.depth = depth
         self.poro_open = poro_open
@@ -114,7 +116,9 @@ class QA_QC_GIS_second:
                     'nktd': ['NKTD', 'CFTC', 'NKT', 'NKTB', 'NKT_1', 'NKTB2'],
                     'nkts': ['NKTS', 'CNTC', 'NKTM', 'NKT_2'],
                     'w': ['NPHI','W','TNPH','NPLS','NPSS','TNPD','TNPL','TNPS','TNPH','TNPH_DOL','TNPH_LIM','TNPH_SAN'],
-                    'depth': ['DEPT']}     
+                    'depth': ['DEPT']}  
+        for i in self.mnemonics_add.keys():
+            mnemonics[i].append(self.mnemonics_add[i])   
         data = self.las[(self.las.index > top) & (self.las.index < bottom)]
         units_list = [i.upper() for i in data]
         gis = {}
