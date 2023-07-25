@@ -1,4 +1,0 @@
-Test for gr: True
-Test for depth: True
-Test 'ILD': True
-Test 'RHOB': True
