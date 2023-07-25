@@ -1,33 +1,32 @@
 import os
 import shutil
+import datetime
+from typing import Any
+from accessify import private
 import numpy as np
 from numpy import int32, float64, int64, float32
 from scipy.stats import t
 from sklearn.metrics import r2_score
 from matplotlib import pyplot as plt
-import pandas as pd
 
 
 class QA_QC_kern:
-    def __init__(self, pas=None, first_array_for_dependency_testing=None, second_array_for_dependency_testing=None,
-                 minple_array=None, kp_array_for_minple=None, obplnas_array=None, kp_array_for_obplnas=None, note=None,
+    def __init__(self, pas=None, note=None,
                  array_for_first_order_tests=None, kno=None, kp_din=None, kp_plast=None, kp_ef=None, density=None,
                  kv=None, kp_pov=None,
                  perpendicular=None, perpendicular_density=None, kp=None, roof=None, takeout=None,
                  parallel_carbonate=None, perpendicular_carbonate=None, perpendicular_porosity=None,
                  kpp=None, intervals=None, sole=None, percentage=None, outreach_in_meters=None, sampling_depth=None,
                  kvo=None, core_sampling=None, kpr=None, parallel_density=None, parallel_porosity=None, parallel=None,
-                 rp=None, pmu=None, rn=None,
-                 file_name="test_report.txt", file_path="D:\\") -> None:
+                 rp=None, pmu=None, rn=None, obplnas=None, minple=None,
+                 file_report_name="test_report.txt", file_path="D:\\", file_name="не указан", r2=0.7) -> None:
         """_summary_
 
         Args:
             data (str): _description_
         """
-        self.x1 = minple_array
-        self.x2 = obplnas_array
-        self.y1 = kp_array_for_minple
-        self.y2 = kp_array_for_obplnas
+        self.obplnas = obplnas
+        self.minple = minple
         self.kno = kno
         self.pas = pas
         self.kp_din = kp_din
@@ -60,20 +59,18 @@ class QA_QC_kern:
         self.perpendicular_density = perpendicular_density
         self.data = array_for_first_order_tests
         self.perpendicular = perpendicular
-        self.filename = file_name
+        self.file_report_name = file_report_name
         self.file_path = file_path
         self.table = note
-        self.y = second_array_for_dependency_testing
-        self.x = first_array_for_dependency_testing
-        self.file = open(self.filename, "w")
+        self.file_name = file_name
+        self.r2 = r2
+        self.dt_now = datetime.datetime.now()
+        self.file = open(self.file_report_name, "w")
 
     def __del__(self):
         self.file.close()
 
-    """
-    Тесты первого порядка 
-    """
-
+    @private
     def check_input(self, array, param_name, test_name):
         """Функция для проверки входных данных для тестов первого порядка
         Проверяет, что на вход подается не нулевой массив массив, содержащий только int и float
@@ -85,20 +82,45 @@ class QA_QC_kern:
                 bool: результат выполнения теста
         """
         if not isinstance(array, np.ndarray):
-            self.file.write(f"Тест {test_name} не запускался. Причина {param_name} не является массивом\n")
+            self.file.write(
+                f"Тест {test_name} не запускался. Причина {param_name}"
+                f" не является массивом. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             return False
         if len(array) == 0:
-            self.file.write(f"Тест {test_name} не запускался. Причина {param_name} пустой\n")
+            self.file.write(
+                f"Тест {test_name} не запускался. Причина {param_name}"
+                f" пустой. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             return False
         for element in array:
             if not isinstance(element, (int32, float64, int64, float32)):
                 self.file.write(
-                    f"Тест {test_name} не запускался. Причина {param_name} содержит данные типа не int/float\n")
+                    f"Тест {test_name} не запускался. Причина {param_name}"
+                    f" содержит не числовые значения. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
                 return False
             if np.isnan(element):
-                self.file.write(f"Тест {test_name} не запускался. Причина {param_name} содержит данные типа Nan\n")
+                self.file.write(
+                    f"Тест {test_name} не запускался. Причина {param_name}"
+                    f" содержит данные типа Nan. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
                 return False
         return True
+
+    @private
+    def linear_dependence_function(self, x, y):
+        coefficients = np.polyfit(x, y, 1)
+        a = coefficients[0]
+        b = coefficients[1]
+        return a, b
+
+    @private
+    def exponential_function(self, x, y):
+        coefficients = np.polyfit(x, np.log(y), 1)
+        a = coefficients[0]
+        b = coefficients[1]
+        return a, b
+
+    """
+    Тесты первого порядка 
+    """
 
     def test_water_saturation(self) -> bool:
         """Функция для проверки тестов
@@ -114,13 +136,23 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.check_input(self.data, "array for first order tests", "test_water_saturation"):
-            if all(0 <= x <= 1 for x in self.data):
-                result = True
-            else:
-                result = False
 
-            self.file.write("Test 'water_saturation': {}\n".format(result))
+        if self.check_input(self.data, "array for first order tests", "test_water_saturation"):
+            dt_now = datetime.datetime.now()
+            wrong_values = []
+            result = True
+            for i in range(len(self.data)):
+                if self.data[i] < 0 or self.data[i] > 1:
+                    result = False
+                    wrong_values.append(i)
+            if not result:
+                self.file.write(
+                    f"Test 'water_saturation': {result}. Данные с индексом {wrong_values}"
+                    f" лежат не в интервале от 0 до 1."
+                    f" Входной файл {self.file_name}. Дата выполнения {dt_now}\n")
+            else:
+                self.file.write(
+                    f"Test 'water_saturation': {result}. Входной файл {self.file_name}. Дата выполнения {dt_now}\n")
             return result
 
     def test_porosity(self) -> bool:
@@ -143,19 +175,27 @@ class QA_QC_kern:
 
         if self.check_input(self.data, "array for first order tests", "test porosity"):
             concerted_data = []
+            dt_now = datetime.datetime.now()
+            wrong_values = []
+            result = True
             for val in self.data:
-                if val <= 1:
-                    concerted_data.append(val * 100)
+                if val >= 1:
+                    concerted_data.append(val / 100)
                 else:
                     concerted_data.append(val)
-            if all(0 <= x <= 47.6 for x in concerted_data):
-                result = True
+            for i in range(len(concerted_data)):
+                if concerted_data[i] < 0 or concerted_data[i] > 0.476:
+                    result = False
+                    wrong_values.append(i)
+            if not result:
+                self.file.write(
+                    f"Test 'porosity': {result}.Данные с индексом {wrong_values}"
+                    f" лежат не в интервале от 0 до 47.6 . Входной файл {self.file_name}. Дата выполнения {dt_now}\n")
             else:
-                result = False
-            self.file.write("Test 'porosity': {}\n".format(result))
+                self.file.write(f"Test 'porosity': {result}. Входной файл {self.file_name}. Дата выполнения {dt_now}\n")
             return result
 
-    def test_permeability(self) -> bool:
+    def test_permeability(self) -> dict[str, bool | list[int] | str]:
         """Функция для проверки тестов
         Газопроницаемость параллельно напластованию
         Газопроницаемость с поправкой по Кликенбергу
@@ -172,12 +212,21 @@ class QA_QC_kern:
                 file: запись результата теста для сохранения состояния
         """
         if self.check_input(self.data, "array for first order tests", "test permeability"):
-            if all(x > 0 for x in self.data):
-                result = True
+            wrong_values = []
+            result = True
+            dt_now = datetime.datetime.now()
+            for i in range(len(self.data)):
+                if self.data[i] < 0:
+                    result = False
+                    wrong_values.append(i)
+            if not result:
+                self.file.write(
+                    f"Test 'permeability': {result}.Данные с индексом {wrong_values} больше нуля. Входной файл"
+                    f" {self.file_name}. Дата выполнения {dt_now}\n")
             else:
-                result = False
-            self.file.write("Test 'permeability': {}\n".format(result))
-            return result
+                self.file.write(
+                    f"Test 'permeability': {result}. Входной файл {self.file_name}. Дата выполнения {dt_now}\n")
+            return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": dt_now}
 
     def test_monotony(self) -> bool:
         """Функция для проверки тестов
@@ -193,12 +242,18 @@ class QA_QC_kern:
                 file: запись результата теста для сохранения состояния
         """
         if self.check_input(self.data, "array for first order tests", "test monotony"):
-            arr = np.diff(self.data)
+            dt_now = datetime.datetime.now()
             result = True
-            if len(arr[arr <= 0]):
-                result = False
-
-            self.file.write("Test 'monotony': {}\n".format(result))
+            wrong_values = []
+            for i in range(len(self.data) - 1):
+                if self.data[i + 1] - self.data[i] <= 0:
+                    result = False
+                    wrong_values.append(i)
+            if not result:
+                self.file.write(
+                    f"Test 'monotony': {result}.Данные с индексом {wrong_values} не монотоны. Входной файл {self.file_name}. Дата выполнения {dt_now}\n")
+            else:
+                self.file.write(f"Test 'monotony': {result}. Входной файл {self.file_name}. Дата выполнения {dt_now}\n")
             return result
 
     """
@@ -206,41 +261,121 @@ class QA_QC_kern:
     """
 
     def test_quo_kp_dependence(self) -> bool:
-        """Функция для проверки тестов
+        """Функция для проверки теста
         Зависимость Кво-Кп
-        Зависимость Кп-плотность
-        Зависимость Кво-Кпдин
 
         Необходимо построить линию тренда и проверить, что зависимость линейная по функции y=a*x+b, при этом a<0
 
             Args:
-                self.x (array[int/float]): массив с данными кво/кп/кво для проверки
-                self.y (array[int/float]): массив с данными кп/плотность/кпдин для проверки
+                self.kvo (array[int/float]): массив с данными кво для проверки
+                self.kp (array[int/float]): массив с данными кп для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.check_input(self.x, "first array for dependency testing", "test quo kp dependence") and \
-                self.check_input(self.y, "second array for dependency testing", "test quo kp dependence"):
-            coefficients = np.polyfit(self.x, self.y, 1)
-            a = coefficients[0]
-            b = coefficients[1]
+
+        if self.check_input(self.kvo, "kvo", "test quo kp dependence") and \
+                self.check_input(self.kp, "kp", "test quo kp dependence"):
             result = True
+            a, b = self.linear_dependence_function(self.kvo, self.kp)
             if a >= 0:
                 result = False
 
-            self.file.write("Test 'dependence quo kp': {}\n".format(result))
-            x_trend = np.linspace(np.min(self.x), np.max(self.x), 100)
+            self.file.write(
+                f"Test 'dependence quo kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            x_trend = np.linspace(np.min(self.kvo), np.max(self.kvo), 100)
             y_trend = a * x_trend + b
 
             # Построение кроссплота
             plt.title("test quo kp dependence")
-            plt.scatter(self.x, self.y, color='b', label='Данные')
+            plt.scatter(self.kvo, self.kp, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kvo')
+            plt.ylabel('kp')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}'  # Форматирование чисел до двух знаков после запятой
+            plt.text(np.mean(self.kvo), np.min(self.kp), equation, ha='center', va='bottom')
+            plt.show()
+
+            return result
+
+    def test_kp_density_dependence(self) -> bool:
+        """Функция для проверки тестов
+        Зависимость Кп-плотность
+
+        Необходимо построить линию тренда и проверить, что зависимость линейная по функции y=a*x+b, при этом a<0
+
+            Args:
+                self.kp (array[int/float]): массив с данными кп для проверки
+                self.density (array[int/float]): массив с данными плотностью для проверки
+
+            Returns:
+                bool: результат выполнения теста
+                file: запись результата теста для сохранения состояния
+        """
+        if self.check_input(self.kp, "kp", "test kp density dependence") and \
+                self.check_input(self.density, "density", "test kp density dependence"):
+
+            result = True
+            a, b = self.linear_dependence_function(self.kp, self.density)
+            if a >= 0:
+                result = False
+
+            self.file.write(
+                f"Test 'dependence quo kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            x_trend = np.linspace(np.min(self.kp), np.max(self.density), 100)
+            y_trend = a * x_trend + b
+
+            # Построение кроссплота
+            plt.title("test kp density dependence")
+            plt.scatter(self.kp, self.density, color='b', label='Данные')
             plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
             plt.xlabel('X')
             plt.ylabel('Y')
             plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}'
+            plt.text(np.mean(self.kp), np.min(self.density), equation, ha='center', va='bottom')
+            plt.show()
+
+            return result
+
+    def test_kvo_kp_din_dependence(self) -> bool:
+        """Функция для проверки тестов
+        Зависимость Кво-Кпдин
+
+        Необходимо построить линию тренда и проверить, что зависимость линейная по функции y=a*x+b, при этом a<0
+
+            Args:
+                self.kvo (array[int/float]): массив с данными кво для проверки
+                self.kp_din (array[int/float]): массив с данными кпдин для проверки
+
+            Returns:
+                bool: результат выполнения теста
+                file: запись результата теста для сохранения состояния
+        """
+        if self.check_input(self.kvo, "kvo", "test kvo kp din dependence") and \
+                self.check_input(self.kp_din, "kp din", "test kvo kp din dependence"):
+
+            result = True
+            a, b = self.linear_dependence_function(self.kvo, self.kp_din)
+            if a >= 0:
+                result = False
+
+            self.file.write(
+                f"Test 'dependence quo kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            x_trend = np.linspace(np.min(self.kvo), np.max(self.kp_din), 100)
+            y_trend = a * x_trend + b
+
+            # Построение кроссплота
+            plt.title("test kvo kp din dependence")
+            plt.scatter(self.kvo, self.kp_din, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kvo')
+            plt.ylabel('kp din')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}'
+            plt.text(np.mean(self.kvo), np.min(self.kp_din), equation, ha='center', va='bottom')
             plt.show()
 
             return result
@@ -254,41 +389,45 @@ class QA_QC_kern:
 
 
             Args:
-                self.x1 (array[int/float]): массив с данными Обплнас для проверки
-                self.y1 (array[int/float]): массив с данными кп для проверки
-                self.x2 (array[int/float]): массив с данными Минпл для проверки
-                self.y2 (array[int/float]): массив с данными кп для проверки
+                self.kp (array[int/float]): массив с данными Обплнас для проверки
+                self.obblnas (array[int/float]): массив с данными кп для проверки
+                self.minple (array[int/float]): массив с данными Минпл для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.check_input(self.x1, "minple_array", "test obblnas kp dependence") and \
-                self.check_input(self.y1, "kp_array_for_minple", "test obblnas kp dependence") and \
-                self.check_input(self.x2, "obplnas_array", "test obblnas kp dependence") and \
-                self.check_input(self.y2, "kp_array_for_obplnas", "test obblnas kp dependence"):
-            coeffs1 = np.polyfit(self.x1, self.y1, 1)
+        if self.check_input(self.minple, "minple", "test obblnas kp dependence") and \
+                self.check_input(self.kp, "kp", "test obblnas kp dependence") and \
+                self.check_input(self.obplnas, "obplnas", "test obblnas kp dependence"):
+            coeffs1 = np.polyfit(self.minple, self.kp, 1)
             a1, b1 = coeffs1[0], coeffs1[1]
-            trend_line1 = np.polyval(coeffs1, self.x1)
+            trend_line1 = np.polyval(coeffs1, self.minple)
 
-            coeffs2 = np.polyfit(self.x2, self.y2, 1)
+            coeffs2 = np.polyfit(self.obplnas, self.kp, 1)
             a2, b2 = coeffs2[0], coeffs2[1]
-            trend_line2 = np.polyval(coeffs2, self.x2)
+            trend_line2 = np.polyval(coeffs2, self.obplnas)
 
             result = True
             if a1 >= a2:
                 result = False
 
-            self.file.write("Test 'dependence obblnas kp': {}\n".format(result))
+            self.file.write(
+                f"Test 'dependence obblnas kp': {result}. Входной файл {self.file_name}."
+                f" Дата выполнения {self.dt_now}\n")
             plt.title("test obblnas kp dependence")
-            plt.scatter(self.x1, self.y1, color='red', label='Обплнас-Кп')
-            plt.scatter(self.x2, self.y2, color='blue', label='Минпл-Кп')
-            plt.plot(self.x1, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
-            plt.plot(self.x2, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
-            plt.xlabel('X')
-            plt.ylabel('Y')
+            plt.scatter(self.obplnas, self.kp, color='red', label='Обплнас-Кп')
+            plt.scatter(self.minple, self.kp, color='blue', label='Минпл-Кп')
+            plt.plot(self.obplnas, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
+            plt.plot(self.minple, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
+            plt.xlabel('obplnas')
+            plt.ylabel('kp')
             plt.legend()
             plt.grid(True)
+            equation = f'y = {a1:.2f}x + {b1:.2f}'
+            plt.text(np.mean(self.minple), np.min(self.kp) + 0.5, equation, ha='center', va='bottom')
+            equation = f'y = {a2:.2f}x + {b2:.2f}'
+            plt.text(np.mean(self.obplnas), np.min(self.kp), equation, ha='center', va='bottom')
             plt.show()
 
             return result
@@ -301,41 +440,45 @@ class QA_QC_kern:
         где а1 - коэффициент из зависимости Обплнас-Кп
 
             Args:
-                self.x1 (array[int/float]): массив с данными Обплнас для проверки
-                self.y1 (array[int/float]): массив с данными кп для проверки
-                self.x2 (array[int/float]): массив с данными Минпл для проверки
-                self.y2 (array[int/float]): массив с данными кп для проверки
+                self.kp (array[int/float]): массив с данными Обплнас для проверки
+                self.obblnas (array[int/float]): массив с данными кп для проверки
+                self.minple (array[int/float]): массив с данными Минпл для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.check_input(self.x1, "minple_array", "test minple kp dependence") and \
-                self.check_input(self.y1, "kp_array_for_minple", "test minple kp dependence") and \
-                self.check_input(self.x2, "obplnas_array", "test minple kp dependence") and \
-                self.check_input(self.y2, "kp_array_for_obplnas", "test minple kp dependence"):
-            coeffs1 = np.polyfit(self.x1, self.y1, 1)
+        if self.check_input(self.minple, "minple array", "test minple kp dependence") and \
+                self.check_input(self.kp, "kp", "test minple kp dependence") and \
+                self.check_input(self.obplnas, "obplnas_array", "test minple kp dependence"):
+            coeffs1 = np.polyfit(self.obplnas, self.kp, 1)
             a1, b1 = coeffs1[0], coeffs1[1]
-            trend_line1 = np.polyval(coeffs1, self.x1)
+            trend_line1 = np.polyval(coeffs1, self.obplnas)
 
-            coeffs2 = np.polyfit(self.x2, self.y2, 1)
+            coeffs2 = np.polyfit(self.minple, self.kp, 1)
             a2, b2 = coeffs2[0], coeffs2[1]
-            trend_line2 = np.polyval(coeffs2, self.x2)
+            trend_line2 = np.polyval(coeffs2, self.minple)
 
             result = True
             if a1 <= a2:
                 result = False
 
-            self.file.write("Test 'dependence minple kp': {}\n".format(result))
+            self.file.write(
+                f"Test 'dependence minple kp': {result}."
+                f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             plt.title("test minple kp dependence")
-            plt.scatter(self.x1, self.y1, color='red', label='Обплнас-Кп')
-            plt.scatter(self.x2, self.y2, color='blue', label='Минпл-Кп')
-            plt.plot(self.x1, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
-            plt.plot(self.x2, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
-            plt.xlabel('X')
-            plt.ylabel('Y')
+            plt.scatter(self.obplnas, self.kp, color='red', label='Обплнас-Кп')
+            plt.scatter(self.minple, self.kp, color='blue', label='Минпл-Кп')
+            plt.plot(self.obplnas, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
+            plt.plot(self.minple, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
+            plt.xlabel('minple')
+            plt.ylabel('kp')
             plt.legend()
             plt.grid(True)
+            equation = f'y = {a1:.2f}x + {b1:.2f}'
+            plt.text(np.mean(self.minple), np.min(self.kp) + 0.5, equation, ha='center', va='bottom')
+            equation = f'y = {a2:.2f}x + {b2:.2f}'
+            plt.text(np.mean(self.obplnas), np.min(self.kp), equation, ha='center', va='bottom')
             plt.show()
 
             return result
@@ -353,141 +496,217 @@ class QA_QC_kern:
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
-                """
-        if self.check_input(self.x, "first array for dependency testing",
-                            "test kpf kpdin dependence") and self.check_input(self.y,
-                                                                              "second array for dependency testing",
-                                                                              "test kpf kpdin dependence"):
-            coefficients = np.polyfit(self.x, self.y, 1)
-            a = coefficients[0]
-            b = coefficients[1]
+        """
+
+        if self.check_input(self.kp_ef, "kp ef", "test kpf kp din dependence") \
+                and self.check_input(self.kp_din, "kp din", "test kpf kp din dependence"):
+
             result = True
+            a, b = self.linear_dependence_function(self.kp_ef, self.kp_din)
             if a <= 0 or b <= 0:
                 result = False
 
-            self.file.write("Test 'dependence kpf kpdin': {}\n".format(result))
-            x_trend = np.linspace(np.min(self.x), np.max(self.x), 100)
+            self.file.write(
+                f"Test 'dependence kpf kpdin': {result}."
+                f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            x_trend = np.linspace(np.min(self.kp_ef), np.max(self.kp_din), 100)
             y_trend = a * x_trend + b
             plt.title("test kpf kpdin dependence")
-            plt.scatter(self.x, self.y, color='b', label='Данные')
+            plt.scatter(self.kp_ef, self.kp_din, color='b', label='Данные')
             plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('X')
-            plt.ylabel('Y')
+            plt.xlabel('kp ef')
+            plt.ylabel('kp din')
             plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}'
+            plt.text(np.mean(self.kp_ef), np.min(self.kp_din), equation, ha='center', va='bottom')
             plt.show()
             return result
 
-    def test_kpff_kp_dependence(self) -> bool:
+    def test_kp_ef_kp_dependence(self) -> bool:
         """Функция для проверки тестов
         Зависимость Кпэф-Кп
-        Зависимость Кп-Кпдин
 
         Необходимо построить линию тренда и проверить,что зависимость линейная по функции y=a*x+b, при этом a>0, b<0
 
             Args:
-                self.x (array[int/float]): массив с данными кпэф,кп для проверки
-                self.y (array[int/float]): массив с данными кп,кпдин для проверки
+                self.kp_ef (array[int/float]): массив с данными кпэф для проверки
+                self.kp (array[int/float]): массив с данными кп для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.check_input(self.x, "first array for dependency testing",
-                            "test kpff kp dependence") and self.check_input(self.y,
-                                                                            "second array for dependency testing",
-                                                                            "test kpff kp dependence"):
-            coefficients = np.polyfit(self.x, self.y, 1)
-            a = coefficients[0]
-            b = coefficients[1]
+        if self.check_input(self.kp_ef, "kp ef", "test kp ef kp dependence") \
+                and self.check_input(self.kp, "kp", "test kp ef kp dependence"):
+            result = True
+            a, b = self.linear_dependence_function(self.kp_ef, self.kp)
+            if a <= 0 or b >= 0:
+                result = False
+
+            self.file.write(
+                f"Test 'dependence kp ef kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            x_trend = np.linspace(np.min(self.kp_ef), np.max(self.kp), 100)
+            y_trend = a * x_trend + b
+            plt.title("test kp ef kp dependence")
+            plt.scatter(self.kp_ef, self.kp, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kp ef')
+            plt.ylabel('kp')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}'
+            plt.text(np.mean(self.kp_ef), np.min(self.kp), equation, ha='center', va='bottom')
+            plt.show()
+            return result
+
+    def test_kp_kp_din_dependence(self) -> bool:
+        """Функция для проверки тестов
+        Зависимость Кп-Кпдин
+
+        Необходимо построить линию тренда и проверить,что зависимость линейная по функции y=a*x+b, при этом a>0, b<0
+
+            Args:
+                self.kp (array[int/float]): массив с данными кп для проверки
+                self.kp_din (array[int/float]): массив с данными кп дин для проверки
+
+            Returns:
+                bool: результат выполнения теста
+                file: запись результата теста для сохранения состояния
+        """
+        if self.check_input(self.kp, "kp", "test kp kp din dependence") \
+                and self.check_input(self.kp_din, "kp din", "test kp kp din dependence"):
+            a, b = self.linear_dependence_function(self.kp, self.kp_din)
             result = True
             if a <= 0 or b >= 0:
                 result = False
 
-            self.file.write("Test 'dependence kpff kp': {}\n".format(result))
-            x_trend = np.linspace(np.min(self.x), np.max(self.x), 100)
+            self.file.write(
+                f"Test 'dependence kp ef kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            x_trend = np.linspace(np.min(self.kp), np.max(self.kp_din), 100)
             y_trend = a * x_trend + b
-            plt.title("test kpff kp dependence")
-            plt.scatter(self.x, self.y, color='b', label='Данные')
+            plt.title("test kp ef kp dependence")
+            plt.scatter(self.kp, self.kp_din, color='b', label='Данные')
             plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('X')
-            plt.ylabel('Y')
+            plt.xlabel('kp')
+            plt.ylabel('kp din')
             plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}'
+            plt.text(np.mean(self.kp), np.min(self.kp_din), equation, ha='center', va='bottom')
             plt.show()
             return result
 
-    def test_dependence_kpc_kp(self) -> bool:
+    def test_dependence_kpr_kp(self) -> bool:
         """Функция для проверки тестов
         Зависимость Кпр-Кп
+
+        Необходимо построить линию тренда и проверить,что  зависимость по функции y=a*exp(b*x) при этом b>0
+
+            Args:
+                self.kpr (array[int/float]): массив с данными кпр для проверки
+                self.kp (array[int/float]): массив с данными кп для проверки
+
+            Returns:
+                bool: результат выполнения теста
+                file: запись результата теста для сохранения состояния
+        """
+
+        if self.check_input(self.kpr, "kpr", "test dependence kpr kp") and \
+                self.check_input(self.kp, "kp", "test dependence kpr kp"):
+
+            result = True
+            a, b = self.exponential_function(self.kpr, self.kp)
+            if b <= 0:
+                result = False
+
+            self.file.write(
+                f"Test 'dependence kpr kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            x_trend = np.linspace(np.min(self.kpr), np.max(self.kp), 100)
+            y_trend = a * x_trend + b
+            plt.title("test dependence kpr kp")
+            plt.scatter(self.kpr, self.kp, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kpr')
+            plt.ylabel('kp')
+            plt.legend()
+            equation = f'y = {a:.2f}*exp({b:.2f}*x)'
+            plt.text(np.mean(self.kp), np.min(self.kp_din), equation, ha='center', va='bottom')
+            plt.show()
+            return result
+
+    def test_dependence_kpr_kp_din(self) -> bool:
+        """Функция для проверки теста
         Зависимость Кпр-Кпдин
 
         Необходимо построить линию тренда и проверить,что  зависимость по функции y=a*exp(b*x) при этом b>0
 
             Args:
-                self.x (array[int/float]): массив с данными кпр,кпр для проверки
-                self.y (array[int/float]): массив с данными кп,кпдин для проверки
+                self.kpr (array[int/float]): массив с данными кпр для проверки
+                self.kp_din (array[int/float]): массив с данными кпдин для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
-                """
-        if self.check_input(self.x, "first array for dependency testing",
-                            "test dependence kpc kp") and self.check_input(self.y,
-                                                                           "second array for dependency testing",
-                                                                           "test dependence kpc kp"):
-            coefficients = np.polyfit(self.x, np.log(self.y), 1)
-            a = coefficients[0]
-            b = coefficients[1]
+        """
+
+        if self.check_input(self.kpr, "first array for dependency testing", "test dependence kpr kp din") and \
+                self.check_input(self.kp_din, "second array for dependency testing", "test dependence kpr kp din"):
+
             result = True
+            a, b = self.exponential_function(self.kpr, self.kp_din)
             if b <= 0:
                 result = False
 
-            self.file.write("Test 'dependence kpc kp': {}\n".format(result))
-            x_trend = np.linspace(np.min(self.x), np.max(self.x), 100)
+            self.file.write(
+                f"Test 'dependence kpc kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            x_trend = np.linspace(np.min(self.kpr), np.max(self.kp_din), 100)
             y_trend = a * x_trend + b
             plt.title("test dependence kpc kp")
-            plt.scatter(self.x, self.y, color='b', label='Данные')
+            plt.scatter(self.kpr, self.kp_din, color='b', label='Данные')
             plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('X')
-            plt.ylabel('Y')
+            plt.xlabel('kpr')
+            plt.ylabel('kp din')
             plt.legend()
+            equation = f'y = {a:.2f}*exp({b:.2f}*x)'
+            plt.text(np.mean(self.kp), np.min(self.kp_din), equation, ha='center', va='bottom')
             plt.show()
             return result
 
-    def test_dependence_quo_qp(self) -> bool:
+    def test_dependence_kvo_kpr(self) -> bool:
         """Функция для проверки тестов
         Зависимость Кво-Кпр
 
         Необходимо построить линию тренда и проверить,что зависимость по функции y=a*ln(x)+b при этом a>0
 
             Args:
-                self.x (array[int/float]): массив с данными кво для проверки
-                self.y (array[int/float]): массив с данными кпр для проверки
+                self.kvo (array[int/float]): массив с данными кво для проверки
+                self.kpr (array[int/float]): массив с данными кпр для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
-                """
-        if self.check_input(self.x, "first array for dependency testing",
-                            "test dependence quo qp") and self.check_input(self.y,
-                                                                           "second array for dependency testing",
-                                                                           "test dependence quo qp"):
-            coefficients = np.polyfit(self.x, np.exp(self.y), 1)
+        """
+
+        if self.check_input(self.kvo, "kvo", "test dependence kvo kpr") and \
+                self.check_input(self.kpr, "kpr", "test dependence kvo kpr"):
+            coefficients = np.polyfit(self.kvo, np.exp(self.kpr), 1)
             a, b = coefficients[0], coefficients[1]
             result = True
             if a <= 0:
                 result = False
 
-            self.file.write("Test 'dependence quo qp': {}\n".format(result))
-            x_trend = np.linspace(np.min(self.x), np.max(self.x), 100)
+            self.file.write(
+                f"Test 'dependence kvo kpr': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            x_trend = np.linspace(np.min(self.kvo), np.max(self.kpr), 100)
             y_trend = a * x_trend + b
 
             # Построение кроссплота
-            plt.title("test dependence quo qp")
-            plt.scatter(self.x, self.y, color='b', label='Данные')
+            plt.title("test dependence kvo kpr")
+            plt.scatter(self.kvo, self.kpr, color='b', label='Данные')
             plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('X')
-            plt.ylabel('Y')
+            plt.xlabel('kvo')
+            plt.ylabel('kpr')
             plt.legend()
+            equation = f'y = {a:.2f}*ln(x)+{b:.2f}'
+            plt.text(np.mean(self.kvo), np.min(self.kpr), equation, ha='center', va='bottom')
             plt.show()
             return result
 
@@ -498,69 +717,72 @@ class QA_QC_kern:
         Необходимо построить линию тренда и проверить,что зависимость по функции y=b/(kв^n) при этом 1,1<n<5
 
             Args:
-                self.x (array[int/float]): массив с данными рн для проверки
-                self.y (array[int/float]): массив с данными кв для проверки
+                self.rn (array[int/float]): массив с данными рн для проверки
+                self.kv (array[int/float]): массив с данными кв для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.check_input(self.x, "first array for dependency testing",
-                            "test rn kv dependencies") and self.check_input(self.y,
-                                                                            "second array for dependency testing",
-                                                                            "test rn kv dependencies"):
-            coefficients = np.polyfit(np.log(self.x), np.log(self.y), 1)
+        if self.check_input(self.rn, "rn", "test rn kv dependencies") \
+                and self.check_input(self.kv, "kv", "test rn kv dependencies"):
+            coefficients = np.polyfit(np.log(self.rn), np.log(self.kv), 1)
             b, n = np.exp(coefficients[1]), coefficients[0]
             result = True
             if 1.1 >= n or n >= 5:
                 result = False
 
-            self.file.write("Test 'dependence rn kv': {}\n".format(result))
+            self.file.write(
+                f"Test 'dependence rn kv': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             plt.title("test rn kv dependencies")
-            plt.scatter(self.x, self.y, color='blue', label='Исходные данные')
-            plt.plot(self.x, b / (self.x ** n), color='red', label='Линия тренда')
-            plt.xlabel('кп')
-            plt.ylabel('y')
+            plt.scatter(self.rn, self.kv, color='blue', label='Исходные данные')
+            plt.plot(self.rn, b / (self.kv ** n), color='red', label='Линия тренда')
+            plt.xlabel('rn')
+            plt.ylabel('kv')
             plt.legend()
+            equation = f'y = {b:.2f}/(x^{b:.2f})'
+            plt.text(np.mean(self.kp), np.min(self.kp_din), equation, ha='center', va='bottom')
             plt.show()
             return result
 
-    def test_rn_kn_dependencies(self) -> bool:
+    def test_rp_kp_dependencies(self) -> bool:
         """Функция для проверки тестов
-        Зависимость Кпр-Кп
-        Зависимость Кпр-Кпдин
+        Зависимость Рп-Кп
 
-        Необходимо построить линию тренда и проверить,что  зависимость по функции y=a*exp(b*x) при этом b>0
+        В данном случае зависимость по функции y=a/(kп^m) при этом m>0. a>0 и a<2,5, 1,1<m<3,8
 
             Args:
-                self.x (array[int/float]): массив с данными кпр,кпр для проверки
-                self.y (array[int/float]): массив с данными кп,кпдин для проверки
+                self.rp (array[int/float]): массив с данными рп для проверки
+                self.kp (array[int/float]): массив с данными кп для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.check_input(self.x, "first array for dependency testing",
-                            "test rn kn dependencies") and self.check_input(self.y,
-                                                                            "second array for dependency testing",
-                                                                            "test rn kn dependencies"):
-            coefficients = np.polyfit(np.log(self.x), -np.log(self.y), 1)
+        if self.check_input(self.rp, "rp", "test rp kp dependencies") \
+                and self.check_input(self.kp, "kp", "test rp kp dependencies"):
+            coefficients = np.polyfit(np.log(self.rn), -np.log(self.kp), 1)
             a, m = np.exp(-coefficients[1]), coefficients[0]
             result = True
             if 1.1 >= m or m >= 3.8 or 0 >= a or a >= 2.5:
                 result = False
 
-            plt.scatter(self.x, self.y, color='blue', label='Исходные данные')
-            plt.plot(self.x, a / (self.x ** m), color='red', label='Линия тренда')
-            plt.title("test rn kn dependencies")
-            plt.xlabel('кп')
-            plt.ylabel('y')
+            self.file.write(f"Test 'dependence rp kp ': {result}."
+                            f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+
+            plt.scatter(self.rp, self.kp, color='blue', label='Исходные данные')
+            plt.plot(self.rp, a / (self.kp ** m), color='red', label='Линия тренда')
+            plt.title("test rp kp dependencies")
+            plt.xlabel('рп')
+            plt.ylabel('кп')
             plt.legend()
+            equation = f'y = {a:.2f}/(x^{m:.2f})'
+            plt.text(np.mean(self.kp), np.min(self.kp_din), equation, ha='center', va='bottom')
             plt.show()
-            self.file.write("Test 'dependence rn kn ': {}\n".format(result))
+
             return result
 
-    def test_general_dependency_checking(self) -> bool:
+    def test_general_dependency_checking(self, x, y) -> bool:
         """Функция для проверки теста
         Для всех зависимостей
 
@@ -574,35 +796,33 @@ class QA_QC_kern:
         тест не пройден
 
             Args:
-                self.x (array[int/float]): массив с данными для проверки
-                self.y (array[int/float]): массив с данными для проверки
+                x (array[int/float]): массив с данными для проверки
+                y (array[int/float]): массив с данными для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.check_input(self.x, "first array for dependency testing",
-                            "test general dependency checking") and self.check_input(self.y,
-                                                                                     "second array for dependency testing",
-                                                                                     "test general dependency checking"):
+        if self.check_input(x, "first array for dependency testing", "test general dependency checking") \
+                and self.check_input(y, "second array for dependency testing", "test general dependency checking"):
             alpha = 0.05  # Уровень значимости
-            n = len(self.x)
+            n = len(x)
             dof = n - 2  # Число степеней свободы для распределения Стьюдента
 
-            residuals = self.y - np.polyval(np.polyfit(self.x, self.y, 1), self.x)
+            residuals = y - np.polyval(np.polyfit(x, y, 1), x)
             std_error = np.sqrt(np.sum(residuals ** 2) / dof)
 
             t_critical = t.ppf(1 - alpha / 2, dof)
-            upper_limit = np.polyval(np.polyfit(self.x, self.y, 1), self.x) + t_critical * std_error
-            lower_limit = np.polyval(np.polyfit(self.x, self.y, 1), self.x) - t_critical * std_error
+            upper_limit = np.polyval(np.polyfit(x, y, 1), x) + t_critical * std_error
+            lower_limit = np.polyval(np.polyfit(x, y, 1), x) - t_critical * std_error
 
             x_filtered = []
             y_filtered = []
 
             for i in range(n):
-                if lower_limit[i] <= self.y[i] <= upper_limit[i]:
-                    x_filtered.append(self.x[i])
-                    y_filtered.append(self.y[i])
+                if lower_limit[i] <= y[i] <= upper_limit[i]:
+                    x_filtered.append(x[i])
+                    y_filtered.append(y[i])
 
             # Аппроксимация линии тренда на отфильтрованных данных
             coeffs = np.polyfit(x_filtered, y_filtered, 1)
@@ -612,7 +832,7 @@ class QA_QC_kern:
             r2 = r2_score(y_filtered, trend_line)
 
             # Проверка условия R2 score и удаление точек при несоответствии
-            while r2 < 0.7 and len(x_filtered) > 0.9 * n:
+            while r2 < self.r2 and len(x_filtered) > 0.9 * n:
                 # Вычисление расстояний от линии тренда до каждой точки
                 distances = np.abs(y_filtered - np.polyval(coeffs, x_filtered))
 
@@ -631,11 +851,15 @@ class QA_QC_kern:
             # Проверка пройденного теста
             if r2 >= 0.7:
                 result = True
-                self.file.write("Test 'general dependency checking': {}\n".format(result))
+                self.file.write(
+                    f"Test 'general dependency checking': {result}."
+                    f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
                 return result
             else:
                 result = False
-                self.file.write("Test 'general dependency checking': {}\n".format(result))
+                self.file.write(
+                    f"Test 'general dependency checking': {result}."
+                    f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
                 return result
 
     def test_coring_depths_first(self):
@@ -660,7 +884,8 @@ class QA_QC_kern:
             for i in range(len(self.roof)):
                 if self.sole[i] < self.roof[i]:
                     result = False
-            self.file.write("Test 'coring depths first': {}\n".format(result))
+            self.file.write(
+                f"Test 'coring depths first': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             return result
 
     def test_coring_depths_second(self):
@@ -678,15 +903,16 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.check_input(self.roof, "roof", "test coring depths second") and self.check_input(self.sole, "sole",
-                                                                                                 "test coring depths second") and self.check_input(
-            self.takeout, "takeout", "test coring depths second"):
-
+        if self.check_input(self.roof, "roof", "test coring depths second") \
+                and self.check_input(self.sole, "sole", "test coring depths second") \
+                and self.check_input(self.takeout, "takeout", "test coring depths second"):
+            dt_now = datetime.datetime.now()
             result = True
             for i in range(len(self.roof)):
                 if self.sole[i] - self.roof[i] > self.takeout[i]:
                     result = False
-            self.file.write("Test 'coring depths second': {}\n".format(result))
+            self.file.write(
+                f"Test 'coring depths second': {result}. Входной файл {self.file_name}. Дата выполнения {dt_now}\n")
             return result
 
     def test_coring_depths_third(self):
@@ -704,11 +930,9 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.check_input(self.intervals, "intervals",
-                            "test coring depths third") and self.check_input(self.outreach_in_meters,
-                                                                             "outreach_in_meters",
-                                                                             "test coring depths third") and self.check_input(
-            self.percentage, "percentage", "test coring depths third"):
+        if self.check_input(self.intervals, "intervals", "test coring depths third") \
+                and self.check_input(self.outreach_in_meters, "outreach_in_meters", "test coring depths third") \
+                and self.check_input(self.percentage, "percentage", "test coring depths third"):
             result = True
             for i in range(len(self.intervals)):
                 interval_length = max(self.intervals[i]) - min(self.intervals[i])
@@ -716,7 +940,8 @@ class QA_QC_kern:
                 if abs(self.percentage[i] - displacement_percent_calculated) > 0.001:
                     result = False
 
-            self.file.write("Test 'coring depths third': {}\n".format(result))
+            self.file.write(
+                f"Test 'coring depths third': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             return result
 
     def test_coring_depths_four(self):
@@ -740,7 +965,8 @@ class QA_QC_kern:
                 if self.core_sampling[i] > self.sampling_depth[i]:
                     result = False
 
-            self.file.write("Test 'coring depths four': {}\n".format(result))
+            self.file.write(
+                f"Test 'coring depths four': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             return result
 
     def test_data_tampering(self):
@@ -787,7 +1013,8 @@ class QA_QC_kern:
                     if abs(self.rn[i] - self.kv[k]) > 0.01:
                         result = False
 
-            self.file.write("Test 'data tampering': {}\n".format(result))
+            self.file.write(
+                f"Test 'data tampering': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             return result
 
     def test_estimated_values_in_core_data(self, pv=1):
@@ -833,7 +1060,9 @@ class QA_QC_kern:
                 if self.pas[i] + (self.kp[i] * pv) != self.pmu[i]:
                     result = False
 
-            self.file.write("Test 'estimated values in core data': {}\n".format(result))
+            self.file.write(
+                f"Test 'estimated values in core data': {result}."
+                f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             return result
 
     def test_kp_in_surface_and_reservoir_conditions(self):
@@ -857,7 +1086,9 @@ class QA_QC_kern:
                 if abs(self.kp_pov[i] - self.kp_plast[i]) > 2:
                     result = False
 
-            self.file.write("Test 'kp in surface and reservoir conditions': {}\n".format(result))
+            self.file.write(
+                f"Test 'kp in surface and reservoir conditions': {result}."
+                f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             return result
 
     def test_table_notes(self):
@@ -899,15 +1130,15 @@ class QA_QC_kern:
             converted_kv = []
             converted_kpp = []
             result = True
-            # перевод из долей в проценты при необходимости
+            # перевод из процентов в доли при необходимости
             for val in self.kv:
-                if val <= 1:
-                    converted_kv.append(val * 100)
+                if val >= 1:
+                    converted_kv.append(val / 100)
                 else:
                     converted_kv.append(val)
             for val in self.kpp:
-                if val <= 1:
-                    converted_kpp.append(val * 100)
+                if val >= 1:
+                    converted_kpp.append(val / 100)
                 else:
                     converted_kpp.append(val)
 
@@ -915,7 +1146,8 @@ class QA_QC_kern:
                 if (converted_kv[i] + converted_kpp[i]) > 100:
                     result = False
 
-            self.file.write("Test 'quo and qno': {}\n".format(result))
+            self.file.write(f"Test 'quo and qno': {result}."
+                            f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             return result
 
     def test_correctness_of_p_sk_kp(self):
@@ -944,7 +1176,8 @@ class QA_QC_kern:
                 self.check_input(self.parallel_carbonate, "parallel_carbonate", "test correctness of p sk kp") and \
                 self.check_input(self.parallel_porosity, "parallel_porosity", "test correctness of p sk kp") and \
                 self.check_input(self.perpendicular, "perpendicular", "test correctness of p sk kp") and \
-                self.check_input(self.perpendicular_density, "perpendicular_density", "test correctness of p sk kp") and \
+                self.check_input(self.perpendicular_density, "perpendicular_density",
+                                 "test correctness of p sk kp") and \
                 self.check_input(self.perpendicular_carbonate, "perpendicular_carbonate",
                                  "test correctness of p sk kp") and \
                 self.check_input(self.perpendicular_porosity, "perpendicular_porosity", "test correctness of p sk kp"):
@@ -969,7 +1202,8 @@ class QA_QC_kern:
                     if parallel_properties[key] != perpendicular_properties[key]:
                         result = False
 
-            self.file.write("Test 'quo and qno': {}\n".format(result))
+            self.file.write(f"Test 'quo and qno': {result}."
+                            f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             return result
 
     def get_list_of_tests(self) -> list:
@@ -983,16 +1217,31 @@ class QA_QC_kern:
                         callable(getattr(self, method)) and method.startswith("test")]
         return test_methods
 
-    def start_tests(self, list_of_tests: list) -> None:
+    def start_tests(self, list_of_tests: list) -> list[Any]:
         """_summary_
 
         Args:
             list_of_tests (list): _description_
         """
+        results = []
         for method_name in list_of_tests:
             method = getattr(self, method_name)
-            method()
-        pass
+            results.append(method())
+        return results
+
+    def get_method_description(self, method_name: str) -> str:
+        """Метод для получение описания теста по названию теста
+
+         Args:
+             method_name(str) - название теста
+        Returns:
+             str - описание теста
+         """
+        method = getattr(self, method_name, None)
+        if method is not None:
+            return method.__doc__
+        else:
+            return "Метод не найден."
 
     def generate_test_report(self) -> str:
         """_summary_
@@ -1001,7 +1250,7 @@ class QA_QC_kern:
             str: _description_
         """
         self.file.close()
-        new_filepath = self.file_path + "\\" + self.filename  # Путь для сохранения файла на диске D:
-        shutil.copy(self.filename, new_filepath)  # Копирование файла
-        os.remove(self.filename)  # Удаление исходного файла
+        new_filepath = self.file_path + "\\" + self.file_report_name  # Путь для сохранения файла на диске D:
+        shutil.copy(self.file_report_name, new_filepath)  # Копирование файла
+        os.remove(self.file_report_name)  # Удаление исходного файла
         return new_filepath
