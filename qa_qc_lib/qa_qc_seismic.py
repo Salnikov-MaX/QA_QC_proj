@@ -1,15 +1,22 @@
+import os
 import segyio
 import numpy as np
 from shapely.geometry import MultiPoint, Polygon
 import matplotlib.pyplot as plt
+from accessify import private
+import datetime
+from typing import Any
 
 
 class QA_QC_seismic():
     def __init__(self, file_path: str = None, license_area_poly: list = None) -> None:
         self.seismic_cube, self.coordinate_x, self.coordinate_y = self.get_seismic_grid(file_path)
         self.license_area_poly = license_area_poly
+        self.report_text = ""
+        self.ident = ' '*5   # отступ при формировании лога
 
 
+    @private
     def get_seismic_grid(self, segy_file_path:str):
         """Метод предназначенный для чтения сейсмического куба из файла формата SEG-Y 
 
@@ -26,67 +33,80 @@ class QA_QC_seismic():
         return seismic_data, np.array(coordinate_x), np.array(coordinate_y)
 
 
-    def coordinate_validation(self, get_report=True) -> None:
+    def test_coordinate_validation(self, get_report=True) -> None:
         """Оценка корректности координат загруженного куба.
         Метод проверяет вхождение сейсического куба в границы лицензионного участка 
 
         Args:
-            get_report (bool, optional): _description_. Defaults to True.
-        """        
-        cube_poly = build_polygon_from_points(self.coordinate_x, self.coordinate_y)
-
-        polygon1 = Polygon(cube_poly)
-        polygon2 = Polygon(self.license_area_poly)
-
-        if polygon1.intersects(polygon2):
-            intersection_area = polygon1.intersection(polygon2)
-            percentage_inside = (intersection_area.area / polygon1.area) * 100
-            report_text = f"Тест пройден успешно. \n\nПроцент вхождения сейсмического куба в границы лицензионного участка {round(percentage_inside, 2)}%"
-        else:
-            intersection_area = None
-            percentage_inside = None
-            report_text = f"Тест не пройден. \n\nСейсмический куб не входит в границы лицензионного участка"
+            get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+        """
+        # Проверяем наличие данных для запуска теста
+        if self.coordinate_x is None or self.coordinate_y is None or self.license_area_poly is None:
+            coordinate_existence = self.coordinate_x is not None or self.coordinate_y is not None
+            license_area_poly_existence = self.license_area_poly is not None
+            report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Наличие координат:{coordinate_existence}, Наличие границ лицензионного участка:{license_area_poly_existence}'
         
-        if get_report:
-            visualize_intersection(polygon1, polygon2, intersection_area, report_text)
+        # Непосредственно проведение теста
+        else:
+            cube_poly = build_polygon_from_points(self.coordinate_x, self.coordinate_y)
+            polygon1, polygon2 = Polygon(cube_poly), Polygon(self.license_area_poly)
+        
+            if polygon1.intersects(polygon2):
+                intersection_area = polygon1.intersection(polygon2)
+                percentage_inside = (intersection_area.area / polygon1.area) * 100
+                report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}Процент вхождения сейсмического куба в границы лицензионного участка {round(percentage_inside, 2)}%"
+            else:
+                intersection_area = None
+                percentage_inside = None
+                report_text = f"{self.ident}Тест не пройден. \n{self.ident}Сейсмический куб не входит в границы лицензионного участка"
+            
+            if get_report:
+                visualize_intersection(polygon1, polygon2, intersection_area, report_text)
 
-       
-
-
-    def second_test(self) -> bool:
-        """_summary_
-
-        Returns:
-            bool: _description_
-        """        
-        return True
+        #self.report_file.write(f"test_coordinate_validation: {report_text}")
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.report_text += f"{timestamp:10} / test_coordinate_validation:\n{report_text}\n\n"
 
 
     def get_list_of_tests(self) -> list:
-        """_summary_
+        test_methods = [method for method in dir(self) if
+                        callable(getattr(self, method)) and method.startswith("test")]
+        return test_methods
 
+    
+    def get_method_description(self, method_name: str) -> str:
+        """Метод для получение описания теста по названию теста
+
+         Args:
+             method_name(str) - название теста
         Returns:
-            list: _description_
-        """        
-        return ['first_test', 'second_test']
+             str - описание теста
+         """
+        method = getattr(self, method_name, None)
+        if method is not None:
+            return method.__doc__
+        else:
+            return "Метод не найден."
 
 
-    def start_tests(self, list_of_tests:list) -> None:
-        """_summary_
+    def start_tests(self, list_of_tests: list) -> list[Any]:
+        # results = []
+        for method_name in list_of_tests:
+            method = getattr(self, method_name)
+            method()
+            #results.append(method())
+        # return results
 
-        Args:
-            list_of_tests (list): _description_
-        """        
-        pass
+
+    def generate_test_report(self, file_name='test_report', file_path='report', data_name='Неизвестный файл'):
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
+        report = f"Отчет о тестировании от {timestamp}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
+        with open(f"{file_path}/{file_name}.txt", "w") as file:
+            file.write(report)
     
 
-    def generate_test_report(self) -> str:
-        """_summary_
 
-        Returns:
-            str: _description_
-        """        
-        return 'test results'
+
 
 
 #########################################################################################################
