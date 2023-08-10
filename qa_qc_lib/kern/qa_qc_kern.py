@@ -99,7 +99,7 @@ class QA_QC_kern:
 
     @private
     def check_input(self, array, param_name, test_name):
-        """Функция для проверки входных данных для тестов первого порядка
+        """
         Тест предназначен для проверки условия - все элементы массива должны быть числовыми.
 
             Args:
@@ -150,10 +150,7 @@ class QA_QC_kern:
     """
 
     def test_water_saturation(self) -> dict[str, bool | datetime | list[int] | str]:
-        """Функция для проверки тестов
-        Кво (остаточная водонасыщенность)
-        Кв (водонасыщенность)
-
+        """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
 
@@ -184,13 +181,7 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_porosity(self) -> dict[str, bool | datetime | list[int] | str]:
-        """Функция для проверки тестов
-        Открытая пористость в атмосферных условия
-        Открытая пористость в пластовых условиях
-        Открытая пористость по гелию
-        Открытая пористость по керосину
-        Эффективная пористость
-
+        """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 47,6]
 
@@ -226,12 +217,7 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_permeability(self) -> dict[str, bool | list[int] | str]:
-        """Функция для проверки тестов
-        Газопроницаемость параллельно напластованию
-        Газопроницаемость с поправкой по Кликенбергу
-        Эффективная проницаемость
-        Проницаемость по воде
-
+        """
         Тест предназначен для проверки физичности данных.
         Значение должно быть больше 0
 
@@ -259,9 +245,7 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_monotony(self) -> dict[str, bool | datetime | list[int] | str]:
-        """Функция для проверки тестов
-        Место отбора керна
-
+        """
         Тест предназначен для проверки монотонности возрастания значения глубины
 
             Args:
@@ -292,9 +276,7 @@ class QA_QC_kern:
     """
 
     def test_quo_kp_dependence(self) -> dict[str, bool | datetime | str]:
-        """Функция для проверки теста
-        Зависимости между Коэффициентом остаточной водонасыщенности и Коэффициентом пористости
-
+        """
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость линейная по функции
@@ -341,9 +323,6 @@ class QA_QC_kern:
 
     def test_kp_density_dependence(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки тестов
-        Зависимость между Коэффициентом пористости и Плотностью
-
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость линейная по функции y=a*x+b, при этом a<0
@@ -389,9 +368,6 @@ class QA_QC_kern:
 
     def test_kvo_kp_din_dependence(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки тестов
-        Зависимость между Коэффициентом остаточной водонасыщенности и Коэффициентом динамической пористости
-
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость линейная по функции y=a*x+b, при этом a<0
@@ -436,17 +412,14 @@ class QA_QC_kern:
 
     def test_obblnas_kp_dependence(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки теста
-        Объемная плотность-Коэффициент пористости
-
         Тест предназначен для проверки физичности
         взаимосвязи двух кроссплотов - Обплнас-Кп и
         Минпл-Кп. Пусть первый аппроксимируется
         линией тренда y=a1*x+b1, а второй - y=a2*x+b2, при этом a1<a2
 
         Args:
-            self.kp (array[int/float]): массив с данными объемная плотность для проверки
-            self.obblnas (array[int/float]): массив с данными коэффициента пористости для проверки
+            self.kp (array[int/float]): массив с данными коэффициента пористости для проверки
+            self.obblnas (array[int/float]): массив с данными объемная плотность для проверки
             self.minple (array[int/float]): массив с данными минералогическая плотность для проверки
 
         Returns:
@@ -499,17 +472,14 @@ class QA_QC_kern:
 
     def test_minple_kp_dependence(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки теста
-        Минералогическая плотность-Коэффициент пористости
-
         Тест предназначен для проверки физичности
         взаимосвязи двух кроссплотов - Обплнас-Кп и
         Минпл-Кп. Пусть первый аппроксимируется
         линией тренда y=a1*x+b1, а второй - y=a2*x+b2, при этом a1<a2
 
         Args:
-            self.kp (array[int/float]): массив с данными объемная плотность для проверки
-            self.obblnas (array[int/float]): массив с данными коэффициента пористости для проверки
+            self.kp (array[int/float]): массив с данными коэффициента пористости для проверки
+            self.obblnas (array[int/float]): массив с данными объемная плотность для проверки
             self.minple (array[int/float]): массив с данными минералогическая плотность для проверки
 
         Returns:
@@ -562,9 +532,6 @@ class QA_QC_kern:
 
     def test_kp_ef_kpdin_dependence(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки теста
-        Зависимость между Коэффициентом эффективной пористости и Коэффициентом динамической пористости
-
         Тест предназначен для оценки соответствия
         типовой для данного кроссплота и полученной
         аппроксимации. В данном случае зависимость
@@ -609,9 +576,6 @@ class QA_QC_kern:
 
     def test_kp_ef_kp_dependence(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки тестов
-        Зависимость между Коэффициентом эффективной пористости и Коэффициентом пористости
-
         Тест предназначен для оценки соответствия
         типовой для данного кроссплота и полученной
         аппроксимации. В данном случае зависимость
@@ -653,9 +617,7 @@ class QA_QC_kern:
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_kp_din_dependence(self) -> dict[str, bool | datetime | str]:
-        """Функция для проверки тестов
-        Зависимость между Коэффициентом пористости и Коэффициентом динамической пористости
-
+        """
         Тест предназначен для оценки соответствия
         типовой для данного кроссплота и полученной
         аппроксимации. В данном случае зависимость
@@ -697,9 +659,6 @@ class QA_QC_kern:
 
     def test_dependence_kpr_kp(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки тестов
-        Зависимость между Коэффициентом проницаемости и Коэффициентом пористости
-
         Тест предназначен для оценки соответствия
         типовой для данного кроссплота и полученной
         аппроксимации. В данном случае зависимость по
@@ -707,7 +666,7 @@ class QA_QC_kern:
 
         Args:
             self.kpr (array[int/float]): массив с данными коэффициент проницаемости для проверки
-            self.kp (array[int/float]): массив с данными кп для проверки
+            self.kp (array[int/float]): массив с данными коэффициент пористости для проверки
 
         Returns:
             image: визуализация кроссплота
@@ -743,9 +702,6 @@ class QA_QC_kern:
 
     def test_dependence_kpr_kp_din(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки теста
-        Зависимость между Коэффициентом проницаемости и Коэффициентом динамической пористости
-
         Тест предназначен для оценки соответствия типовой для
         данного кроссплота и полученной аппроксимации.
         В данном случае зависимость по функции y=a*exp(b*x) при этом b>0
@@ -788,9 +744,6 @@ class QA_QC_kern:
 
     def test_dependence_kvo_kpr(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки тестов
-        Зависимость между Коэффициентом остаточной водонасыщенности и Коэффициентом проницаемости
-
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость по функции y=a*ln(x)+b при этом a>0
@@ -836,15 +789,12 @@ class QA_QC_kern:
 
     def test_rn_kv_dependencies(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки тестов
-        Зависимости между Рн-Коэффициентом водонасыщенности
-
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость по функции y=b/(kв^n) при этом 1,1<n<5
 
         Args:
-            self.rn (array[int/float]): массив с данными рн для проверки
+            self.rn (array[int/float]): массив с данными параметр насыщенности для проверки
             self.kv (array[int/float]): массив с данными коэффициент водонасыщенности для проверки
 
         Returns:
@@ -855,7 +805,7 @@ class QA_QC_kern:
         if self.check_input(self.rn, "rn", "test rn kv dependencies") \
                 and self.check_input(self.kv, "kv", "test rn kv dependencies"):
             self.test_general_dependency_checking(self.rn, self.kv, "est rn kv dependencies",
-                                                  "Коэффициента проницаемости",
+                                                  "Параметр насыщенности",
                                                   "Коэффициента водонасыщенности")
             coefficients = np.polyfit(np.log(self.rn), np.log(self.kv), 1)
             b, n = np.exp(coefficients[1]), coefficients[0]
@@ -878,16 +828,13 @@ class QA_QC_kern:
 
     def test_rp_kp_dependencies(self) -> dict[str, bool | datetime | str]:
         """
-        Функция для проверки тестов
-        Зависимость между Рп-Коэффициентом пористости
-
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость по функции y=a/(kп^m)
         при этом m>0. a>0 и a<2,5, 1,1<m<3,8
 
         Args:
-            self.rp (array[int/float]): массив с данными рп для проверки
+            self.rp (array[int/float]): массив с данными параметр пористости для проверки
             self.kp (array[int/float]): массив с данными коэффициент пористости для проверки
 
         Returns:
@@ -898,7 +845,7 @@ class QA_QC_kern:
         if self.check_input(self.rp, "rp", "test rp kp dependencies") \
                 and self.check_input(self.kp, "kp", "test rp kp dependencies"):
             self.test_general_dependency_checking(self.rp, self.kp, "test rp kp dependencies",
-                                                  "Коэффициента проницаемости",
+                                                  "Параметр пористости",
                                                   "Коэффициента пористости")
             coefficients = np.polyfit(np.log(self.rp), -np.log(self.kp), 1)
             a, m = np.exp(-coefficients[1]), coefficients[0]
@@ -924,9 +871,7 @@ class QA_QC_kern:
     def test_general_dependency_checking(self, x, y, test_name="не указано", x_name="не указано", y_name="не указано") \
             -> dict[str, bool | str | Any] | dict[
                 str, bool | str | Any]:
-        """Функция для проверки теста
-        Для всех зависимостей
-
+        """
         Тест предназначен для оценки дисперсии входных данных.
         Он проводится по следующему алгоритму: изначально,
         используя статистические методы, детектируются и удаляются
@@ -1007,9 +952,7 @@ class QA_QC_kern:
                 return {"result": result, "r2": r2, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_first(self):
-        """Функция для проверки теста
-        Глубины отбора керна_1
-
+        """
         Тест проводится для оценки отсутствия монотонности интервалов долбления. Т.е.,
         подошва вышележащего интервала долбления должна быть выше или равна кровле нижележащего
 
@@ -1042,9 +985,7 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_second(self):
-        """Функция для проверки теста
-        Глубины отбора керна_2
-
+        """
         Тест проводится для оценкци соответствия интервала долбления: подошва-кровля ≥ выносу в метрах
 
             Args:
@@ -1076,9 +1017,7 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_third(self):
-        """Функция для проверки теста
-        Глубины отбора керна_3
-
+        """
         Тест оценивает соответствие значений выноса керна в метрах и в процентах
 
             Args:
@@ -1113,9 +1052,7 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_four(self):
-        """Функция для проверки теста
-        Глубины отбора керна_4
-
+        """
         Тест проводится с целью соответствия глубин отбора образцов с глубинами выноса керна
 
             Args:
@@ -1146,21 +1083,19 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_data_tampering(self):
-        """Функция для проверки теста
-        Подлог данных
-
+        """
         Тест выполняется с целью фиксации подлога измерений.
         Подлог заключается в том, что существуют значения параметров,
         схожие вплоть до 3-его знака после запятой
 
             Args:
-                self.kpr (array[int/float]): массив с данными кпр для сравнения
-                self.kp (array[int/float]): массив с данными кп для сравнения
-                self.kvo (array[int/float]): массив с данными кво для сравнения
-                self.rp (array[int/float]): массив с данными рп для сравнения
+                self.kpr (array[int/float]): массив с данными коэффициент проницаемости для сравнения
+                self.kp (array[int/float]): массив с данными коэффициент пористости для сравнения
+                self.kvo (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для сравнения
+                self.rp (array[int/float]): массив с данными параметр пористости для сравнения
                 self.density (array[int/float]): массив с данными всех плотностей для сравнения
-                self.rn (array[int/float]): массив с данными рн для сравнения
-                self.kv (array[int/float]): массив с данными кв для сравнения
+                self.rn (array[int/float]): массив с данными параметр насыщенности для сравнения
+                self.kv (array[int/float]): массив с данными коэффициент водонасыщенности для сравнения
 
             Returns:
                 bool: результат выполнения теста
@@ -1214,22 +1149,20 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_estimated_values_in_core_data(self, pv=1):
-        """Функция для проверки теста
-        Расчетные величины в данных керна
-
+        """
         Тест выполняет проверку корректности оценки расчетных велчин, таких как
         Кпэфф =Кп*(1-Кво);
         Кп.дин.= Кп*(1-Кво-Кно);
         ρму=ρас+(Кп*ρв);
 
             Args:
-                self.kp_ef (array[int/float]): массив с данными кпэф для проверки
-                self.kp (array[int/float]): массив с данными кп для рассчета
-                self.kvo (array[int/float]): массив с данными кво для рассчета
-                self.kp_din (array[int/float]): массив с данными кп. дин. для проверки
-                self.kno (array[int/float]): массив с данными кно для рассчетов
+                self.kp_ef (array[int/float]): массив с данными коэффициент эффективной пористости для проверки
+                self.kp (array[int/float]): массив с данными коэффициент пористости для рассчета
+                self.kvo (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для рассчета
+                self.kp_din (array[int/float]): массив с данными  коэффициент динамической пористости для проверки
+                self.kno (array[int/float]): массив с данными коэффициент нефтенащенности для рассчетов
                 self.pmu (array[int/float]): массив с данными рму для проверки
-                self.pas (array[int/float]): массив с данными кп для рассчетов
+                self.pas (array[int/float]): массив с данными коэффициент пористости для рассчетов
                 pv  (const): константа для рассчетов
             Returns:
                 bool: результат выполнения теста
@@ -1270,15 +1203,15 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_in_surface_and_reservoir_conditions(self):
-        """Функция для проверки теста
-        Кп в поверхностных и пластовых условиях
-
+        """
         Тест выполянется для сравнения коэффициентов пористости, оцененных пластовых
         и атмосферных условиях. Кп в атмосферных условиях всегда больше чем Кп в пластовых условиях.
 
             Args:
-                self.kp_pov (array[int/float]): массив с данными кп в поверхностных условиях для проверки
-                self.kp_plast (array[int/float]): массив с данными кп в пластовых условиях для проверки
+                self.kp_pov (array[int/float]): массив с данными коэффициент пористости в
+                                                поверхностных условиях для проверки
+                self.kp_plast (array[int/float]): массив с данными коэффициент пористости
+                                                в пластовых условиях для проверки
 
             Returns:
                 bool: результат выполнения теста
@@ -1304,9 +1237,7 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_table_notes(self):
-        """Функция для проверки теста
-        Примечания в таблицах
-
+        """
         Тест проводится с целью ранее установленных несоответствий/аномалий
         при лаборатоном анализе керна, указанных в “примечаниях”
 
@@ -1324,9 +1255,7 @@ class QA_QC_kern:
         return indexes
 
     def test_quo_and_qno(self):
-        """Функция для проверки теста
-        Кво и Кно
-
+        """
         Тест оценивает величину суммарную насыщения водой и нефтью,
         которая не должна привышать 100% или 1 в долях
 
@@ -1334,8 +1263,8 @@ class QA_QC_kern:
                 kv, kpp
 
             Argument description:
-                self.kv (array[int/float]): массив с данными кво для проверки
-                self.kpp (array[int/float]): массив с данными кно для проверки
+                self.kv (array[int/float]): массив с данными коэффиент водонасыщенности для проверки
+                self.kpp (array[int/float]): массив с данными коэффициент нефтенащенности для проверки
 
             Returns:
                 bool: результат выполнения теста
@@ -1375,9 +1304,7 @@ class QA_QC_kern:
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_correctness_of_p_sk_kp(self):
-        """Функция для проверки теста
-          ρ, Ск и Кп1
-
+        """
             Тест выполянется с целью оценки соответствия плотности/карбонатности
             и пористости образцов в зависимости от направления измерений
             (перпендикулярный или параллельный образец). Разница не должна превышать
@@ -1489,6 +1416,3 @@ class QA_QC_kern:
         shutil.copy(self.file_report_name, new_filepath)  # Копирование файла
         os.remove(self.file_report_name)  # Удаление исходного файла
         return new_filepath
-
-
-print(find_test_methods_with_params(["kpp", "kv"]))
