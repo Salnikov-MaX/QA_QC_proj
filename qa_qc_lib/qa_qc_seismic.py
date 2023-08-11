@@ -1,4 +1,4 @@
-import os
+#import os
 import segyio
 import numpy as np
 from shapely.geometry import MultiPoint, Polygon
@@ -92,15 +92,14 @@ class QA_QC_seismic():
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
         """
-
         seismic_cube_r = self.seismic_cube.reshape(-1, self.seismic_cube.shape[2])
         mask = np.all(seismic_cube_r == 0, axis=1)
 
         percent_true = round((np.sum(mask) / mask.size) * 100, 1)
         percent_false = 100 - percent_true
+
         test_result = 'Тест пройден успешно.' if percent_false == 100 else 'Тест не пройден.'
         report_text = f'{self.ident}{test_result}\n{self.ident}Сейсмические трассы присутствуют в {percent_false}% случаев, отсутствуют в {percent_true}%'
-
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_miss_traces:\n{report_text}\n\n"
 
@@ -137,7 +136,7 @@ class QA_QC_seismic():
             return "Метод не найден."
 
 
-    def start_tests(self, list_of_tests: list):
+    def start_tests(self, list_of_tests: list, get_report=True):
         """
         Метод который запускает все тесты, которые переданы в виде списка list_of_tests
 
@@ -146,7 +145,7 @@ class QA_QC_seismic():
         """        
         for method_name in list_of_tests:
             method = getattr(self, method_name)
-            method()
+            method(get_report=get_report)
 
 
     def generate_test_report(self, file_name='test_report', file_path='report', data_name='Неизвестный файл'):
