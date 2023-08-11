@@ -121,15 +121,15 @@ class QA_QC_GIS_second:
 
 
         for mnemonic in self.mnemonics.keys():
-            unit0 = []
+            same_units = []
             for unit in units_list:
-                unit1 = re.sub(r'(_\d+)?(\d+)?', '', unit)
-                if unit1 in self.mnemonics.get(mnemonic):
-                    unit0.append(unit)
+                base_unit = re.sub(r'(_\d+)?(\d+)?', '', unit)
+                if base_unit in self.mnemonics.get(mnemonic):
+                    same_units.append(unit)
                     gis[mnemonic] = np.array(data[unit])
                     missing.append(unit)
-                if unit0 and len(unit0)>1:
-                    repeat[mnemonic] = unit0
+                if same_units and len(same_units)>1:
+                    repeat[mnemonic] = same_units
                     gis[mnemonic] = np.array(data[unit])
         missingnames = units_list
 
@@ -430,7 +430,7 @@ class QA_QC_GIS_second:
                     depthindex = np.where(depth == round(self.depth[i], 2))[0][0]
                     if gis_for_properties[depthindex] > 0 and self.poro_open[i] > 0:
                         o = len(rigis['poro'])
-                        rigis.at[o, 'poro'] = (poro_model(self.gis[gis_type1][depthindex]) if not gis_type2 else poro_model( self.gis[gis_type2][depthindex], gis_for_properties2[depthindex]))
+                        rigis.at[o, 'poro'] = (poro_model(self.gis[gis_type1][depthindex]) if not gis_type2 else poro_model( self.gis[gis_type2][depthindex], gis_for_properties[depthindex]))
                         rigis.at[o, 'depth'] = depth[depthindex]
                         kern_poro.append(self.poro_open[i])
                         rigis_poro.append(rigis.at[o, 'poro'])
