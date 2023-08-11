@@ -1,7 +1,6 @@
 import numpy as np
 import lasio
 import pandas as pd
-import plotly.express as px
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 import re
