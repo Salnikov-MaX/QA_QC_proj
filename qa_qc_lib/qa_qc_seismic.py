@@ -8,9 +8,11 @@ from typing import Any
 
 
 class QA_QC_seismic():
-    def __init__(self, file_path: str, license_area_poly: list = None) -> None:
+    def __init__(self, file_path: str, license_area_poly: list = None, surfaces_path_list: list = None) -> None:
         self.seismic_cube, self.coordinate_x, self.coordinate_y, self.coordinate_z = self.__get_seismic_grid(file_path)
         self.license_area_poly = license_area_poly
+        self.surfaces_path_list = surfaces_path_list  # список путей к файлам с поверхностями
+
         self.report_text = ""
         self.ident = ' '*5   # отступ при формировании отчета
 
@@ -31,6 +33,29 @@ class QA_QC_seismic():
         coordinate_z = segy.samples
         seismic_data = segyio.tools.cube(segy)
         return seismic_data, np.array(coordinate_x), np.array(coordinate_y), coordinate_z
+
+    
+    def __open_irap_ascii_grid(self, path):
+        """
+        Метод для чтения карт изохрон/структурных карт в формате irap
+
+        Args:
+            path (_type_): путь к irap файлу 
+
+        Returns:
+            _type_: минимальное значение на карте, максимальное значение на карте, полигон в котором лежит карта
+        """        
+        with open(path, 'r') as text:
+            text = text.read().replace('\n', ' ').split(' ') 
+            text = [float(i) for i in text if i != '']
+            grid_values = np.array(text[19:]).reshape(int(text[1]), int(text[9-1]))
+
+            min_val, max_val = grid_values[grid_values != 9999900.0].min(), grid_values[grid_values != 9999900.0].max()
+            min_x, max_x = text[4], text[5]
+            min_y, max_y = text[6], text[7]
+            rectangle_points = [(min_x, min_y), (min_x, max_y), (max_x, max_y), (max_x, min_y)]
+
+        return min_val, max_val, rectangle_points
 
 
     def test_coordinate_validation(self, get_report=True) -> None:
@@ -107,6 +132,59 @@ class QA_QC_seismic():
                                                            self.seismic_cube.shape[1])),
                                              percent_false)
 
+
+    def test_surfaces_location_validation(self, get_report=True):
+        """
+        Метод оценивает соответствие отражающего горизонта сейсмическому кубу
+
+        Args:
+            get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+        """        
+        # Проверка наличия данных для проведения теста
+        if not self.surfaces_path_list:
+            report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о поверхностях не были переданы'
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
+            if get_report: print('\n'+report_text) 
+        
+        # Непосредственно проведение теста
+        else:
+            cube_poly = build_polygon_from_points(self.coordinate_x, self.coordinate_y)
+            polygon1 = Polygon(cube_poly)
+            # Проведем тест для каждой поврхности отдельно
+            for path in self.surfaces_path_list:
+                try:
+                    min_val, max_val, rectangle_points = self.__open_irap_ascii_grid(path)
+
+                    # проверяем совпадение по X и Y коррдинатам
+                    polygon2 = Polygon(rectangle_points)
+                    x_y_coords_validation = polygon1.intersects(polygon2)
+                    
+                    #print(f'проверяем совпадение по X и Y коррдинатам: {x_y_coords_validation}')
+
+                    # проверяем совпадение по Z коррдинатe
+                    cube_z_min, cube_z_max = self.coordinate_z.min(), self.coordinate_z.max()
+                    z_coords_validation = cube_z_min <= min_val and cube_z_max >= max_val
+
+                    # print(f'Z по кубу: {cube_z_min}, {cube_z_max}, по карте: {min_val}, {max_val}')
+
+                    # формируем отчет о тесте
+                    test_result = x_y_coords_validation and z_coords_validation
+                    text = 'Тест пройден успешно.' if test_result else 'Тест не пройден.'
+                    text_2 = '' if test_result else 'не '
+                    report_text = f'{self.ident}{text}\n{self.ident}Путь к файлу:"{path}"; отражающий горизонт {text_2}попадает в границы сейсмического куба'
+                    if not test_result: report_text = report_text + f' (совпадение по X,Y:{x_y_coords_validation}, по вертикальной шкале:{z_coords_validation})'
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
+                    if get_report: print('\n'+report_text)
+
+                except FileNotFoundError:
+                    report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{path}"'
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
+                    if get_report: print('\n'+report_text)
+
+        
 
     def get_list_of_tests(self) -> list:
         """
@@ -192,7 +270,7 @@ def visualize_intersection(polygon1, polygon2, intersection_area=None, text=None
 
     if intersection_area:
         intersection_x, intersection_y = intersection_area.exterior.xy
-        ax.fill(intersection_x, intersection_y, color='red', alpha=0.5, label='Intersection Area')
+        ax.fill(intersection_x, intersection_y, color='red', alpha=0.5, label='Зона пересечения полигонов')
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
@@ -245,3 +323,5 @@ def build_polygon_from_points(x_coords:np.array, y_coords:np.array):
     points = MultiPoint(list(zip(x_coords, y_coords)))
     convex_hull = points.convex_hull
     return list(convex_hull.exterior.coords)
+
+
