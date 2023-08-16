@@ -1,17 +1,21 @@
 #import os
 import segyio
 import numpy as np
-from shapely.geometry import MultiPoint, Polygon
+from shapely.geometry import MultiPoint, Polygon, Point
 import matplotlib.pyplot as plt
 import datetime
 from typing import Any
 
 
 class QA_QC_seismic():
-    def __init__(self, file_path: str, license_area_poly: list = None, surfaces_path_list: list = None) -> None:
+    def __init__(self, file_path: str, license_area_poly: list = None, surfaces_path_list: list = None, faults_file_path: str = None) -> None:
+        
         self.seismic_cube, self.coordinate_x, self.coordinate_y, self.coordinate_z = self.__get_seismic_grid(file_path)
-        self.license_area_poly = license_area_poly
-        self.surfaces_path_list = surfaces_path_list  # список путей к файлам с поверхностями
+        self.cube_poly = Polygon(build_polygon_from_points(self.coordinate_x, self.coordinate_y))
+
+        self.license_area_poly = license_area_poly    # полигон лицензионного участка
+        self.surfaces_path_list = surfaces_path_list  # список путей к файлам с поверхностями структурных карт / карт изохрон
+        self.faults_file_path = faults_file_path
 
         self.report_text = ""
         self.ident = ' '*5   # отступ при формировании отчета
@@ -27,7 +31,7 @@ class QA_QC_seismic():
         Returns:
             _type_: (куб сейсмических трасс, вектор координат X каждой из трасс, вектор координат Y каждой из трасс, вектор глубин)
         """
-        segy = segyio.open(segy_file_path, 'r', strict=False)  # Открываем SEGY-файл в режиме чтения
+        segy = segyio.open(segy_file_path, 'r', strict=False)     # Открываем SEGY-файл в режиме чтения
         coordinate_x = segy.attributes(segyio.TraceField.SourceX)
         coordinate_y = segy.attributes(segyio.TraceField.SourceY)
         coordinate_z = segy.samples
@@ -48,14 +52,39 @@ class QA_QC_seismic():
         with open(path, 'r') as text:
             text = text.read().replace('\n', ' ').split(' ') 
             text = [float(i) for i in text if i != '']
-            grid_values = np.array(text[19:]).reshape(int(text[1]), int(text[9-1]))
+            grid_values = np.array(text[19:]).reshape(int(text[1]), int(text[9-1])) # хардкодом заданы значения из шапки файла согласно его структуре
 
-            min_val, max_val = grid_values[grid_values != 9999900.0].min(), grid_values[grid_values != 9999900.0].max()
+            min_val, max_val = grid_values[grid_values != 9999900.0].min(), grid_values[grid_values != 9999900.0].max() 
             min_x, max_x = text[4], text[5]
             min_y, max_y = text[6], text[7]
             rectangle_points = [(min_x, min_y), (min_x, max_y), (max_x, max_y), (max_x, min_y)]
 
         return min_val, max_val, rectangle_points
+
+
+    def __parse_faults(self, path: str) -> dict:
+        """
+        Функция парсит файл с разломами
+
+        Args:
+            path (str): Путь к файлу с разломами
+
+        Returns:
+            dict: Словарь с разломами, где keys - название разлома, values - (x, y, z) координаты точек разлома.
+        """    
+        fault_dict = {}
+        with open(path, 'r') as fault:
+            for line in fault:
+                words = line.strip().split()
+                if len(words) >= 7:
+                    u = words[6]
+                    r = float(words[3])
+                    t = float(words[4])
+                    y = float(words[5])
+                if u not in fault_dict:
+                    fault_dict[u] = []
+                fault_dict[u].append((r, t, y))
+        return fault_dict
 
 
     def test_coordinate_validation(self, get_report=True) -> None:
@@ -74,19 +103,17 @@ class QA_QC_seismic():
             if get_report: print('\n'+report_text) 
         # Непосредственно проведение теста
         else:
-            cube_poly = build_polygon_from_points(self.coordinate_x, self.coordinate_y)
-            polygon1, polygon2 = Polygon(cube_poly), Polygon(self.license_area_poly)
-        
-            if polygon1.intersects(polygon2):
-                intersection_area = polygon1.intersection(polygon2)
-                percentage_inside = (intersection_area.area / polygon1.area) * 100
+            polygon2 = Polygon(self.license_area_poly)
+            if self.cube_poly.intersects(polygon2):
+                intersection_area = self.cube_poly.intersection(polygon2)
+                percentage_inside = (intersection_area.area / self.cube_poly.area) * 100
                 report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}Процент вхождения сейсмического куба в границы лицензионного участка {round(percentage_inside, 2)}%"
+
             else:
-                intersection_area = None
-                percentage_inside = None
+                intersection_area, percentage_inside = None, None
                 report_text = f"{self.ident}Тест не пройден. \n{self.ident}Сейсмический куб не входит в границы лицензионного участка"
             
-            if get_report: visualize_intersection(polygon1, polygon2, intersection_area, report_text) 
+            if get_report: visualize_intersection(self.cube_poly, polygon2, intersection_area, report_text) 
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_coordinate_validation:\n{report_text}\n\n"
@@ -149,26 +176,18 @@ class QA_QC_seismic():
         
         # Непосредственно проведение теста
         else:
-            cube_poly = build_polygon_from_points(self.coordinate_x, self.coordinate_y)
-            polygon1 = Polygon(cube_poly)
+            cube_z_min, cube_z_max = self.coordinate_z.min(), self.coordinate_z.max()
             # Проведем тест для каждой поврхности отдельно
             for path in self.surfaces_path_list:
                 try:
                     min_val, max_val, rectangle_points = self.__open_irap_ascii_grid(path)
-
                     # проверяем совпадение по X и Y коррдинатам
                     polygon2 = Polygon(rectangle_points)
-                    x_y_coords_validation = polygon1.intersects(polygon2)
-                    
-                    #print(f'проверяем совпадение по X и Y коррдинатам: {x_y_coords_validation}')
-
+                    x_y_coords_validation = self.cube_poly.intersects(polygon2)
                     # проверяем совпадение по Z коррдинатe
-                    cube_z_min, cube_z_max = self.coordinate_z.min(), self.coordinate_z.max()
                     z_coords_validation = cube_z_min <= min_val and cube_z_max >= max_val
 
-                    # print(f'Z по кубу: {cube_z_min}, {cube_z_max}, по карте: {min_val}, {max_val}')
-
-                    # формируем отчет о тесте
+                    # формируем отчет о прохождении теста
                     test_result = x_y_coords_validation and z_coords_validation
                     text = 'Тест пройден успешно.' if test_result else 'Тест не пройден.'
                     text_2 = '' if test_result else 'не '
@@ -178,13 +197,59 @@ class QA_QC_seismic():
                     self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
                     if get_report: print('\n'+report_text)
 
-                except FileNotFoundError:
+                except FileNotFoundError: 
                     report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{path}"'
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
                     if get_report: print('\n'+report_text)
 
+
+    def test_faults_location_validation(self, get_report=True):
+        """
+        Метод оценивает соответствие пикировки разлома сейсмическому кубу
+
+        Args:
+            get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+        """ 
+        # Проверка наличия данных для проведения теста
+        if not self.faults_file_path:
+            report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о разломах не были переданы'
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
+            if get_report: print('\n'+report_text) 
         
+        # Непосредственно проведение теста
+        else: 
+            try:
+                fault_dict = self.__parse_faults(self.faults_file_path)
+                cube_z_min, cube_z_max = self.coordinate_z.min(), self.coordinate_z.max()
+                # В одном файле находится несколько разломов, проведем тест для каждого из них
+                for key in fault_dict.keys():
+                    points = fault_dict[key]
+                    res = []
+                    for point in points:
+                        # проверяем совпадение по X и Y коррдинатам
+                        x_y_coords_validation = Point((point[0], point[1])).within(self.cube_poly)
+                        # проверяем совпадение по вертикальной оси
+                        z_coords_validation = cube_z_min <= point[2] and cube_z_max >= point[2]
+                        res.append(x_y_coords_validation and z_coords_validation)
+                    income_points_percent = round((sum(res) * 100 / len(res)), 2)
+                    test_result = income_points_percent != 0
+
+                    # формируем отчет о прохождении теста
+                    test_result = x_y_coords_validation and z_coords_validation
+                    text = 'Тест пройден успешно.' if test_result else 'Тест не пройден.'
+                    report_text = f'{self.ident}{text}\n{self.ident}Разлом:"{key}"; {income_points_percent}% точек разлома из {len(points)} входит в границы сейсмического куба'
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
+                    if get_report: print('\n'+report_text)
+
+            except FileNotFoundError: 
+                report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{self.faults_file_path}"'
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
+                if get_report: print('\n'+report_text)
+
 
     def get_list_of_tests(self) -> list:
         """
