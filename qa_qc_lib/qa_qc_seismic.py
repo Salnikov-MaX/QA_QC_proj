@@ -11,6 +11,7 @@ class QA_QC_seismic():
     def __init__(self, file_path: str, license_area_poly: list = None, surfaces_path_list: list = None, faults_file_path: str = None) -> None:
         
         self.seismic_cube, self.coordinate_x, self.coordinate_y, self.coordinate_z = self.__get_seismic_grid(file_path)
+        self.file_name = file_path.split('/')[-1]
         self.cube_poly = Polygon(build_polygon_from_points(self.coordinate_x, self.coordinate_y))
 
         self.license_area_poly = license_area_poly    # полигон лицензионного участка
@@ -87,7 +88,7 @@ class QA_QC_seismic():
         return fault_dict
 
 
-    def test_coordinate_validation(self, get_report=True) -> None:
+    def test_coordinate_validation(self, get_report=True) -> dict:
         """
         Оценка корректности координат загруженного куба.
         Метод проверяет вхождение сейсического куба в границы лицензионного участка 
@@ -95,12 +96,14 @@ class QA_QC_seismic():
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
         """
+        all_results_dict = {}
         # Проверяем наличие данных для запуска теста
         if self.coordinate_x is None or self.coordinate_y is None or self.license_area_poly is None:
             coordinate_existence = self.coordinate_x is not None or self.coordinate_y is not None
             license_area_poly_existence = self.license_area_poly is not None
             report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Наличие координат:{coordinate_existence}, Наличие границ лицензионного участка:{license_area_poly_existence}'
             if get_report: print('\n'+report_text) 
+            all_results_dict["result"] = 'Fail'
         # Непосредственно проведение теста
         else:
             polygon2 = Polygon(self.license_area_poly)
@@ -108,36 +111,42 @@ class QA_QC_seismic():
                 intersection_area = self.cube_poly.intersection(polygon2)
                 percentage_inside = (intersection_area.area / self.cube_poly.area) * 100
                 report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}Процент вхождения сейсмического куба в границы лицензионного участка {round(percentage_inside, 2)}%"
+                all_results_dict["result"] = 'True'
 
             else:
                 intersection_area, percentage_inside = None, None
                 report_text = f"{self.ident}Тест не пройден. \n{self.ident}Сейсмический куб не входит в границы лицензионного участка"
+                all_results_dict["result"] = 'False'
             
             if get_report: visualize_intersection(self.cube_poly, polygon2, intersection_area, report_text) 
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_coordinate_validation:\n{report_text}\n\n"
+        return all_results_dict | {"file_name": self.file_name, "date": timestamp}
 
 
-    def test_monotony(self, get_report=True):
+    def test_monotony(self, get_report=True) -> dict:
         """
         Метод проверяет ось глубин / времени на монотонное возрастание (каждое следующее значение больше предыдущего)
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
         """
-        if sum(np.diff(self.coordinate_z) <= 0) == 0:
+        result_mask = np.diff(self.coordinate_z) <= 0
+        result = sum(result_mask) == 0
+        if result:
             report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}Отметки оси глубин/времени монотонно возрастают"
         else:
             report_text = f"{self.ident}Тест не пройден. \n{self.ident}Отметки оси глубин/времени не возрастают монотонно"
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_monotony:\n{report_text}\n\n"
-
         if get_report: print('\n'+report_text)
 
+        return {"result": result, "wrong_values": ~result_mask, "file_name": self.file_name, "date": timestamp}
 
-    def test_miss_traces(self, get_report=True):
+
+    def test_miss_traces(self, get_report=True) -> dict:
         """
         Метод проверяет сейсмический куб на наличие пропущенных / не записанных сейсмотрасс 
 
@@ -149,8 +158,9 @@ class QA_QC_seismic():
 
         percent_true = round((np.sum(mask) / mask.size) * 100, 1)
         percent_false = 100 - percent_true
+        result = percent_false == 100
 
-        test_result = 'Тест пройден успешно.' if percent_false == 100 else 'Тест не пройден.'
+        test_result = 'Тест пройден успешно.' if result else 'Тест не пройден.'
         report_text = f'{self.ident}{test_result}\n{self.ident}Сейсмические трассы присутствуют в {percent_false}% случаев, отсутствуют в {percent_true}%'
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_miss_traces:\n{report_text}\n\n"
@@ -159,33 +169,42 @@ class QA_QC_seismic():
                                                            self.seismic_cube.shape[1])),
                                              percent_false)
 
+        return {"result": result, "wrong_values": mask, "file_name": self.file_name, "date": timestamp}
 
-    def test_surfaces_location_validation(self, get_report=True):
+
+    def test_surfaces_location_validation(self, get_report=True) -> dict:
         """
         Метод оценивает соответствие отражающего горизонта сейсмическому кубу
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
         """        
+        all_results_dict = {}
         # Проверка наличия данных для проведения теста
         if not self.surfaces_path_list:
             report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о поверхностях не были переданы'
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
-            if get_report: print('\n'+report_text) 
+            if get_report: print('\n'+report_text)
+            all_results_dict['data availability'] = False 
         
         # Непосредственно проведение теста
         else:
             cube_z_min, cube_z_max = self.coordinate_z.min(), self.coordinate_z.max()
+            all_results_dict['data availability'] = True
             # Проведем тест для каждой поврхности отдельно
             for path in self.surfaces_path_list:
+                name = path.split('/')[-1]
+                results_dict = {}
                 try:
                     min_val, max_val, rectangle_points = self.__open_irap_ascii_grid(path)
                     # проверяем совпадение по X и Y коррдинатам
                     polygon2 = Polygon(rectangle_points)
                     x_y_coords_validation = self.cube_poly.intersects(polygon2)
+                    results_dict['x_y_coords_validation'] = str(x_y_coords_validation)
                     # проверяем совпадение по Z коррдинатe
                     z_coords_validation = cube_z_min <= min_val and cube_z_max >= max_val
+                    results_dict['z_coords_validation'] = str(z_coords_validation)
 
                     # формируем отчет о прохождении теста
                     test_result = x_y_coords_validation and z_coords_validation
@@ -198,35 +217,43 @@ class QA_QC_seismic():
                     if get_report: print('\n'+report_text)
 
                 except FileNotFoundError: 
+                    results_dict['x_y_coords_validation'], results_dict['z_coords_validation'] = 'Fail', 'Fail'
                     report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{path}"'
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
                     if get_report: print('\n'+report_text)
 
+                all_results_dict[name] = results_dict
+        return all_results_dict | {"date" : timestamp}
 
-    def test_faults_location_validation(self, get_report=True):
+
+    def test_faults_location_validation(self, get_report=True) -> dict:
         """
         Метод оценивает соответствие пикировки разлома сейсмическому кубу
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
         """ 
+        all_results_dict = {}
         # Проверка наличия данных для проведения теста
         if not self.faults_file_path:
             report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о разломах не были переданы'
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
             if get_report: print('\n'+report_text) 
+            all_results_dict['data availability'] = False
         
         # Непосредственно проведение теста
-        else: 
+        else:
             try:
                 fault_dict = self.__parse_faults(self.faults_file_path)
+                all_results_dict['data availability'] = True 
                 cube_z_min, cube_z_max = self.coordinate_z.min(), self.coordinate_z.max()
                 # В одном файле находится несколько разломов, проведем тест для каждого из них
                 for key in fault_dict.keys():
                     points = fault_dict[key]
                     res = []
+                    results_dict = {}
                     for point in points:
                         # проверяем совпадение по X и Y коррдинатам
                         x_y_coords_validation = Point((point[0], point[1])).within(self.cube_poly)
@@ -236,6 +263,11 @@ class QA_QC_seismic():
                     income_points_percent = round((sum(res) * 100 / len(res)), 2)
                     test_result = income_points_percent != 0
 
+                    # results_dict['x_y_coords_validation'] = str(x_y_coords_validation)
+                    # results_dict['z_coords_validation'] = str(z_coords_validation)
+                    results_dict['income_points_percent'] = income_points_percent
+                    all_results_dict[key] = results_dict
+
                     # формируем отчет о прохождении теста
                     test_result = x_y_coords_validation and z_coords_validation
                     text = 'Тест пройден успешно.' if test_result else 'Тест не пройден.'
@@ -244,11 +276,14 @@ class QA_QC_seismic():
                     self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
                     if get_report: print('\n'+report_text)
 
-            except FileNotFoundError: 
+            except FileNotFoundError:
+                all_results_dict['data availability'] = False 
                 report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{self.faults_file_path}"'
                 timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
                 if get_report: print('\n'+report_text)
+        
+        return all_results_dict | {"date" : timestamp}
 
 
     def get_list_of_tests(self) -> list:
@@ -279,16 +314,22 @@ class QA_QC_seismic():
             return "Метод не найден."
 
 
-    def start_tests(self, list_of_tests: list, get_report=True):
+    def start_tests(self, list_of_tests: list, get_report=True) -> dict:
         """
         Метод который запускает все тесты, которые переданы в виде списка list_of_tests
 
         Args:
             list_of_tests (list): список названий тестов которые должны быть проведены
-        """        
+            get_report (bool, optional): _description_. Defaults to True.
+
+        Returns:
+            dict: результаты выбранных тестов
+        """            
+        results = {}
         for method_name in list_of_tests:
             method = getattr(self, method_name)
-            method(get_report=get_report)
+            results[method_name] = method(get_report=get_report)
+        return results
 
 
     def generate_test_report(self, file_name='test_report', file_path='report', data_name='Неизвестный файл'):
