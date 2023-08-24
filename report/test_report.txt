@@ -1,614 +1,614 @@
 Отчет о тестировании от 2023-08-23     Название тестируемого файла: 'Глубинный куб NP cropped'
 
-2023-08-23 12:30:41 / test_coordinate_validation:
+2023-08-23 13:45:09 / test_coordinate_validation:
      Тест пройден успешно. 
-     Процент вхождения сейсмического куба в границы лицензионного участка 94.87%
+     Процент вхождения сейсмического куба в границы лицензионного участка 99.2%
 
-2023-08-23 12:31:47 / test_faults_location_validation:
-     Тест пройден.
+2023-08-23 13:46:08 / test_edge_zone_evaluation:
+     Тест пройден успешно.
      Ширина краевой зоны оценена в 70 дискретов сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_Jra_kust14_2_[Depth_1]"; 52.63% точек разлома из 19 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_Jra_kust14_4_[Depth_1]"; 75.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_Jra_kust14_5_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_Jra_kust14_6_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_Jra_kust14_7_[Depth_1]"; 54.55% точек разлома из 11 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_Jra_kust14_8_[Depth_1]"; 50.0% точек разлома из 10 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_Jra_kust14_9_[Depth_1]"; 50.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_10_[Depth_1]"; 55.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_11_[Depth_1]"; 50.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_14_[Depth_1]"; 68.75% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_15_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_1_[Depth_1]"; 50.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_2_[Depth_1]"; 72.73% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_3_[Depth_1]"; 100.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_4_[Depth_1]"; 67.65% точек разлома из 34 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_6_[Depth_1]"; 63.64% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_7_[Depth_1]"; 50.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_8_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust11_9_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust12_10_[Depth_1]"; 50.0% точек разлома из 32 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust12_14_[Depth_1]"; 100.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust12_16_[Depth_1]"; 51.72% точек разлома из 29 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust12_17_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust12_18_[Depth_1]"; 50.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust12_19_[Depth_1]"; 50.0% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust12_5_[Depth_1]"; 54.55% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust12_6_[Depth_1]"; 50.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust13_1_[Depth_1]"; 50.0% точек разлома из 32 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust13_2_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust13_3_[Depth_1]"; 50.0% точек разлома из 8 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust13_4_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust13_5_[Depth_1]"; 60.0% точек разлома из 10 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_10_[Depth_1]"; 50.0% точек разлома из 30 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_11_[Depth_1]"; 53.33% точек разлома из 60 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_15_[Depth_1]"; 60.0% точек разлома из 30 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_17_[Depth_1]"; 50.0% точек разлома из 8 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_18_[Depth_1]"; 50.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_19_[Depth_1]"; 50.0% точек разлома из 60 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_1_[Depth_1]"; 50.0% точек разлома из 32 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_20_[Depth_1]"; 50.0% точек разлома из 46 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_2_[Depth_1]"; 50.0% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_3_[Depth_1]"; 65.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_4_[Depth_1]"; 50.0% точек разлома из 28 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_7_[Depth_1]"; 50.0% точек разлома из 30 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_8_[Depth_1]"; 50.0% точек разлома из 10 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust14_9_[Depth_1]"; 50.0% точек разлома из 70 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_11_[Depth_1]"; 50.0% точек разлома из 38 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_12_[Depth_1]"; 50.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_13_[Depth_1]"; 50.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_14_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_15_[Depth_1]"; 50.0% точек разлома из 8 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_16_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_1_[Depth_1]"; 50.0% точек разлома из 32 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_20_[Depth_1]"; 50.0% точек разлома из 24 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_21_[Depth_1]"; 50.0% точек разлома из 32 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_22_[Depth_1]"; 50.0% точек разлома из 38 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_23_[Depth_1]"; 50.0% точек разлома из 50 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_24_[Depth_1]"; 54.55% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_25_[Depth_1]"; 75.0% точек разлома из 8 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_26_[Depth_1]"; 60.0% точек разлома из 10 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_27_[Depth_1]"; 58.33% точек разлома из 24 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_28_[Depth_1]"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_30_[Depth_1]"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_32_[Depth_1]"; 50.0% точек разлома из 24 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_33_[Depth_1]"; 50.0% точек разлома из 26 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_34_[Depth_1]"; 50.0% точек разлома из 34 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_35_[Depth_1]"; 50.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_43_[Depth_1]"; 50.0% точек разлома из 10 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_44_[Depth_1]"; 50.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_4_[Depth_1]"; 50.0% точек разлома из 24 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_5_[Depth_1]"; 50.0% точек разлома из 28 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_7_[Depth_1]"; 54.55% точек разлома из 11 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust15_16_9_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust17_1_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust17_2_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust17_3_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust17_4_[Depth_1]"; 50.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust17_5_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust17_6_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_10_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_12_[Depth_1]"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_13_[Depth_1]"; 50.0% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_14_[Depth_1]"; 54.55% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_15_[Depth_1]"; 65.38% точек разлома из 26 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_16_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_18_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_19_[Depth_1]"; 60.0% точек разлома из 10 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_1_[Depth_1]"; 49.51% точек разлома из 103 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_20_[Depth_1]"; 45.16% точек разлома из 31 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_21_[Depth_1]"; 50.0% точек разлома из 24 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_22_[Depth_1]"; 50.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_23_[Depth_1]"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_24_[Depth_1]"; 50.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_25_[Depth_1]"; 50.0% точек разлома из 10 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_26_[Depth_1]"; 50.0% точек разлома из 8 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_27_[Depth_1]"; 64.29% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_28_[Depth_1]"; 59.09% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_29_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_2_[Depth_1]"; 50.0% точек разлома из 24 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_30_[Depth_1]"; 58.33% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_31_[Depth_1]"; 50.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_32_[Depth_1]"; 50.0% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_33_[Depth_1]"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_34_[Depth_1]"; 50.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_35_[Depth_1]"; 50.0% точек разлома из 24 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_36_[Depth_1]"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_37_[Depth_1]"; 50.0% точек разлома из 10 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_38_[Depth_1]"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_39_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_3_[Depth_1]"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_40_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_4_[Depth_1]"; 56.25% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_52_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_53_[Depth_1]"; 50.0% точек разлома из 8 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_56_[Depth_1]"; 87.5% точек разлома из 8 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_5_[Depth_1]"; 50.0% точек разлома из 34 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_6_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_7_[Depth_1]"; 50.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust18_9_[Depth_1]"; 55.56% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust_8_1_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust_8_3_[Depth_1]"; 56.25% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust_8_4_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust_8_7_[Depth_1]"; 50.0% точек разлома из 12 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust_9_1_[Depth_1]"; 50.0% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust_9_2_[Depth_1]"; 50.0% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust_9_3_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust_9_4_[Depth_1]"; 50.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust_9_5_[Depth_1]"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust_9_6_[Depth_1]"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_kust14_1_[Depth_1]"; 85.0% точек разлома из 20 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_kust14_3_[Depth_1]"; 100.0% точек разлома из 6 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_kust14_4_[Depth_1]"; 100.0% точек разлома из 8 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_East_Depth_1"; 50.0% точек разлома из 66 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_NP_Jra_kust12_1_[Depth_1]"; 50.0% точек разлома из 46 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_West_Depth_9"; 50.0% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_East_Depth_32"; 50.0% точек разлома из 52 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_East_Depth_35"; 50.0% точек разлома из 42 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_West_Depth_22"; 50.0% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_West_Depth_25"; 55.56% точек разлома из 18 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_West_Depth_28"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_West_Depth_33"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_West_Depth_35"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_West_Depth_36"; 50.0% точек разлома из 16 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_West_Depth_39"; 50.0% точек разлома из 8 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_West_Depth_40"; 54.55% точек разлома из 22 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_West_Depth_45"; 50.0% точек разлома из 38 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_faults_location_validation:
+2023-08-23 13:46:08 / test_faults_location_validation:
      Тест пройден успешно.
      Разлом:"Fault_Ok_Jra_kust14_3_[Depth_1]"; 50.0% точек разлома из 14 входит в границы сейсмического куба
 
-2023-08-23 12:31:47 / test_miss_traces:
+2023-08-23 13:46:08 / test_miss_traces:
      Тест не пройден.
      Сейсмические трассы присутствуют в 69.2% случаев, отсутствуют в 30.8%
 
-2023-08-23 12:31:47 / test_monotony:
+2023-08-23 13:46:08 / test_monotony:
      Тест пройден успешно. 
      Отметки оси глубин/времени монотонно возрастают
 
-2023-08-23 12:31:48 / test_surfaces_location_validation:
+2023-08-23 13:46:08 / test_surfaces_location_validation:
      Тест не пройден.
      Путь к файлу:"data/TWT_NP4"; отражающий горизонт не попадает в границы сейсмического куба (совпадение по X,Y:True, по вертикальной шкале:False)
 
-2023-08-23 12:31:48 / test_surfaces_location_validation:
+2023-08-23 13:46:08 / test_surfaces_location_validation:
      Отсутствуют данные для проведения теста.
      Некорректный путь к файлу:"data/TWT_NP"
 

@@ -502,14 +502,11 @@ def find_border(mask):
     """
     # Создаем 3x3 ядро (kernel) с единицами
     kernel = np.ones((3, 3))
-    
     # Применяем свертку к маске с ядром
     conv_result = convolve2d(mask, kernel, mode='same')
-    
     # Идентифицируем границы: все пиксели в результирующем изображении, которые меньше 9
     # (и соответствующие пиксели в исходной маске равны True), являются границами.
     border = np.logical_and(conv_result < 9, mask)
-    
     return border
 
 
@@ -523,12 +520,8 @@ def compute_variance(arr):
     Returns:
         float: Дисперсия массива.
     """    
-    # Вычисляем среднее значение
     mean_val = np.mean(arr)
-    
-    # Вычисляем дисперсию
     variance = np.mean((arr - mean_val) ** 2)
-    
     return variance
 
 
@@ -596,8 +589,6 @@ def visualize_edge_zone_evaluation(mask, variance_list, split_point):
     ]
     legend_labels = [mpatches.Patch(color=colors[i], label=labels[i]) for i in range(3)]
     axes[1].legend(handles=legend_labels, loc='center left', bbox_to_anchor=(1, 0.945))
-    
-    # Отображение графиков
     plt.tight_layout()
     plt.show()
 
