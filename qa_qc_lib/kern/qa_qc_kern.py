@@ -194,7 +194,7 @@ class QA_QC_kern:
                 self.pmu = []
                 if self.pas is not None and self.kp is not None:
                         for i in range(len(self.pas)):
-                            self.pmu.append(self.pas + (self.kp * 1))
+                            self.pmu.append(self.pas[i] + (self.kp[i] * 1))
                         self.pmu = np.array(self.pmu)
         except:
             self.file.write("Не удалось вычислить значение Объемная плотность\n")
@@ -886,7 +886,6 @@ class QA_QC_kern:
                 equation = f'y = {a:.2f}x + {b:.2f}, r2={r2}'
                 plt.text(np.mean(self.kp_ef), np.min(self.kp_din), equation, ha='center', va='bottom')
                 plt.show()
-                print(wrong_values1, wrong_values2)
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
@@ -1308,7 +1307,7 @@ class QA_QC_kern:
 
         # Вычисление R2 score
         r2 = r2_score(y_filtered, trend_line)
-
+        result=True
         # Проверка условия R2 score и удаление точек при несоответствии
         while r2 < self.r2 and len(x_filtered) > 0.9 * n:
             # Вычисление расстояний от линии тренда до каждой точки
@@ -1335,10 +1334,10 @@ class QA_QC_kern:
                 return {"result": result, "r2": r2, "file_name": self.file_name, "date": self.dt_now}
             else:
                 result = False
-                self.file.write(
-                    f"Test 'general dependency checking': {result}. "
-                    f"Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n")
-                return {"result": result, "r2": r2, "file_name": self.file_name, "date": self.dt_now}
+        self.file.write(
+            f"Test 'general dependency checking': {result}. "
+            f"Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n")
+        return {"result": result, "r2": r2, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_first(self, get_report=True):
         """
@@ -1631,10 +1630,13 @@ class QA_QC_kern:
                 array[int]: индексы на которых находятся дефекты
                 file: запись результата теста для сохранения состояния
         """
-        indexes = [i for i, x in enumerate(self.table) if x != 'nan']
-        self.file.write("Test 'table notes': {}\n".format(indexes))
-        self.dict_of_wrong_values["test_table_notes"] = [{"Примечание": indexes}, "присутствует неисправность"]
-        return indexes
+        try:
+            indexes = [i for i, x in enumerate(self.table) if x != 'nan']
+            self.file.write("Test 'table notes': {}\n".format(indexes))
+            self.dict_of_wrong_values["test_table_notes"] = [{"Примечание": indexes}, "присутствует неисправность"]
+            return indexes
+        except:
+            self.dict_of_wrong_values["test_table_notes"] = [{"Примечание": [0]}, "пустой"]
 
     def test_quo_and_qno(self, get_report=True):
         """

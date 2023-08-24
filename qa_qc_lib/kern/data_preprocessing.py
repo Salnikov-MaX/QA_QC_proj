@@ -1,6 +1,4 @@
 import os
-from typing import re
-
 import pandas as pd
 import numpy as np
 from openpyxl import Workbook
@@ -111,7 +109,7 @@ class DataPreprocessing:
         self.perpendicular_porosity = []
         self.perpendicular_number = []
         self.parallel_carbonate = []
-        self.interval=[]
+        self.interval = []
         self.perpendicular_carbonate = []
 
     def __create_new_glossary(self):
@@ -131,7 +129,7 @@ class DataPreprocessing:
             if file.endswith(".xlsx") or file.endswith(".xls"):
                 df = pd.read_excel(file)
             elif file.endswith(".txt"):
-                df = pd.read_csv(file, sep="\t")
+                df = pd.read_table(file, sep='\t', header=0, on_bad_lines='skip')
             if len(df) != 0:
                 for col in df.columns:
                     if col in self.glossary_of_names.values():
@@ -145,8 +143,15 @@ class DataPreprocessing:
                                 processed_value = value
                             processed_col_data.append(processed_value)
                         self.data_dict[key] = processed_col_data
+                        processed_depth = []
                         try:
-                            new_depths = df[self.user_glossary_of_names[file_name]]
+                            for value in df[self.user_glossary_of_names[file_name]]:
+                                try:
+                                    processed_value = float(value.replace(',', '.'))
+                                except:
+                                    processed_value = value
+                                processed_depth.append(processed_value)
+                            new_depths = processed_depth
                         except KeyError:
                             raise ValueError(f"Не указана глубина для файла {file_name}")
 
@@ -159,6 +164,8 @@ class DataPreprocessing:
                             if abs(existing_depth - new_depth) > 0.1:
                                 print("Depth values in the file are not consistent")
 
+                        if len(existing_depths) != len(new_depths) and len(existing_depths)!=0:
+                            raise ValueError("Разные глубины")
                         for idx, (key, values) in enumerate(self.data_dict.items(), start=2):
                             if values is not None and key != "Глубина отбора, м":
                                 for row_idx, value in enumerate(values, start=2):
@@ -245,7 +252,6 @@ class DataPreprocessing:
         sole = self.data_dict["Подошва интервала отбора"]
         for i in range(len(roof)):
             self.interval.append([roof[i], sole[i]])
-        print(self.interval)
 
     def error_flagging(self):
         self.ws.cell(row=1, column=38, value="Примечание")
@@ -265,13 +271,15 @@ class DataPreprocessing:
                         cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
                         self.ws.cell(row=int(value) + 3, column=38 + idx1 + 1, value=failed_columns[-1])
 
-    def save_file(self, output_excel_path="C:\\Users\\nikit\\Downloads", file_name="excel"):
+    def save_file(self, output_excel_path="kern\\data", file_name="result"):
         self.wb.save(f"{output_excel_path}\\{file_name}.xls")
 
 
 input_files = [
-    "C:\\Users\\nikit\\Downloads\\59PObraz.xlsx",
-    "C:\\Users\\nikit\\Downloads\\Direction.xlsx"]
+    "kern\\data\\Poro.txt",
+    "kern\\data\\59PObraz.xlsx",
+    "kern\\data\\Direction.xlsx"
+]
 dic = {
     "Ск": "Ск",
     "Эффективная проницаемость": "Эффективная проницаемость",
@@ -287,7 +295,8 @@ dic = {
     "Открытая пористость по керосину": "Porosity (kerosine)",
     # "Кпр_газ(гелий)": "Permeability (perpendicular)",
     # "Параметр пористости": "So",
-    # "So": "FF",
+    "So": "Poro",
+    "Poro.txt": "Глубина",
     "Кво": "Sw",
     # "Плотность абсолютно сухого образца": "Density, g/cc",
     # "Рн": "PoroTBU",
@@ -297,7 +306,7 @@ dic = {
     "Кровля интервала отбора": "Top",
     "Вынос керна, м": "Vynos, m",
     "Газопроницаемость, mkm2 (parallel)": "Permeability, mkm2 (parallel)",
-    "Вынос керна, %":"Vynos, %",
+    "Вынос керна, %": "Vynos, %",
     # "Газопроницаемость Кликенбергу": "PoroTBU",
     # "Объемная плотность": "PoroTBU",
     # "Минералогическая плотность": "PoroTBU",
@@ -310,8 +319,9 @@ dic = {
 
 file_modal = DataPreprocessing(files=input_files, glossary_of_names=dic)
 file_modal.process_files()
-print(file_modal.start_tests(
+file_modal.start_tests(
     ["test_correctness_of_p_sk_kp", "test_open_porosity", "test_porosity_TBU", "test_porosity_kerosine",
      "test_residual_water_saturation", "test_parallel_permeability", "test_monotony", "test_porosity_HE",
-     "test_quo_kp_dependence", "test_kp_density_dependence", "test_effective_permeability","test_coring_depths_third"]))
+     "test_quo_kp_dependence", "test_kp_density_dependence", "test_effective_permeability", "test_coring_depths_third",
+     "test_table_notes","test_pmu_kp_dependence","test_quo_and_qno"])
 file_modal.save_file()
