@@ -1,17 +1,16 @@
-#import os
 import segyio
 import numpy as np
-from shapely.geometry import MultiPoint, Polygon, Point
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+from shapely.geometry import Polygon, Point
 import datetime
-from scipy.signal import convolve2d
-#from typing import Any
+from .qa_qc_main import QA_QC_main
+from .qa_qc_tools.seismic_tools import *
+from .qa_qc_tools.math_tools import compute_variance
 
 
-class QA_QC_seismic():
+class QA_QC_seismic(QA_QC_main):
     def __init__(self, file_path: str, license_area_poly: list = None, surfaces_path_list: list = None, faults_file_path: str = None) -> None:
         
+        super().__init__()
         self.seismic_cube, self.coordinate_x, self.coordinate_y, self.coordinate_z = self.__get_seismic_grid(file_path)
         self.file_name = file_path.split('/')[-1]
         self.cube_poly = Polygon(build_polygon_from_points(self.coordinate_x, self.coordinate_y))
@@ -19,9 +18,6 @@ class QA_QC_seismic():
         self.license_area_poly = license_area_poly    # полигон лицензионного участка
         self.surfaces_path_list = surfaces_path_list  # список путей к файлам с поверхностями структурных карт / карт изохрон
         self.faults_file_path = faults_file_path
-
-        self.report_text = ""
-        self.ident = ' '*5   # отступ при формировании отчета
 
 
     def __get_seismic_grid(self, segy_file_path: str):
@@ -141,6 +137,7 @@ class QA_QC_seismic():
             dict: Словарь с ключевыми данными о прохождении теста
         """
         result_mask = np.diff(self.coordinate_z) <= 0
+        result_mask = np.insert(result_mask, 0, False)
         result = sum(result_mask) == 0
         if result:
             report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}Отметки оси глубин/времени монотонно возрастают"
@@ -176,11 +173,10 @@ class QA_QC_seismic():
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_miss_traces:\n{report_text}\n\n"
 
-        if get_report: visualize_miss_traces(mask.reshape((self.seismic_cube.shape[0], 
-                                                           self.seismic_cube.shape[1])),
-                                             percent_false)
+        mask_2d = mask.reshape((self.seismic_cube.shape[0], self.seismic_cube.shape[1]))
+        if get_report: visualize_miss_traces(mask_2d, percent_false)
 
-        return {"result": result, "wrong_values": mask, "file_name": self.file_name, "date": timestamp}
+        return {"result": result, "wrong_values": mask_2d, "file_name": self.file_name, "date": timestamp}
 
 
     def test_surfaces_location_validation(self, get_report=True) -> dict:
@@ -342,254 +338,3 @@ class QA_QC_seismic():
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_edge_zone_evaluation:\n{report_text}\n\n"
         return {'variance_list': variance_list, 'split_point': split_point, 'edge_zone_mask': edge_zone_mask, "file_name": self.file_name, "date": timestamp}
-
-
-    def get_list_of_tests(self) -> list:
-        """
-        Метод для получения списка тестов для данных реализованных в классе QA_QC_seismic
-
-        Returns:
-            list: список с названиями методов реализующих тесты
-        """        
-        test_methods = [method for method in dir(self) if
-                        callable(getattr(self, method)) and method.startswith("test")]
-        return test_methods
-
-    
-    def get_method_description(self, method_name: str) -> str:
-        """
-        Метод для получение описания теста по его названию
-
-         Args:
-             method_name(str) - название теста
-        Returns:
-             str - описание теста
-         """
-        method = getattr(self, method_name, None)
-        if method is not None:
-            return method.__doc__
-        else:
-            return "Метод не найден."
-
-
-    def start_tests(self, list_of_tests: list, get_report=True) -> dict:
-        """
-        Метод который запускает все тесты, которые переданы в виде списка list_of_tests
-
-        Args:
-            list_of_tests (list): список названий тестов которые должны быть проведены
-            get_report (bool, optional): _description_. Defaults to True.
-
-        Returns:
-            dict: результаты выбранных тестов
-        """            
-        results = {}
-        for method_name in list_of_tests:
-            method = getattr(self, method_name)
-            results[method_name] = method(get_report=get_report)
-        return results
-
-
-    def generate_test_report(self, file_name='test_report', file_path='report', data_name=None):
-        """
-        Метод для генерации отчета в виде текстового файла
-
-        Args:
-            file_name (str, optional): название файла с отчетом. Defaults to 'test_report'.
-            file_path (str, optional): директория в которую следует сохранить отчет. Defaults to 'report'.
-            data_name (str, optional): название данных который подвергались тестированию. 
-                                       Данное название отобразится в итоговом отчете. Defaults to self.file_name.
-        """        
-        data_name = self.file_name if not data_name else data_name
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-        report = f"Отчет о тестировании от {timestamp}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
-        with open(f"{file_path}/{file_name}.txt", "w") as file:
-            file.write(report)
-    
-
-
-
-
-
-#########################################################################################################
-###########################| РЕАЛИЗАЦИЯ ВСПОМОГАТЕЛЬНЫХ ФУНКЦИЙ |########################################
-#########################################################################################################
-
-def visualize_intersection(polygon1, polygon2, intersection_area=None, text=None):
-    """
-    Функция формирующая визуальный отчет о проведении теста test_coordinate_validation
-
-    Args:
-        polygon1 (_type_): полигон-проекция сейсмического куба
-        polygon2 (_type_): полигон границы лицензионного участка
-        intersection_area (_type_, optional): пололигон отражающий площадь пересечения polygon1 и polygon2. Defaults to None.
-        text (_type_, optional): текст с выводами результата тестирования который будет отображен в визуальном отчете. Defaults to None.
-    """    
-    fig, ax = plt.subplots()
-
-    x_coords1, y_coords1 = polygon1.exterior.xy
-    ax.plot(x_coords1, y_coords1, label='Проекция сейсмического куба', color='red')
-
-    x_coords2, y_coords2 = polygon2.exterior.xy
-    ax.plot(x_coords2, y_coords2, label='Граница лицензионного участка', color='orange')
-
-    if intersection_area:
-        intersection_x, intersection_y = intersection_area.exterior.xy
-        ax.fill(intersection_x, intersection_y, color='red', alpha=0.5, label='Зона пересечения полигонов')
-
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_title('Проверка корректности координат')
-    ax.legend(loc='center left', bbox_to_anchor=(1.01, 0.945))   
-    ax.grid()
-
-    if text:
-        ax.text(0.99, 0.5, text, transform=ax.transAxes, fontsize=12, verticalalignment='center', style='italic')
-    
-    fig.set_size_inches(8, 8)
-    plt.show()
-
-
-def visualize_miss_traces(mask, percent_false):
-    """
-    Функция формирующая визуальный отчет о проведении теста test_miss_traces
-
-    Args:
-        mask (_type_): 2D масиив с булевими значениями, где True означает пыстые сейсмические трассы
-        percent_false (_type_): процент отсутствующих сейсмических трасс от общего их колличества в кубе
-    """    
-    colors = ['red','blue']
-    percent_true = 100 - percent_false
-    labels = [f'Сейсмические трассы отсутствуют ({percent_true:.1f}%)',
-              f'Сейсмические трассы присутствуют ({percent_false:.1f}%)']
-
-    plt.figure(figsize=(8, 8))
-    plt.imshow(mask, cmap='seismic')
-
-    legend_elements = [plt.Rectangle((0, 0), 1, 1, color=colors[i], label=labels[i]) for i in range(len(colors))]
-    plt.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 1.09))
-
-    plt.grid(ls=':', alpha=.5)
-    plt.gca().invert_yaxis()
-    plt.show()
-
-
-def build_polygon_from_points(x_coords:np.array, y_coords:np.array):
-    """
-    Получение полигона из облака точек
-
-    Args:
-        x_coords (np.array): X координаты облака точек
-        y_coords (np.array): Y координаты облака точек
-
-    Returns:
-        list: список кортежей координат полигона в который вписано облако точек 
-    """    
-    points = MultiPoint(list(zip(x_coords, y_coords)))
-    convex_hull = points.convex_hull
-    return list(convex_hull.exterior.coords)
-
-
-def find_border(mask):
-    """
-    Находит границу в бинарной маске.
-
-    Args:
-        mask (numpy.ndarray): Бинарная маска, где True - это интересующий объект, а False - фон.
-
-    Returns:
-        numpy.ndarray: Бинарное изображение с той же размерностью, что и mask, где True отмечает границы объекта.
-    """
-    # Создаем 3x3 ядро (kernel) с единицами
-    kernel = np.ones((3, 3))
-    # Применяем свертку к маске с ядром
-    conv_result = convolve2d(mask, kernel, mode='same')
-    # Идентифицируем границы: все пиксели в результирующем изображении, которые меньше 9
-    # (и соответствующие пиксели в исходной маске равны True), являются границами.
-    border = np.logical_and(conv_result < 9, mask)
-    return border
-
-
-def compute_variance(arr):
-    """
-    Вычисляет дисперсию массива чисел.
-
-    Args:
-        arr (list or numpy.ndarray): Массив чисел.
-
-    Returns:
-        float: Дисперсия массива.
-    """    
-    mean_val = np.mean(arr)
-    variance = np.mean((arr - mean_val) ** 2)
-    return variance
-
-
-def best_split_point(variance_list):
-    """
-    Находит оптимальную точку разделения кривой, основываясь на дисперсии производных.
-
-    Args:
-        variance_list (list or numpy.ndarray): Одномерный массив или список значений дисперсии.
-
-    Returns:
-        int: Индекс, на котором достигается наибольшая разница в дисперсии производных слева и справа.
-    """    
-    # Вычисляем производные кривой
-    derivatives = np.diff(variance_list)
-    # Инициализируем переменную для хранения максимальной разницы в дисперсии и лучшей точки разделения
-    best_point, max_variance_diff = 0, 0
-    # Перебор всех возможных точек разделения
-    for i in range(1, len(derivatives)):
-        # Вычисляем дисперсию для производных слева и справа от текущей точки
-        left_variance = compute_variance(derivatives[:i])
-        right_variance = compute_variance(derivatives[i:])
-        # Вычисляем разницу в дисперсиях
-        variance_diff = np.abs(left_variance - right_variance)
-        # Если текущая разница в дисперсиях больше максимальной, обновляем максимальное значение и индекс лучшей точки
-        if variance_diff > max_variance_diff:
-            max_variance_diff = variance_diff
-            best_point = i
-    return best_point
-
-
-def visualize_edge_zone_evaluation(mask, variance_list, split_point):
-    """
-    Визуализирует оценку наличия краевой зоны на основе маски и списка дисперсий.
-
-    Args:
-        mask (numpy.ndarray): Маска, содержащая значения: 
-                              0 - Сейсмотрассы отсутствуют
-                              1 - Основная часть сейсмического куба
-                              2 - Краевая часть сейсмического куба.
-        variance_list (list ): Список дисперсий для последовательности.
-        split_point (int): Индекс разделения для отсечки краевой зоны.
-    """
-    fig, axes = plt.subplots(1, 2, figsize=(20, 8), gridspec_kw={'width_ratios': [3, 2]}) 
-    # Добавляем общий заголовок для всей фигуры
-    fig.suptitle("Оценка наличия краевой зоны", fontsize=16)
-    # Визуализация графика дисперсии
-    x_vals = np.arange(1, len(variance_list) + 1)  # Начало с 1
-    axes[0].plot(x_vals, variance_list, label="Дисперсия", color="blue")
-    axes[0].axvline(x=split_point, color="red", linestyle="--", label=f"Ширина краевой зоны: {split_point+1}")
-    axes[0].text(split_point, variance_list[split_point-1] + 0.05*(max(variance_list)-min(variance_list)), f"{split_point+1}", color='black', ha="left", va="bottom")
-    axes[0].legend()
-    axes[0].set_xlabel("Ширина краевой зоны в количестве дискретов")
-    axes[0].set_ylabel("Дисперсия")
-    
-    # Визуализация маски
-    im = axes[1].imshow(mask)
-    axes[1].grid(ls=':', alpha=.5)
-    axes[1].invert_yaxis()
-    colors = im.cmap(im.norm(range(3)))
-    labels = [
-        'Сейсмотрассы отсутствуют',
-        'Основная часть сейсмического куба',
-        'Краевая часть сейсмического куба'
-    ]
-    legend_labels = [mpatches.Patch(color=colors[i], label=labels[i]) for i in range(3)]
-    axes[1].legend(handles=legend_labels, loc='center left', bbox_to_anchor=(1, 0.945))
-    plt.tight_layout()
-    plt.show()
-
-

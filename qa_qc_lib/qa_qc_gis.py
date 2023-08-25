@@ -1,18 +1,19 @@
 import lasio
-import pandas as pd
+#import pandas as pd
 import numpy as np
 import datetime
 import re
+from .qa_qc_main import QA_QC_main
 
-class QA_QC_gis():
+
+class QA_QC_gis(QA_QC_main):
     def __init__(self, las_path:str,) -> None:
+
+        super().__init__()
         las = lasio.read(las_path)
         self.file_name = las_path.split('/')[-1]
         self.las_df = las.df()
         self.units_dict = {curve.mnemonic.upper() : curve.unit for curve in las.curves}
-
-        self.report_text = ""
-        self.ident = ' '*5   # отступ при формировании отчета
 
         self.__mnemonics = {'SP'   : ['SP', 'PS', 'ПС', 'СП', 'PS_1', 'PS_2'],
                             'GR'   : ['GR', 'GK', 'ГК', 'ECGR', 'GK_1', 'GK_2'],
@@ -73,7 +74,7 @@ class QA_QC_gis():
             values_to_remove (list): список значений мнемоник, которые нужно удалить из списка, связанного с ключом
         """
         key = key.upper()
-         # Проверяем, есть ли ключ в словаре с помощью assert
+        # Проверяем, есть ли ключ в словаре с помощью assert
         assert key in self.__mnemonics, f"Key '{key}' not found in mnemonics dictionary"
 
         # Удаляем каждое значение из списка, связанного с ключом
@@ -184,66 +185,4 @@ class QA_QC_gis():
         
         return all_results_dict | {"file_name" : self.file_name, "date" : timestamp}
             
-
-    def get_list_of_tests(self) -> list:
-        """
-        Метод для получения списка тестов для данных реализованных в классе QA_QC_seismic
-
-        Returns:
-            list: список с названиями методов реализующих тесты
-        """        
-        test_methods = [method for method in dir(self) if
-                        callable(getattr(self, method)) and method.startswith("test")]
-        return test_methods
-
-    
-    def get_method_description(self, method_name: str) -> str:
-        """
-        Метод для получение описания теста по его названию
-
-         Args:
-             method_name(str) - название теста
-        Returns:
-             str - описание теста
-         """
-        method = getattr(self, method_name, None)
-        if method is not None:
-            return method.__doc__
-        else:
-            return "Метод не найден."
-
-
-    def start_tests(self, list_of_tests: list, get_report=True) -> dict:
-        """
-        Метод который запускает все тесты, которые переданы в виде списка list_of_tests
-
-        Args:
-            list_of_tests (list): список названий тестов которые должны быть проведены
-            get_report (bool, optional): _description_. Defaults to True.
-
-        Returns:
-            dict: результаты выбранных тестов
-        """            
-        results = {}
-        for method_name in list_of_tests:
-            method = getattr(self, method_name)
-            results[method_name] = method(get_report=get_report)
-        return results
-
-
-    def generate_test_report(self, file_name='test_report', file_path='report', data_name=None):
-        """
-        Метод для генерации отчета в виде текстового файла
-
-        Args:
-            file_name (str, optional): название файла с отчетом. Defaults to 'test_report'.
-            file_path (str, optional): директория в которую следует сохранить отчет. Defaults to 'report'.
-            data_name (str, optional): название данных который подвергались тестированию. 
-                                       Данное название отобразится в итоговом отчете. Defaults to self.file_name.
-        """        
-        data_name = self.file_name if not data_name else data_name
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-        report = f"Отчет о тестировании от {timestamp}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
-        with open(f"{file_path}/{file_name}.txt", "w") as file:
-            file.write(report)
             
