@@ -13,10 +13,10 @@ class QA_QC_kern:
                  kp_plast=None,
                  density=None,
                  water_permeability=None, kp_pov=None,
-                 perpendicular=None, perpendicular_density=None, kp=np.array([]), roof=None,
+                 perpendicular=None, perpendicular_density=None, kp=np.array([]), top=None,
                  core_removal_in_meters=None,
                  parallel_carbonate=None, perpendicular_carbonate=None, perpendicular_porosity=None,
-                 intervals=None, sole=None, percent_core_removal=None, outreach_in_meters=None,
+                 intervals=None, bottom=None, percent_core_removal=None, outreach_in_meters=None,
                  sw_residual=np.array([]), core_sampling=None, kpr=None, parallel_density=None, parallel_porosity=None,
                  parallel=None,
                  rp=None, pmu=None, rn=None, obplnas=None, poroTBU=None, poroHe=None, porosity_open=np.array([]),
@@ -60,14 +60,14 @@ class QA_QC_kern:
         self.sw_residual = sw_residual
         self.outreach_in_meters = outreach_in_meters
         self.percent_core_removal = percent_core_removal
-        self.sole = sole
+        self.bottom = bottom
         self.intervals = intervals
         self.poro_tbu = poroTBU
         self.perpendicular_porosity = perpendicular_porosity
         self.perpendicular_carbonate = perpendicular_carbonate
         self.parallel_carbonate = parallel_carbonate
         self.core_removal_in_meters = core_removal_in_meters
-        self.roof = roof
+        self.top = top
         self.kp = kp
         self.perpendicular_density = perpendicular_density
         self.perpendicular = perpendicular
@@ -1345,19 +1345,19 @@ class QA_QC_kern:
         подошва вышележащего интервала долбления должна быть выше или равна кровле нижележащего
 
             Args:
-                self.roof (array[int/float]): массив с данными кровли для проверки
-                self.sole (array[int/float]): массив с данными подошвы для проверки
+                self.top (array[int/float]): массив с данными кровли для проверки
+                self.bottom (array[int/float]): массив с данными подошвы для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.roof, "Кровля интервала отбора", "test coring depths first") \
-                and self.__check_input(self.sole, "Подошва интервала отбора", "test coring depths first"):
+        if self.__check_input(self.top, "Кровля интервала отбора", "test coring depths first") \
+                and self.__check_input(self.bottom, "Подошва интервала отбора", "test coring depths first"):
             result = True
             wrong_values = []
-            for i in range(len(self.roof)):
-                if self.sole[i] < self.roof[i]:
+            for i in range(len(self.top)):
+                if self.bottom[i] < self.top[i]:
                     result = False
                     wrong_values.append(i)
             self.dict_of_wrong_values["test_coring_depths_first"] = [{"Кровля интервала отбора": wrong_values,
@@ -1379,22 +1379,22 @@ class QA_QC_kern:
         Тест проводится для оценкци соответствия интервала долбления: подошва-кровля ≥ выносу в метрах
 
             Args:
-                self.roof (array[int/float]): массив с данными кровли для проверки
-                self.sole (array[int/float]): массив с данными подошвы для проверки
+                self.top (array[int/float]): массив с данными кровли для проверки
+                self.bottom (array[int/float]): массив с данными подошвы для проверки
                 self.core_removal_in_meters (array[int/float]): массив с данными выноса в метрах для проверки
 
             Returns:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.roof, "Кровля интервала отбора", "test coring depths second") \
-                and self.__check_input(self.sole, "Подошва интервала отбора", "test coring depths second") \
+        if self.__check_input(self.top, "Кровля интервала отбора", "test coring depths second") \
+                and self.__check_input(self.bottom, "Подошва интервала отбора", "test coring depths second") \
                 and self.__check_input(self.core_removal_in_meters, "Вынос керна, м",
                                        "test coring depths second"):
             wrong_values = []
             result = True
-            for i in range(len(self.roof)):
-                if self.sole[i] - self.roof[i] < self.core_removal_in_meters[i]:
+            for i in range(len(self.top)):
+                if self.bottom[i] - self.top[i] < self.core_removal_in_meters[i]:
                     wrong_values.append(i)
                     result = False
             self.dict_of_wrong_values["test_coring_depths_second"] = [{"Кровля интервала отбора": wrong_values,
@@ -1456,7 +1456,7 @@ class QA_QC_kern:
             Args:
                 self.core_removal_in_meters (array[int/float]): массив с выносом керна в метрах
                 self.core_sampling (array[int/float]): массив с глубинами отбора образцов
-                self.sole(array[int/float]): массив с подошвой отбора образцов
+                self.bottom(array[int/float]): массив с подошвой отбора образцов
 
             Returns:
                 bool: результат выполнения теста
@@ -1464,11 +1464,11 @@ class QA_QC_kern:
         """
         if self.__check_input(self.core_removal_in_meters, "Вынос керна, м", "test coring depths four") \
                 and self.__check_input(self.core_sampling, "Глубина отбора, м", "test coring depths four") \
-                and self.__check_input(self.sole, "Подошва интервала отбора", "test coring depths four"):
+                and self.__check_input(self.bottom, "Подошва интервала отбора", "test coring depths four"):
             result = True
             wrong_values = []
             for i in range(len(self.core_removal_in_meters)):
-                if self.core_removal_in_meters[i] + self.core_sampling[i] > self.sole[i]:
+                if self.core_removal_in_meters[i] + self.core_sampling[i] > self.bottom[i]:
                     result = False
                     wrong_values.append(i)
 
