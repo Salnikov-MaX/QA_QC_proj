@@ -205,10 +205,10 @@ class DataPreprocessing:
                                  parallel_density=np.array(self.parallel_density),
                                  parallel_carbonate=np.array(self.parallel_carbonate),
                                  kp=np.array(self.data_dict["Открытая пористость по жидкости"]),
-                                 roof=np.array(self.data_dict["Кровля интервала отбора"]),
+                                 top=np.array(self.data_dict["Кровля интервала отбора"]),
                                  core_removal_in_meters=np.array(self.data_dict["Вынос керна, м"]),
                                  intervals=self.interval,
-                                 sole=np.array(self.data_dict["Подошва интервала отбора"]),
+                                 bottom=np.array(self.data_dict["Подошва интервала отбора"]),
                                  percent_core_removal=np.array(self.data_dict["Вынос керна, %"]),
                                  outreach_in_meters=np.array(self.data_dict["Вынос керна, м"]),
                                  sw_residual=np.array(self.data_dict["Кво"]),
@@ -248,10 +248,10 @@ class DataPreprocessing:
                 self.perpendicular_carbonate.append([self.data_dict["Ск"][idx], idx])
 
     def interval_data_parsing(self):
-        roof = self.data_dict["Кровля интервала отбора"]
-        sole = self.data_dict["Подошва интервала отбора"]
-        for i in range(len(roof)):
-            self.interval.append([roof[i], sole[i]])
+        top = self.data_dict["Кровля интервала отбора"]
+        bottom = self.data_dict["Подошва интервала отбора"]
+        for i in range(len(top)):
+            self.interval.append([top[i], bottom[i]])
 
     def error_flagging(self):
         self.ws.cell(row=1, column=38, value="Примечание")
