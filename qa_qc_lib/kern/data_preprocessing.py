@@ -164,7 +164,7 @@ class DataPreprocessing:
                             if abs(existing_depth - new_depth) > 0.1:
                                 print("Depth values in the file are not consistent")
 
-                        if len(existing_depths) != len(new_depths) and len(existing_depths)!=0:
+                        if len(existing_depths) != len(new_depths) and len(existing_depths) != 0:
                             raise ValueError("Разные глубины")
                         for idx, (key, values) in enumerate(self.data_dict.items(), start=2):
                             if values is not None and key != "Глубина отбора, м":
@@ -184,7 +184,7 @@ class DataPreprocessing:
         if self.data_dict["Направление"] is not None and \
                 self.data_dict["Ск"] is not None and \
                 self.data_dict["Лабораторный номер"] is not None and \
-                self.data_dict["Параметр пористости"] is not None and \
+                self.data_dict["Открытая пористость по жидкости"] is not None and \
                 self.data_dict["Плотность абсолютно сухого образца"]:
             self.parallel_data_parsing()
         if self.data_dict["Кровля интервала отбора"] is not None and self.data_dict["Подошва интервала отбора"]:
@@ -226,7 +226,7 @@ class DataPreprocessing:
                                  parallel_permeability=np.array(self.data_dict["Газопроницаемость, mkm2 (parallel)"]),
                                  klickenberg_permeability=np.array(self.data_dict["Газопроницаемость по Кликенбергу"]),
                                  effective_permeability=np.array(self.data_dict["Эффективная проницаемость"]),
-                                 md=np.array(self.data_dict["Место отбора (ниже кровли), м"]), )
+                                 md=np.array(self.data_dict["Место отбора (ниже кровли), м"]),show=False)
 
         self.failed_tests = test_system.start_tests(tests_name)["wrong_parameters"]
         test_system.generate_test_report()
@@ -238,12 +238,12 @@ class DataPreprocessing:
         for idx, is_parallel in enumerate(direction_array):
             if is_parallel == 1:
                 self.parallel_density.append([self.data_dict["Плотность абсолютно сухого образца"][idx], idx])
-                self.parallel_porosity.append([self.data_dict["Параметр пористости"][idx], idx])
+                self.parallel_porosity.append([self.data_dict["Открытая пористость по жидкости"][idx], idx])
                 self.parallel_number.append([self.data_dict["Лабораторный номер"][idx], idx])
                 self.parallel_carbonate.append([self.data_dict["Ск"][idx], idx])
             else:
                 self.perpendicular_density.append([self.data_dict["Плотность абсолютно сухого образца"][idx], idx])
-                self.perpendicular_porosity.append([self.data_dict["Параметр пористости"][idx], idx])
+                self.perpendicular_porosity.append([self.data_dict["Открытая пористость по жидкости"][idx], idx])
                 self.perpendicular_number.append([self.data_dict["Лабораторный номер"][idx], idx])
                 self.perpendicular_carbonate.append([self.data_dict["Ск"][idx], idx])
 
@@ -272,7 +272,7 @@ class DataPreprocessing:
                         self.ws.cell(row=int(value) + 3, column=38 + idx1 + 1, value=failed_columns[-1])
 
     def save_file(self, output_excel_path="kern\\data", file_name="result"):
-        self.wb.save(f"{output_excel_path}\\{file_name}.xls")
+        self.wb.save(f"{output_excel_path}\\{file_name}.xlsx")
 
 
 input_files = [
@@ -281,26 +281,26 @@ input_files = [
     "kern\\data\\Direction.xlsx"
 ]
 dic = {
-    "Ск": "Ск",
-    "Эффективная проницаемость": "Эффективная проницаемость",
+    "Ск": "Carbonate",
+    "Эффективная проницаемость": "PermEf",
     "59PObraz.xlsx": "MD",
     "Direction.xlsx": "Глубина",
     'Плотность абсолютно сухого образца': "Плотность",
-    "Параметр пористости": "Пористость ",
+    "Параметр пористости": "RI",
     "Направление": "Направление",
     "Лабораторный номер": "Ном",
-    "Открытая пористость по жидкости": "Porosity",
-    "Открытая пористость по газу": "Пустой параметр",
+    "Открытая пористость по жидкости": "Porosity (open)",
+    "Открытая пористость по газу": "PoroHe",
     "Открытая пористость в пластовых условиях": "Porosity (open)",
     "Открытая пористость по керосину": "Porosity (kerosine)",
     # "Кпр_газ(гелий)": "Permeability (perpendicular)",
     # "Параметр пористости": "So",
-    "So": "Poro",
-    "Poro.txt": "Глубина",
-    "Кво": "Sw",
+    "So": "So",
+    "Poro.txt": "Poro",
+    # "Кво": "Sw",
     # "Плотность абсолютно сухого образца": "Density, g/cc",
     # "Рн": "PoroTBU",
-    # "Sw": "Sw",
+    "Sw": "Sw",
     # "Газопроницаемость по Кликенбергу": "PoroTBU",
     "Подошва интервала отбора": "Bottom",
     "Кровля интервала отбора": "Top",
@@ -323,5 +323,5 @@ file_modal.start_tests(
     ["test_correctness_of_p_sk_kp", "test_open_porosity", "test_porosity_TBU", "test_porosity_kerosine",
      "test_residual_water_saturation", "test_parallel_permeability", "test_monotony", "test_porosity_HE",
      "test_quo_kp_dependence", "test_kp_density_dependence", "test_effective_permeability", "test_coring_depths_third",
-     "test_table_notes","test_pmu_kp_dependence","test_quo_and_qno"])
+     "test_table_notes", "test_pmu_kp_dependence", "test_quo_and_qno"])
 file_modal.save_file()

@@ -22,7 +22,7 @@ class QA_QC_kern:
                  rp=None, pmu=None, rn=None, obplnas=None, poroTBU=None, poroHe=None, porosity_open=np.array([]),
                  porosity_kerosine=None, porosity_effective=None, sw=None, parallel_permeability=None,
                  klickenberg_permeability=None, effective_permeability=None, md=None,
-                 file_report_name="test_report", file_path="C:\\Users\\nikit\\Downloads", file_name="не указан",
+                 file_report_name="test_report",show=True,file_path="C:\\Users\\nikit\\Downloads", file_name="не указан",
                  r2=0.7) -> None:
         """_summary_
 
@@ -77,6 +77,7 @@ class QA_QC_kern:
         self.dt_now = datetime.now()
         self.file = open(f"{file_path}/{file_report_name}.txt", "w")
         self.dict_of_wrong_values = {}
+        self.get_report = show
         self.__parameter_calculation()
 
     def __del__(self):
@@ -117,7 +118,7 @@ class QA_QC_kern:
                     f"Тест {test_name} не запускался. Причина {param_name}"
                     f" содержит не числовые значения. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
                 return False
-            if array[i]=="nan":
+            if array[i] == "nan":
                 self.dict_of_wrong_values[test_name] = [{
                     param_name: [i]}, "содержит nan"]
                 self.file.write(
@@ -149,18 +150,18 @@ class QA_QC_kern:
         return result, wrong_values
 
     def __test_porosity(self, array) -> tuple[bool, list[int]]:
-        concerted_data = []
         wrong_values = []
         result = True
-        for val in array:
-            if val >= 1:
-                concerted_data.append(val / 100)
-            else:
-                concerted_data.append(val)
-        for i in range(len(concerted_data)):
-            if concerted_data[i] < 0 or concerted_data[i] > 0.476:
-                result = False
-                wrong_values.append(i)
+        if array[0] < 1:
+            for i in range(len(array)):
+                if array[i] < 0 or array[i] > 0.476:
+                    result = False
+                    wrong_values.append(i)
+        else:
+            for i in range(len(array)):
+                if array[i] < 0 or array[i] > 47.6:
+                    result = False
+                    wrong_values.append(i)
         return result, wrong_values
 
     def __permeability(self, array) -> tuple[bool, list[int]]:
@@ -175,17 +176,17 @@ class QA_QC_kern:
     def __parameter_calculation(self):
         try:
             if self.porosity_open is not None and self.sw_residual is not None:
-                    for i in range(len(self.porosity_open)):
-                        self.kp_ef.append(self.porosity_open[i] * (1 - self.sw_residual[i]))
-                    self.kp_ef = np.array(self.kp_ef)
+                for i in range(len(self.porosity_open)):
+                    self.kp_ef.append(self.porosity_open[i] * (1 - self.sw_residual[i]))
+                self.kp_ef = np.array(self.kp_ef)
         except:
             self.file.write("Не удалось вычислить значение Эффективная пористость\n")
             self.kp_ef = np.array([])
         try:
             if self.porosity_open is not None and self.sw_residual is not None and self.kno is not None:
-                    for i in range(len(self.porosity_open)):
-                        self.kp_din.append(self.porosity_open[i] * (1 - self.sw_residual[i] - self.kno[i]))
-                    self.kp_din = np.array(self.kp_din)
+                for i in range(len(self.porosity_open)):
+                    self.kp_din.append(self.porosity_open[i] * (1 - self.sw_residual[i] - self.kno[i]))
+                self.kp_din = np.array(self.kp_din)
         except:
             self.file.write("Не удалось вычислить значение Динамическая пористость\n")
             self.kp_din = np.array([])
@@ -193,9 +194,9 @@ class QA_QC_kern:
             if self.pmu is None:
                 self.pmu = []
                 if self.pas is not None and self.kp is not None:
-                        for i in range(len(self.pas)):
-                            self.pmu.append(self.pas[i] + (self.kp[i] * 1))
-                        self.pmu = np.array(self.pmu)
+                    for i in range(len(self.pas)):
+                        self.pmu.append(self.pas[i] + (self.kp[i] * 1))
+                    self.pmu = np.array(self.pmu)
         except:
             self.file.write("Не удалось вычислить значение Объемная плотность\n")
             self.pmu = np.array([])
@@ -576,8 +577,8 @@ class QA_QC_kern:
                 plt.xlabel('sw_residual')
                 plt.ylabel('kp')
                 plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2}'  # Форматирование чисел до двух знаков после запятой
-                plt.text(np.mean(self.sw_residual), np.min(self.kp), equation, ha='center', va='bottom')
+                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
+                plt.text(np.min(self.sw_residual), np.mean(self.kp), equation)
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -676,7 +677,7 @@ class QA_QC_kern:
             self.file.write(
                 f"Test 'dependence quo kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             self.dict_of_wrong_values["test_sw_residual_kp_din_dependence"] = [{"Кво": wrong_values1, },
-                                                               "выпадает из линии тренда"]
+                                                                               "выпадает из линии тренда"]
             if get_report:
                 x_trend = np.linspace(np.min(self.sw_residual), np.max(self.kp_din), 100)
                 y_trend = a * x_trend + b
@@ -741,8 +742,8 @@ class QA_QC_kern:
                     wrong_values1.append(self.obplnas[i])
                     wrong_values2.append(self.kp[i])
             self.dict_of_wrong_values["test_obblnas_kp_dependence"] = [{"Объемная плотность": wrong_values1,
-                                                                "Открытая пористость по жидкости": wrong_values2},
-                                                               "выпадает из линии тренда"]
+                                                                        "Открытая пористость по жидкости": wrong_values2},
+                                                                       "выпадает из линии тренда"]
             self.file.write(
                 f"Test 'dependence obblnas kp': {result}. Входной файл {self.file_name}."
                 f" Дата выполнения {self.dt_now}\n")
@@ -812,8 +813,8 @@ class QA_QC_kern:
                     wrong_values1.append(self.pmu[i])
                     wrong_values2.append(self.kp[i])
             self.dict_of_wrong_values["test_pmu_kp_dependence"] = [{"Минералогическая плотность": wrong_values1,
-                                                                "Открытая пористость по жидкости": wrong_values2},
-                                                               "выпадает из линии тренда"]
+                                                                    "Открытая пористость по жидкости": wrong_values2},
+                                                                   "выпадает из линии тренда"]
             self.file.write(
                 f"Test 'dependence pmu kp': {result}."
                 f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
@@ -975,7 +976,7 @@ class QA_QC_kern:
                     wrong_values1.append(self.kp[i])
                     wrong_values2.append(self.kp_din[i])
             self.dict_of_wrong_values["test_kp_kp_din_dependence"] = [{"Открытая пористость по жидкости": wrong_values1,
-                                                                }, "выпадает из линии тренда"]
+                                                                       }, "выпадает из линии тренда"]
             self.file.write(
                 f"Test 'dependence kp ef kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             if get_report:
@@ -1028,8 +1029,8 @@ class QA_QC_kern:
                     wrong_values1.append(self.kpr[i])
                     wrong_values2.append(self.kp[i])
             self.dict_of_wrong_values["test_dependence_kpr_kp"] = [{"Кпр_газ(гелий)": wrong_values1,
-                                                                "Открытая пористость по жидкости": wrong_values2},
-                                                               "выпадает из линии тренда"]
+                                                                    "Открытая пористость по жидкости": wrong_values2},
+                                                                   "выпадает из линии тренда"]
             self.file.write(
                 f"Test 'dependence kpr kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             if get_report:
@@ -1081,7 +1082,7 @@ class QA_QC_kern:
                     wrong_values1.append(self.kpr[i])
                     wrong_values2.append(self.kp_din[i])
             self.dict_of_wrong_values["test_dependence_kpr_kp_din"] = [{"Кпр_газ(гелий)": wrong_values1,
-                                                                }, "выпадает из линии тренда"]
+                                                                        }, "выпадает из линии тренда"]
             self.file.write(
                 f"Test 'dependence kpc kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             if get_report:
@@ -1136,8 +1137,8 @@ class QA_QC_kern:
             self.file.write(
                 f"Test 'dependence sw_residual kpr': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             self.dict_of_wrong_values["test_dependence_sw_residual_kpr"] = [{"Кво": wrong_values1,
-                                                                "Кпр_газ(гелий)": wrong_values2},
-                                                               "выпадает из линии тренда"]
+                                                                             "Кпр_газ(гелий)": wrong_values2},
+                                                                            "выпадает из линии тренда"]
             if get_report:
                 x_trend = np.linspace(np.min(self.sw_residual), np.max(self.sw_residual), 100)
                 y_trend = a * x_trend + b
@@ -1190,8 +1191,8 @@ class QA_QC_kern:
                     wrong_values1.append(self.rn[i])
                     wrong_values2.append(self.sw_residual[i])
             self.dict_of_wrong_values["test_rn_sw_residual_dependence"] = [{"Параметр насыщенности": wrong_values1,
-                                                                "Sw": wrong_values2
-                                                                }, "выпадает из линии тренда"]
+                                                                            "Sw": wrong_values2
+                                                                            }, "выпадает из линии тренда"]
             self.file.write(
                 f"Test 'dependence rn sw_residual': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             if get_report:
@@ -1243,8 +1244,8 @@ class QA_QC_kern:
             self.file.write(f"Test 'dependence rp kp ': {result}."
                             f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
             self.dict_of_wrong_values["test_rp_kp_dependencies"] = [{"Параметр пористости": wrong_values1,
-                                                                "Открытая пористость по жидкости": wrong_values2
-                                                                }, "выпадает из линии тренда"]
+                                                                     "Открытая пористость по жидкости": wrong_values2
+                                                                     }, "выпадает из линии тренда"]
             if get_report:
                 plt.scatter(self.rp, self.kp, color='blue', label='Исходные данные')
                 plt.plot(self.rp, a / (self.kp ** m), color='red', label='Линия тренда')
@@ -1307,7 +1308,7 @@ class QA_QC_kern:
 
         # Вычисление R2 score
         r2 = r2_score(y_filtered, trend_line)
-        result=True
+        result = True
         # Проверка условия R2 score и удаление точек при несоответствии
         while r2 < self.r2 and len(x_filtered) > 0.9 * n:
             # Вычисление расстояний от линии тренда до каждой точки
@@ -1361,8 +1362,8 @@ class QA_QC_kern:
                     result = False
                     wrong_values.append(i)
             self.dict_of_wrong_values["test_coring_depths_first"] = [{"Кровля интервала отбора": wrong_values,
-                                                                "Подошва интервала отбора": wrong_values, },
-                                                               "подошва вышележащего интервала долбления ниже кровли нижележащего"]
+                                                                      "Подошва интервала отбора": wrong_values, },
+                                                                     "подошва вышележащего интервала долбления ниже кровли нижележащего"]
             if result:
                 self.file.write(
                     f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
@@ -1398,9 +1399,10 @@ class QA_QC_kern:
                     wrong_values.append(i)
                     result = False
             self.dict_of_wrong_values["test_coring_depths_second"] = [{"Кровля интервала отбора": wrong_values,
-                                                                "Подошва интервала отбора": wrong_values,
-                                                                "Вынос керна, м": wrong_values
-                                                                }, "разница между подошвой и кровлей меньше выноса в м"]
+                                                                       "Подошва интервала отбора": wrong_values,
+                                                                       "Вынос керна, м": wrong_values
+                                                                       },
+                                                                      "разница между подошвой и кровлей меньше выноса в м"]
             if result:
                 self.file.write(
                     f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
@@ -1436,8 +1438,9 @@ class QA_QC_kern:
                     result = False
                     wrong_values.append(i)
             self.dict_of_wrong_values["test_coring_depths_third"] = [{"Вынос керна, %": wrong_values,
-                                                                "Вынос керна, м": wrong_values,
-                                                                }, "вынос керна в процентах и метрах не совпадает"]
+                                                                      "Вынос керна, м": wrong_values,
+                                                                      },
+                                                                     "вынос керна в процентах и метрах не совпадает"]
 
             if result:
                 self.file.write(
@@ -1473,9 +1476,9 @@ class QA_QC_kern:
                     wrong_values.append(i)
 
             self.dict_of_wrong_values["test_coring_depths_four"] = [{"Глубина отбора, м": wrong_values,
-                                                                "Вынос керна, м": wrong_values,
-                                                                "Подошва интервала отбора": wrong_values,
-                                                                }, "глубина отбора ниже фактического выноса керна"]
+                                                                     "Вынос керна, м": wrong_values,
+                                                                     "Подошва интервала отбора": wrong_values,
+                                                                     }, "глубина отбора ниже фактического выноса керна"]
             if result:
                 self.file.write(
                     f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
@@ -1563,13 +1566,13 @@ class QA_QC_kern:
             wrong_values.append(wrong_values_rn)
             wrong_values.append(wrong_values_water_permeability)
             self.dict_of_wrong_values["test_data_tampering"] = [{"Кпр_газ(гелий)": wrong_values_kpr,
-                                                                "Открытая пористость по жидкости": wrong_values_kp,
-                                                                "Кво": wrong_values_sw_residual,
-                                                                "Параметр пористости": wrong_values_rp,
-                                                                "Параметр насыщенности": wrong_values_rn,
-                                                                "Плотность абсолютно сухого образца": wrong_values_density,
-                                                                "Sw": wrong_values_water_permeability},
-                                                               "схожие значения"]
+                                                                 "Открытая пористость по жидкости": wrong_values_kp,
+                                                                 "Кво": wrong_values_sw_residual,
+                                                                 "Параметр пористости": wrong_values_rp,
+                                                                 "Параметр насыщенности": wrong_values_rn,
+                                                                 "Плотность абсолютно сухого образца": wrong_values_density,
+                                                                 "Sw": wrong_values_water_permeability},
+                                                                "схожие значения"]
             if result:
                 self.file.write(
                     f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
@@ -1595,17 +1598,20 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
                 """
-        if self.__check_input(self.kp_pov, "Открытая пористость по жидкости", "test kp in surface and reservoir conditions") and \
-                self.__check_input(self.kp_plast, "Открытая пористость в пластовых условиях", "test kp in surface and reservoir conditions"):
+        if self.__check_input(self.kp_pov, "Открытая пористость по жидкости",
+                              "test kp in surface and reservoir conditions") and \
+                self.__check_input(self.kp_plast, "Открытая пористость в пластовых условиях",
+                                   "test kp in surface and reservoir conditions"):
             result = True
             wrong_values = []
             for i in range(len(self.kp_pov)):
                 if self.kp_pov[i] - self.kp_plast[i] > 2:
                     result = False
                     wrong_values.append(i)
-            self.dict_of_wrong_values["test_kp_in_surface_and_reservoir_conditions"] = [{"Открытая пористость по жидкости": wrong_values,
-                                                                "Открытая пористость в пластовых условиях": wrong_values,
-                                                                }, "кп в пластовых больше или равно кп в атмосферных"]
+            self.dict_of_wrong_values["test_kp_in_surface_and_reservoir_conditions"] = [
+                {"Открытая пористость по жидкости": wrong_values,
+                 "Открытая пористость в пластовых условиях": wrong_values,
+                 }, "кп в пластовых больше или равно кп в атмосферных"]
             if result:
                 self.file.write(
                     f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
@@ -1674,8 +1680,8 @@ class QA_QC_kern:
                     result = False
                     wrong_values.append(i)
             self.dict_of_wrong_values["test_quo_and_qno"] = [{"Sw": wrong_values,
-                                                                "So": wrong_values},
-                                                               "суммарное насыщение превышает 1 или 100%"]
+                                                              "So": wrong_values},
+                                                             "суммарное насыщение превышает 1 или 100%"]
             if result:
                 self.file.write(
                     f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
@@ -1750,10 +1756,10 @@ class QA_QC_kern:
         wrong_values.append(wrong_carb)
         wrong_values.append(wrong_poro)
         self.dict_of_wrong_values["test correctness of p sk kp"] = [{
-            "Параметр пористости": wrong_den,
+            "Открытая пористость по жидкости": wrong_den,
             "Ск": wrong_carb,
             "Плотность абсолютно сухого образца": wrong_poro
-        }, "расхождение параметров выше 0.5%"]
+        }, "расхождение параметров выше 5%"]
 
         if result:
             self.file.write(
@@ -1776,17 +1782,18 @@ class QA_QC_kern:
                         callable(getattr(self, method)) and method.startswith("test")]
         return test_methods
 
-    def start_tests(self, list_of_tests: list, get_report=True) -> dict[str | Any, dict[Any, Any] | Any]:
+    def start_tests(self, list_of_tests: list) -> dict[str | Any, dict[Any, Any] | Any]:
         """_summary_
 
         Args:
             list_of_tests (list): _description_
+            :param get_report:
         """
 
         results = {}
         for method_name in list_of_tests:
             method = getattr(self, method_name)
-            results[method_name] = method(get_report=get_report)
+            results[method_name] = method(get_report=self.get_report)
         results["wrong_parameters"] = self.dict_of_wrong_values
         return results
 
