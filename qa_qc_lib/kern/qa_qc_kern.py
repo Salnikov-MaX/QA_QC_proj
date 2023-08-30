@@ -634,7 +634,7 @@ class QA_QC_kern:
                 plt.xlabel('X')
                 plt.ylabel('Y')
                 plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2}'
+                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
                 plt.text(np.mean(self.kp), np.min(self.density), equation, ha='center', va='bottom')
                 plt.show()
 
@@ -679,7 +679,7 @@ class QA_QC_kern:
             self.dict_of_wrong_values["test_sw_residual_kp_din_dependence"] = [{"Кво": wrong_values1, },
                                                                                "выпадает из линии тренда"]
             if get_report:
-                x_trend = np.linspace(np.min(self.sw_residual), np.max(self.kp_din), 100)
+                x_trend = np.linspace(np.max(self.sw_residual), np.min(self.kp_din), 100)
                 y_trend = a * x_trend + b
 
                 # Построение кроссплота
@@ -689,7 +689,7 @@ class QA_QC_kern:
                 plt.xlabel('sw_residual')
                 plt.ylabel('kp din')
                 plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2}'
+                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
                 plt.text(np.mean(self.sw_residual), np.min(self.kp_din), equation, ha='center', va='bottom')
                 plt.show()
 
@@ -758,10 +758,10 @@ class QA_QC_kern:
                 plt.ylabel('kp')
                 plt.legend()
                 plt.grid(True)
-                equation = f'y = {a1:.2f}x + {b1:.2f}, r2_pmu={r2_pmu}'
-                plt.text(np.mean(self.pmu), np.min(self.kp) + 0.5, equation, ha='center', va='bottom')
-                equation = f'y = {a2:.2f}x + {b2:.2f}, r2_obp={r2_obp}'
-                plt.text(np.mean(self.obplnas), np.min(self.kp), equation, ha='center', va='bottom')
+                equation = f'y = {a1:.2f}x + {b1:.2f}, r2_pmu={r2_pmu:.2f}'
+                plt.text(np.mean(self.pmu)+10, np.min(self.kp) + 2, equation, ha='center', va='bottom')
+                equation = f'y = {a2:.2f}x + {b2:.2f}, r2_obp={r2_obp:.2f}'
+                plt.text(np.mean(self.obplnas)+10, np.min(self.kp), equation, ha='center', va='bottom')
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -876,7 +876,7 @@ class QA_QC_kern:
                 f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
 
             if get_report:
-                x_trend = np.linspace(np.min(self.kp_ef), np.max(self.kp_din), 100)
+                x_trend = np.linspace(np.max(self.kp_ef), np.min(self.kp_din), 100)
                 y_trend = a * x_trend + b
                 plt.title("test kpf kpdin dependence")
                 plt.scatter(self.kp_ef, self.kp_din, color='b', label='Данные')
@@ -884,7 +884,7 @@ class QA_QC_kern:
                 plt.xlabel('kp ef')
                 plt.ylabel('kp din')
                 plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2}'
+                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
                 plt.text(np.mean(self.kp_ef), np.min(self.kp_din), equation, ha='center', va='bottom')
                 plt.show()
 
@@ -937,7 +937,7 @@ class QA_QC_kern:
                 plt.xlabel('kp ef')
                 plt.ylabel('kp')
                 plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2}'
+                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
                 plt.text(np.mean(self.kp_ef), np.min(self.kp), equation, ha='center', va='bottom')
                 plt.show()
 
@@ -988,7 +988,7 @@ class QA_QC_kern:
                 plt.xlabel('kp')
                 plt.ylabel('kp din')
                 plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2}'
+                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
                 plt.text(np.mean(self.kp), np.min(self.kp_din), equation, ha='center', va='bottom')
                 plt.show()
 
@@ -1042,7 +1042,7 @@ class QA_QC_kern:
                 plt.xlabel('kpr')
                 plt.ylabel('kp')
                 plt.legend()
-                equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2}'
+                equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2:.2f}'
                 plt.text(np.mean(self.kpr), np.min(self.kp), equation, ha='center', va='bottom')
                 plt.show()
 
@@ -1094,7 +1094,7 @@ class QA_QC_kern:
                 plt.xlabel('kpr')
                 plt.ylabel('kp din')
                 plt.legend()
-                equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2}'
+                equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2:.2f}'
                 plt.text(np.mean(self.kpr), np.min(self.kp_din), equation, ha='center', va='bottom')
                 plt.show()
 
@@ -1150,7 +1150,7 @@ class QA_QC_kern:
                 plt.xlabel('sw_residual')
                 plt.ylabel('kpr')
                 plt.legend()
-                equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2}'
+                equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
                 plt.text(np.mean(self.sw_residual), np.min(self.kpr), equation, ha='center', va='bottom')
                 plt.show()
 
@@ -1202,7 +1202,7 @@ class QA_QC_kern:
                 plt.xlabel('rn')
                 plt.ylabel('sw_residual')
                 plt.legend()
-                equation = f'y = {b:.2f}/(x^{b:.2f}),  r2={r2}'
+                equation = f'y = {b:.2f}/(x^{b:.2f}),  r2={r2:.2f}'
                 plt.text(np.mean(self.rn), np.min(self.sw_residual), equation, ha='center', va='bottom')
                 plt.show()
 
@@ -1253,7 +1253,7 @@ class QA_QC_kern:
                 plt.xlabel('рп')
                 plt.ylabel('кп')
                 plt.legend()
-                equation = f'y = {a:.2f}/(x^{m:.2f}), r2={r2}'
+                equation = f'y = {a:.2f}/(x^{m:.2f}), r2={r2:.2f}'
                 plt.text(np.mean(self.rp), np.min(self.kp), equation, ha='center', va='bottom')
                 plt.show()
 
