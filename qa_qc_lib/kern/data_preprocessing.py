@@ -118,23 +118,20 @@ class DataPreprocessing:
                 self.glossary_of_names[key] = self.user_glossary_of_names[key]
 
     def process_files(self):
-        for idx, header in enumerate(self.headers, start=1):
-            self.ws.cell(row=2, column=idx, value=header)
-            if len(header) > 7:
-                letter = get_column_letter(idx)
-                self.ws.column_dimensions[letter].width = 20
-        df = []
+        df_result = pd.DataFrame(columns=self.headers)
+
         for file in self.input_files:
             file_name = os.path.basename(file)
             if file.endswith(".xlsx") or file.endswith(".xls"):
-                df = pd.read_excel(file)
+                df_file = pd.read_excel(file)
             elif file.endswith(".txt"):
-                df = pd.read_table(file, sep='\t', header=0, on_bad_lines='skip')
-            if len(df) != 0:
-                for col in df.columns:
+                df_file = pd.read_table(file, sep='\t', header=0, on_bad_lines='skip')
+
+            if len(df_file) != 0:
+                for col in df_file.columns:
                     if col in self.glossary_of_names.values():
                         key = list(self.glossary_of_names.keys())[list(self.glossary_of_names.values()).index(col)]
-                        col_data = df[col].tolist()
+                        col_data = df_file[col].tolist()
                         processed_col_data = []
                         for value in col_data:
                             try:
@@ -145,7 +142,7 @@ class DataPreprocessing:
                         self.data_dict[key] = processed_col_data
                         processed_depth = []
                         try:
-                            for value in df[self.user_glossary_of_names[file_name]]:
+                            for value in df_file[self.user_glossary_of_names[file_name]]:
                                 try:
                                     processed_value = float(value.replace(',', '.'))
                                 except:
@@ -168,15 +165,16 @@ class DataPreprocessing:
                             raise ValueError("Разные глубины")
                         for idx, (key, values) in enumerate(self.data_dict.items(), start=2):
                             if values is not None and key != "Глубина отбора, м":
-                                for row_idx, value in enumerate(values, start=2):
-                                    col_idx = self.headers.index(key) + 1
-                                    depth_value = self.data_dict["Глубина отбора, м"][row_idx - 2]
-                                    if depth_value == new_depths[row_idx - 2]:
-                                        self.ws.cell(row=row_idx + 1, column=col_idx, value=value)
+                                df_result[key] = values
+        df_result.style.apply(self.style_specific_cell)
+        df_result.to_excel("output.xlsx", index=False)
 
-                        for row_idx, value in enumerate(self.data_dict["Глубина отбора, м"], start=2):
-                            col_idx = self.headers.index("Глубина отбора, м") + 1
-                            self.ws.cell(row=row_idx + 1, column=col_idx, value=value)
+    def style_specific_cell(x):
+        color = 'background-color: red'
+        df1 = pd.DataFrame('', index=x.index, columns=x.columns)
+        print(df1)
+        df1.iloc[2, 8] = color
+        return df1
 
     def start_tests(self, tests_name=None):
         if tests_name is None:
@@ -226,7 +224,7 @@ class DataPreprocessing:
                                  parallel_permeability=np.array(self.data_dict["Газопроницаемость, mkm2 (parallel)"]),
                                  klickenberg_permeability=np.array(self.data_dict["Газопроницаемость по Кликенбергу"]),
                                  effective_permeability=np.array(self.data_dict["Эффективная проницаемость"]),
-                                 md=np.array(self.data_dict["Место отбора (ниже кровли), м"]),show=False)
+                                 md=np.array(self.data_dict["Место отбора (ниже кровли), м"]), show=False)
 
         self.failed_tests = test_system.start_tests(tests_name)["wrong_parameters"]
         test_system.generate_test_report()
@@ -276,18 +274,17 @@ class DataPreprocessing:
 
 
 input_files = [
-    "kern\\data\\Poro.txt",
     "kern\\data\\59PObraz.xlsx",
     "kern\\data\\Direction.xlsx"
 ]
 dic = {
-    "Ск": "Carbonate",
-    "Эффективная проницаемость": "PermEf",
+    # "Ск": "Carbonate",
+    # "Эффективная проницаемость": "PermEf",
     "59PObraz.xlsx": "MD",
     "Direction.xlsx": "Глубина",
     'Плотность абсолютно сухого образца': "Плотность",
-    "Параметр пористости": "RI",
-    "Направление": "Направление",
+    # "Параметр пористости": "RI",
+    # "Направление": "Направление",
     "Лабораторный номер": "Ном",
     "Открытая пористость по жидкости": "Porosity (open)",
     "Открытая пористость по газу": "PoroHe",
@@ -295,18 +292,17 @@ dic = {
     "Открытая пористость по керосину": "Porosity (kerosine)",
     # "Кпр_газ(гелий)": "Permeability (perpendicular)",
     # "Параметр пористости": "So",
-    "So": "So",
-    "Poro.txt": "Poro",
+    # "So": "So",
     # "Кво": "Sw",
     # "Плотность абсолютно сухого образца": "Density, g/cc",
     # "Рн": "PoroTBU",
-    "Sw": "Sw",
+    # "Sw": "Sw",
     # "Газопроницаемость по Кликенбергу": "PoroTBU",
     "Подошва интервала отбора": "Bottom",
     "Кровля интервала отбора": "Top",
     "Вынос керна, м": "Vynos, m",
     "Газопроницаемость, mkm2 (parallel)": "Permeability, mkm2 (parallel)",
-    "Вынос керна, %": "Vynos, %",
+    # "Вынос керна, %": "Vynos, %",
     # "Газопроницаемость Кликенбергу": "PoroTBU",
     # "Объемная плотность": "PoroTBU",
     # "Минералогическая плотность": "PoroTBU",
@@ -319,9 +315,9 @@ dic = {
 
 file_modal = DataPreprocessing(files=input_files, glossary_of_names=dic)
 file_modal.process_files()
-file_modal.start_tests(
-    ["test_correctness_of_p_sk_kp", "test_open_porosity", "test_porosity_TBU", "test_porosity_kerosine",
-     "test_residual_water_saturation", "test_parallel_permeability", "test_monotony", "test_porosity_HE",
-     "test_quo_kp_dependence", "test_kp_density_dependence", "test_effective_permeability", "test_coring_depths_third",
-     "test_table_notes", "test_pmu_kp_dependence", "test_quo_and_qno"])
-file_modal.save_file()
+# file_modal.start_tests(
+#     ["test_correctness_of_p_sk_kp", "test_open_porosity", "test_porosity_TBU", "test_porosity_kerosine",
+#      "test_residual_water_saturation", "test_parallel_permeability", "test_monotony", "test_porosity_HE",
+#      "test_quo_kp_dependence", "test_kp_density_dependence", "test_effective_permeability", "test_coring_depths_third",
+#      "test_table_notes", "test_pmu_kp_dependence", "test_quo_and_qno"])
+# file_modal.save_file()

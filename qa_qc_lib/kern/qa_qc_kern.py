@@ -6,6 +6,8 @@ from numpy import int32, float64, int64, float32
 from scipy.stats import t
 from sklearn.metrics import r2_score
 from matplotlib import pyplot as plt
+from ..qa_qc_tools.math_tools import linear_dependence_function
+from ..qa_qc_tools.math_tools import exponential_function
 
 
 class QA_QC_kern:
@@ -21,7 +23,7 @@ class QA_QC_kern:
                  parallel=None,
                  rp=None, pmu=None, rn=None, obplnas=None, poroTBU=None, poroHe=None, porosity_open=np.array([]),
                  porosity_kerosine=None, porosity_effective=None, sw=None, parallel_permeability=None,
-                 klickenberg_permeability=None, effective_permeability=None, md=None,
+                 klickenberg_permeability=None, effective_permeability=None, md=None, lithology=None,
                  file_report_name="test_report",show=True,file_path="C:\\Users\\nikit\\Downloads", file_name="не указан",
                  r2=0.7) -> None:
         """_summary_
@@ -78,6 +80,7 @@ class QA_QC_kern:
         self.file = open(f"{file_path}/{file_report_name}.txt", "w")
         self.dict_of_wrong_values = {}
         self.get_report = show
+        self.lithology = lithology
         self.__parameter_calculation()
 
     def __del__(self):
@@ -127,18 +130,6 @@ class QA_QC_kern:
                 return False
 
         return True
-
-    def __linear_dependence_function(self, x, y):
-        coefficients = np.polyfit(x, y, 1)
-        a = coefficients[0]
-        b = coefficients[1]
-        return a, b
-
-    def __exponential_function(self, x, y):
-        coefficients = np.polyfit(x, np.log(y), 1)
-        a = coefficients[0]
-        b = coefficients[1]
-        return a, b
 
     def __water_saturation(self, array) -> tuple[bool, list[int]]:
         wrong_values = []
@@ -551,7 +542,7 @@ class QA_QC_kern:
                                                        "Кво",
                                                        "Коэффициентом пористости")["r2"]
             result = True
-            a, b = self.__linear_dependence_function(self.sw_residual, self.kp)
+            a, b = linear_dependence_function(self.sw_residual, self.kp)
             if a >= 0 or r2 < 0.7:
                 result = False
 
@@ -606,7 +597,7 @@ class QA_QC_kern:
                                                        "Плотности")["r2"]
 
             result = True
-            a, b = self.__linear_dependence_function(self.kp, self.density)
+            a, b = linear_dependence_function(self.kp, self.density)
             if a >= 0 or r2 < 0.7:
                 result = False
 
@@ -663,7 +654,7 @@ class QA_QC_kern:
                                                        "Коэффициента остаточной водонасыщенности",
                                                        "Коэффициента динамической пористости")["r2"]
             result = True
-            a, b = self.__linear_dependence_function(self.sw_residual, self.kp_din)
+            a, b = linear_dependence_function(self.sw_residual, self.kp_din)
             if a >= 0 or r2 < 0.7:
                 result = False
 
@@ -860,7 +851,7 @@ class QA_QC_kern:
                                                        "Коэффициента эффективной пористости",
                                                        "Динамическая пористость")["r2"]
             result = True
-            a, b = self.__linear_dependence_function(self.kp_ef, self.kp_din)
+            a, b = linear_dependence_function(self.kp_ef, self.kp_din)
             if a <= 0 or b <= 0 or r2 < 0.7:
                 result = False
 
@@ -913,7 +904,7 @@ class QA_QC_kern:
                                                        "Коэффициента эффективной пористости",
                                                        "Коэффициента пористости")["r2"]
             result = True
-            a, b = self.__linear_dependence_function(self.kp_ef, self.kp)
+            a, b = self.linear_dependence_function(self.kp_ef, self.kp)
             if a <= 0 or b >= 0 or r2 < 0.7:
                 result = False
 
@@ -964,7 +955,7 @@ class QA_QC_kern:
             r2 = self.test_general_dependency_checking(self.kp, self.kp_din, "test kp kp din dependence",
                                                        "Коэффициента пористости",
                                                        "Коэффициента динамической пористости")["r2"]
-            a, b = self.__linear_dependence_function(self.kp, self.kp_din)
+            a, b = linear_dependence_function(self.kp, self.kp_din)
             result = True
             if a <= 0 or b >= 0 or r2 < 0.7:
                 result = False
@@ -1018,7 +1009,7 @@ class QA_QC_kern:
                                                        "Коэффициента пористости")["r2"]
 
             result = True
-            a, b = self.__exponential_function(self.kpr, self.kp)
+            a, b = exponential_function(self.kpr, self.kp)
             if b <= 0 or r2 < 0.7:
                 result = False
 
@@ -1071,7 +1062,7 @@ class QA_QC_kern:
                                                        "Коэффициента проницаемости",
                                                        "Коэффициента динамической пористости")["r2"]
             result = True
-            a, b = self.__exponential_function(self.kpr, self.kp_din)
+            a, b = exponential_function(self.kpr, self.kp_din)
             if b <= 0 or r2 < 0.7:
                 result = False
 
@@ -1787,7 +1778,6 @@ class QA_QC_kern:
 
         Args:
             list_of_tests (list): _description_
-            :param get_report:
         """
 
         results = {}
