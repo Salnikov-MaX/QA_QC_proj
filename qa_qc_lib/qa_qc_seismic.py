@@ -91,6 +91,11 @@ class QA_QC_seismic(QA_QC_main):
         Оценка корректности координат загруженного куба.
         Метод проверяет вхождение сейсического куба в границы лицензионного участка 
 
+        Required data:
+            self.coordinate_x (np.ndarray): координаты x сейсмического куба
+            self.coordinate_y (np.ndarray): координаты y сейсмического куба
+            self.license_area_poly (list): список кортежей содержащий координаты полигона лицензионного полигона
+
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
 
@@ -130,6 +135,9 @@ class QA_QC_seismic(QA_QC_main):
         """
         Метод проверяет ось глубин / времени на монотонное возрастание (каждое следующее значение больше предыдущего)
 
+        Required data:
+            self.coordinate_z (np.ndarray): координаты z сейсмического куба (глубины/время)
+
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
 
@@ -153,7 +161,10 @@ class QA_QC_seismic(QA_QC_main):
 
     def test_miss_traces(self, get_report=True) -> dict:
         """
-        Метод проверяет сейсмический куб на наличие пропущенных / не записанных сейсмотрасс 
+        Метод проверяет сейсмический куб на наличие пропущенных / не записанных сейсмотрасс
+        
+        Required data:
+            self.seismic_cube (np.ndarray): сейсмический куб
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
@@ -182,6 +193,12 @@ class QA_QC_seismic(QA_QC_main):
     def test_surfaces_location_validation(self, get_report=True) -> dict:
         """
         Метод оценивает соответствие отражающего горизонта сейсмическому кубу
+
+        Required data:
+            self.surfaces_path_list (list): список содержащий пути к файлам с отражающими горизонтами
+            self.coordinate_x (np.ndarray): координаты x сейсмического куба
+            self.coordinate_y (np.ndarray): координаты y сейсмического куба
+            self.coordinate_z (np.ndarray): координаты z сейсмического куба (глубины/время)
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
@@ -240,6 +257,12 @@ class QA_QC_seismic(QA_QC_main):
     def test_faults_location_validation(self, get_report=True) -> dict:
         """
         Метод оценивает соответствие пикировки разлома сейсмическому кубу
+
+        Required data:
+            self.faults_file_path (str): путь к файлу с координатами разломов
+            self.coordinate_x (np.ndarray): координаты x сейсмического куба
+            self.coordinate_y (np.ndarray): координаты y сейсмического куба
+            self.coordinate_z (np.ndarray): координаты z сейсмического куба (глубины/время)
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
@@ -302,6 +325,9 @@ class QA_QC_seismic(QA_QC_main):
     def test_edge_zone_evaluation(self, get_report=True) -> dict:
         """
         Метод для оценку ширины краевой зоны сейсмического куба
+
+        Required data:
+            self.seismic_cube (np.ndarray): сейсмический куб
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.

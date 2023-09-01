@@ -126,8 +126,14 @@ class QA_QC_gis(QA_QC_main):
         """
         Метод для оценки физичности значений кривых ГИС
 
+        Required data:
+            self.las_df (Pandas.DataFrame): датафрейм содержащий кривые ГИС скважины
+
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+
+        Returns:
+            dict: Словарь с ключевыми данными о прохождении теста
         """        
         # Словарь содержащий условия прохождения теста для каждого из видов ГИС
         conditions_dict = {

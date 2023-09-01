@@ -35,13 +35,13 @@ class Anomaly_Search_Stat_Methods():
         self.data = data 
 
 
-    def __mody_mean(self, mean_list, index_list) -> float:
+    def __mody_mean(self, mean_list:np.array, index_list:list) -> float:
         """
         Вычислить модифицированное среднее значение в соответствии с index_list.
         Если индекс равен 0, то элемент не участвует в рассчетах.
         
         Args:
-            mean_list (list): Список средних значений.
+            mean_list (np.array): Список средних значений.
             index_list (list): Список индексов.
         
         Returns:
@@ -51,13 +51,13 @@ class Anomaly_Search_Stat_Methods():
         return np.sum(mean_list * index_list) / np.sum(index_list)
 
 
-    def __mody_std(self, std_list, index_list) -> float:
+    def __mody_std(self, std_list:np.array, index_list:list) -> float:
         """
         Вычислить модифицированное стандартное отклонение в соответствии с index_list.
         Если индекс равен 0, то элемент не участвует в рассчетах.
 
         Args:
-            std_list (list): Список значений стандартного отклонения.
+            std_list (np.array): Список значений стандартного отклонения.
             index_list (list): Список индексов.
 
         Returns:
@@ -69,12 +69,12 @@ class Anomaly_Search_Stat_Methods():
         return np.sqrt(m_std / (np.sum(index_list) - 1))
 
 
-    def __mody_max(self, max_list, index_list) -> float:
+    def __mody_max(self, max_list:np.array, index_list:list) -> float:
         """
         Найти максимальное значение из max_list, соответствующее 1 в index_list.
 
         Args:
-            max_list (list): Список максимальных значений.
+            max_list (np.array): Список максимальных значений.
             index_list (list): Список индексов.
 
         Returns:
@@ -84,12 +84,12 @@ class Anomaly_Search_Stat_Methods():
         return max(filtered_maxes)
 
 
-    def __mody_min(self, min_list, index_list) -> float:
+    def __mody_min(self, min_list:np.array, index_list:list) -> float:
         """
         Найти минимальное значение из min_list, соответствующее 1 в index_list.
 
         Args:
-            min_list (list): Список минимальных значений.
+            min_list (np.array): Список минимальных значений.
             index_list (list): Список индексов.
 
         Returns:
@@ -99,12 +99,12 @@ class Anomaly_Search_Stat_Methods():
         return min(filtered_mins)
 
 
-    def __sub_function_26(self, data_segment, start_idx, anomaly_counts, direction=1, switch_direction=1) -> list:
+    def __sub_function_26(self, data_segment:np.array, start_idx:int, anomaly_counts:list, direction=1, switch_direction=1) -> list:
         """
         Подфункция для определения аномалий в сегменте данных.
 
         Args:
-            data_segment (list): Сегмент данных для анализа.
+            data_segment (np.array): Сегмент данных для анализа.
             start_idx (int): Начальный индекс сегмента данных.
             anomaly_counts (list): Список с количеством аномалий для каждой точки данных (весь времянной ряд).
             direction (int, optional): Направление анализа. По умолчанию 1.
