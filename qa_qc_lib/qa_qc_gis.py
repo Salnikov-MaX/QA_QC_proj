@@ -83,7 +83,7 @@ class QA_QC_gis(QA_QC_main):
                 self.__mnemonics[key].remove(value)
 
 
-    def find_mnemonic(self, search_value):
+    def find_mnemonic(self, search_value) -> str:
         """
         Метод для поиска стандартного названия ГИС из словаря мнемоник
 
@@ -122,7 +122,7 @@ class QA_QC_gis(QA_QC_main):
           а затем снова провести проверку, используя метод check_gis_names, чтобы список unidentified_gis сформировался заново.""")
 
 
-    def test_physical_correctness(self, get_report=True):
+    def test_physical_correctness(self, get_report=True) -> dict:
         """
         Метод для оценки физичности значений кривых ГИС
 
