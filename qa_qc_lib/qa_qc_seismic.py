@@ -5,7 +5,7 @@ class QA_QC_seismic():
         """_summary_
 
         Args:
-            data (str): _description_
+            input (str): _description_
         """ 
         pass
 

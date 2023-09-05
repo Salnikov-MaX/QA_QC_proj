@@ -1,22 +1,12 @@
 import os
 import pandas as pd
 import numpy as np
-from openpyxl import Workbook
-from openpyxl.styles import PatternFill, Alignment
-from openpyxl.utils import get_column_letter
 from qa_qc_kern import QA_QC_kern
+from qa_qc_lib.qa_qc_tools.kern_tools import find_test_methods_with_params
 
 
 class DataPreprocessing:
-    def __init__(self, files=None, glossary_of_names=None):
-        if glossary_of_names is None:
-            glossary_of_names = {}
-        if files is None:
-            files = []
-        self.wb = Workbook()
-        self.ws = self.wb.active
-        self.user_glossary_of_names = glossary_of_names
-        self.input_files = files
+    def __init__(self):
         self.failed_tests = {}
         self.glossary_of_names = {
             "Направление": "",
@@ -52,41 +42,6 @@ class DataPreprocessing:
             "Упругие свойства": "",
             "Примечание": ""
         }
-        self.data_dict = {
-            "Направление": None,
-            "Лабораторный номер": None,
-            "Кровля интервала отбора": None,
-            "Подошва интервала отбора": None,
-            "Место отбора (ниже кровли), м": None,
-            "Глубина отбора, м": None,
-            "Вынос керна, м": None,
-            "Вынос керна, %": None,
-            "Ск %": None,
-            "Открытая пористость по жидкости": None,
-            "Открытая пористость по газу": None,
-            "Открытая пористость в пластовых условиях": None,
-            "Открытая пористость по керосину": None,
-            "Кпр_газ(гелий)": None,
-            "Параметр пористости": None,
-            "Эффективная проницаемость": None,
-            "So": None,
-            "Газопроницаемость по Кликенбергу": None,
-            "Кво": None,
-            "Параметр насыщения": None,
-            "Плотность абсолютно сухого образца": None,
-            "Рн": None,
-            "Sw": None,
-            "Газопроницаемость, mkm2 (parallel)": None,
-            "Газопроницаемость Кликенбергу": None,
-            "Объемная плотность": None,
-            "Минералогическая плотность": None,
-            "Ск": None,
-            "Газопроницаемость по воде": None,
-            "Плотность максимально увлажненного образца": None,
-            "Упругие свойства": None,
-            "Примечание": None
-        }
-        self.__create_new_glossary()
         self.headers = [
             "Лабораторный номер", "Кровля интервала отбора", "Подошва интервала отбора",
             "Эффективная проницаемость", "Параметр насыщения",
@@ -96,9 +51,9 @@ class DataPreprocessing:
             "Открытая пористость в пластовых условиях", "Открытая пористость по керосину", "Кпр_газ(гелий)",
             "Параметр пористости", "So",
             "Кво", "Плотность абсолютно сухого образца", "Рн",
-            "Sw", "Газопроницаемость, mkm2 (parallel)", "Газопроницаемость Кликенбергу",
+            "Sw", "Газопроницаемость, mkm2 (parallel)", "Газопроницаемость по Кликенбергу",
             "Объемная плотность", "Минералогическая плотность", "Ск", "Газопроницаемость по воде",
-            "Плотность максимально увлажненного образца"
+            "Плотность максимально увлажненного образца","Эффективная пористость",
             "Упругие свойства",
             "Примечание", "Направление"
         ]
@@ -111,89 +66,64 @@ class DataPreprocessing:
         self.parallel_carbonate = []
         self.interval = []
         self.perpendicular_carbonate = []
+        self.df_result = []
+        self.newdic = {}
 
-    def __create_new_glossary(self):
-        for key in self.user_glossary_of_names:
-            if key in self.glossary_of_names:
-                self.glossary_of_names[key] = self.user_glossary_of_names[key]
+    def get_possible_tests(self, columns_with_data):
+        test = find_test_methods_with_params(columns_with_data, QA_QC_kern())
+        return test
 
-    def process_files(self):
-        df_result = pd.DataFrame(columns=self.headers)
+    def process_data(self, columns_mapping):
+        self.df_result = pd.DataFrame(columns=self.headers)
+        for col_name, file_col_list in columns_mapping.items():
+            for file_col in file_col_list:
+                file_path, col_name_in_file = file_col.split("->")
+                if not os.path.exists(file_path):
+                    print(f"Предупреждение: Файл {file_path} не найден. Пропуск.")
+                    continue
 
-        for file in self.input_files:
-            file_name = os.path.basename(file)
-            if file.endswith(".xlsx") or file.endswith(".xls"):
-                df_file = pd.read_excel(file)
-            elif file.endswith(".txt"):
-                df_file = pd.read_table(file, sep='\t', header=0, on_bad_lines='skip')
+                if file_path.endswith(".xlsx") or file_path.endswith(".xls"):
+                    data = pd.read_excel(file_path)
+                elif file_path.endswith(".txt"):
+                    data = pd.read_csv(file_path, delimiter="\t")
+                else:
+                    print(f"Предупреждение: Неизвестный формат файла {file_path}. Пропуск.")
+                    continue
 
-            if len(df_file) != 0:
-                for col in df_file.columns:
-                    if col in self.glossary_of_names.values():
-                        key = list(self.glossary_of_names.keys())[list(self.glossary_of_names.values()).index(col)]
-                        col_data = df_file[col].tolist()
-                        processed_col_data = []
-                        for value in col_data:
-                            try:
-                                processed_value = float(value.replace(',', '.'))
-                            except:
-                                processed_value = value
-                            processed_col_data.append(processed_value)
-                        self.data_dict[key] = processed_col_data
-                        processed_depth = []
-                        try:
-                            for value in df_file[self.user_glossary_of_names[file_name]]:
-                                try:
-                                    processed_value = float(value.replace(',', '.'))
-                                except:
-                                    processed_value = value
-                                processed_depth.append(processed_value)
-                            new_depths = processed_depth
-                        except KeyError:
-                            raise ValueError(f"Не указана глубина для файла {file_name}")
+                self.df_result.loc[:, col_name] = data[col_name_in_file]
 
-                        existing_depths = self.data_dict["Глубина отбора, м"]
-                        if existing_depths is None:
-                            self.data_dict["Глубина отбора, м"] = new_depths
-                            existing_depths = []
+        column_order = np.concatenate(
+            [self.df_result.columns[~self.df_result.isna().all(axis=0)], self.df_result.columns[self.df_result.isna().all(axis=0)]])
+        self.df_result = self.df_result[column_order]
+        columns_with_data = []
 
-                        for existing_depth, new_depth in zip(existing_depths, new_depths):
-                            if abs(existing_depth - new_depth) > 0.1:
-                                print("Depth values in the file are not consistent")
+        # Проходим по DataFrame и добавляем названия колонок с данными в список
+        for col in self.df_result.columns:
+            if self.df_result[col].notna().any():
+                columns_with_data.append(col)
+        return self.get_possible_tests(columns_with_data)
 
-                        if len(existing_depths) != len(new_depths) and len(existing_depths) != 0:
-                            raise ValueError("Разные глубины")
-                        for idx, (key, values) in enumerate(self.data_dict.items(), start=2):
-                            if values is not None and key != "Глубина отбора, м":
-                                df_result[key] = values
-        df_result.style.apply(self.style_specific_cell)
-        df_result.to_excel("output.xlsx", index=False)
-
-    def style_specific_cell(x):
-        color = 'background-color: red'
-        df1 = pd.DataFrame('', index=x.index, columns=x.columns)
-        print(df1)
-        df1.iloc[2, 8] = color
-        return df1
-
-    def start_tests(self, tests_name=None):
-        if tests_name is None:
-            tests_name = []
-        if self.data_dict["Направление"] is not None and \
-                self.data_dict["Ск"] is not None and \
-                self.data_dict["Лабораторный номер"] is not None and \
-                self.data_dict["Открытая пористость по жидкости"] is not None and \
-                self.data_dict["Плотность абсолютно сухого образца"]:
+    def start_tests(self, tests=None):
+        test_array = set()
+        if tests is not None:
+            for test in tests.items():
+                for t in test[-1]:
+                    test_array.add(t)
+        if self.df_result["Направление"].notna().any() and\
+                self.df_result["Ск"].notna().any() and\
+                self.df_result["Лабораторный номер"].notna().any() and\
+                self.df_result["Открытая пористость по жидкости"].notna().any() and\
+                self.df_result["Плотность абсолютно сухого образца"].notna().any():
             self.parallel_data_parsing()
-        if self.data_dict["Кровля интервала отбора"] is not None and self.data_dict["Подошва интервала отбора"]:
+        if self.df_result["Кровля интервала отбора"].notna().any() and self.df_result["Подошва интервала отбора"].notna().any():
             self.interval_data_parsing()
-        test_system = QA_QC_kern(pas=np.array(self.data_dict["Плотность абсолютно сухого образца"]),
-                                 note=np.array(self.data_dict["Примечание"]),
-                                 kno=np.array(self.data_dict["So"]),
-                                 kp_plast=np.array(self.data_dict["Открытая пористость в пластовых условиях"]),
-                                 density=np.array(self.data_dict["Плотность абсолютно сухого образца"]),
-                                 water_permeability=np.array(self.data_dict["Газопроницаемость по воде"]),
-                                 kp_pov=np.array(self.data_dict["Открытая пористость по жидкости"]),
+        test_system = QA_QC_kern(pas=np.array(self.df_result["Плотность абсолютно сухого образца"]),
+                                 note=np.array(self.df_result["Примечание"]),
+                                 kno=np.array(self.df_result["So"]),
+                                 kp_plast=np.array(self.df_result["Открытая пористость в пластовых условиях"]),
+                                 density=np.array(self.df_result["Плотность абсолютно сухого образца"]),
+                                 water_permeability=np.array(self.df_result["Газопроницаемость по воде"]),
+                                 kp_pov=np.array(self.df_result["Открытая пористость по жидкости"]),
                                  perpendicular=np.array(self.perpendicular_number),
                                  perpendicular_porosity=np.array(self.perpendicular_porosity),
                                  perpendicular_density=np.array(self.perpendicular_density),
@@ -202,122 +132,81 @@ class DataPreprocessing:
                                  parallel_porosity=np.array(self.parallel_porosity),
                                  parallel_density=np.array(self.parallel_density),
                                  parallel_carbonate=np.array(self.parallel_carbonate),
-                                 kp=np.array(self.data_dict["Открытая пористость по жидкости"]),
-                                 top=np.array(self.data_dict["Кровля интервала отбора"]),
-                                 core_removal_in_meters=np.array(self.data_dict["Вынос керна, м"]),
+                                 kp=np.array(self.df_result["Открытая пористость по жидкости"]),
+                                 top=np.array(self.df_result["Кровля интервала отбора"]),
+                                 core_removal_in_meters=np.array(self.df_result["Вынос керна, м"]),
                                  intervals=self.interval,
-                                 bottom=np.array(self.data_dict["Подошва интервала отбора"]),
-                                 percent_core_removal=np.array(self.data_dict["Вынос керна, %"]),
-                                 outreach_in_meters=np.array(self.data_dict["Вынос керна, м"]),
-                                 sw_residual=np.array(self.data_dict["Кво"]),
-                                 core_sampling=np.array(self.data_dict["Глубина отбора, м"]),
-                                 kpr=np.array(self.data_dict["Кпр_газ(гелий)"]),
-                                 rp=np.array(self.data_dict["Параметр пористости"]),
-                                 pmu=np.array(self.data_dict["Плотность максимально увлажненного образца"]),
-                                 rn=np.array(self.data_dict["Параметр насыщения"]),
-                                 obplnas=np.array(self.data_dict["Плотность абсолютно сухого образца"]),
-                                 poroTBU=np.array(self.data_dict["Открытая пористость в пластовых условиях"]),
-                                 poroHe=np.array(self.data_dict["Открытая пористость по газу"]),
-                                 porosity_open=np.array(self.data_dict["Открытая пористость по жидкости"]),
-                                 porosity_kerosine=np.array(self.data_dict["Открытая пористость по керосину"]),
-                                 sw=np.array(self.data_dict["Sw"]),
-                                 parallel_permeability=np.array(self.data_dict["Газопроницаемость, mkm2 (parallel)"]),
-                                 klickenberg_permeability=np.array(self.data_dict["Газопроницаемость по Кликенбергу"]),
-                                 effective_permeability=np.array(self.data_dict["Эффективная проницаемость"]),
-                                 md=np.array(self.data_dict["Место отбора (ниже кровли), м"]), show=False)
+                                 bottom=np.array(self.df_result["Подошва интервала отбора"]),
+                                 percent_core_removal=np.array(self.df_result["Вынос керна, %"]),
+                                 outreach_in_meters=np.array(self.df_result["Вынос керна, м"]),
+                                 sw_residual=np.array(self.df_result["Кво"]),
+                                 core_sampling=np.array(self.df_result["Глубина отбора, м"]),
+                                 kpr=np.array(self.df_result["Кпр_газ(гелий)"]),
+                                 rp=np.array(self.df_result["Параметр пористости"]),
+                                 pmu=np.array(self.df_result["Плотность максимально увлажненного образца"]),
+                                 rn=np.array(self.df_result["Параметр насыщения"]),
+                                 obplnas=np.array(self.df_result["Плотность абсолютно сухого образца"]),
+                                 poroTBU=np.array(self.df_result["Открытая пористость в пластовых условиях"]),
+                                 poroHe=np.array(self.df_result["Открытая пористость по газу"]),
+                                 porosity_open=np.array(self.df_result["Открытая пористость по жидкости"]),
+                                 porosity_kerosine=np.array(self.df_result["Открытая пористость по керосину"]),
+                                 porosity_effective=np.array(self.df_result["Эффективная пористость"]),
+                                 sw=np.array(self.df_result["Sw"]),
+                                 parallel_permeability=np.array(self.df_result["Газопроницаемость, mkm2 (parallel)"]),
+                                 klickenberg_permeability=np.array(self.df_result["Газопроницаемость по Кликенбергу"]),
+                                 effective_permeability=np.array(self.df_result["Эффективная проницаемость"]),
+                                 md=np.array(self.df_result["Место отбора (ниже кровли), м"]), show=False)
 
-        self.failed_tests = test_system.start_tests(tests_name)["wrong_parameters"]
+        self.failed_tests = test_system.start_tests(test_array)["wrong_parameters"]
         test_system.generate_test_report()
         self.error_flagging()
         return self.failed_tests
 
     def parallel_data_parsing(self):
-        direction_array = self.data_dict["Направление"]
+        direction_array = self.df_result["Направление"]
         for idx, is_parallel in enumerate(direction_array):
             if is_parallel == 1:
-                self.parallel_density.append([self.data_dict["Плотность абсолютно сухого образца"][idx], idx])
-                self.parallel_porosity.append([self.data_dict["Открытая пористость по жидкости"][idx], idx])
-                self.parallel_number.append([self.data_dict["Лабораторный номер"][idx], idx])
-                self.parallel_carbonate.append([self.data_dict["Ск"][idx], idx])
+                self.parallel_density.append([self.df_result["Плотность абсолютно сухого образца"][idx], idx])
+                self.parallel_porosity.append([self.df_result["Открытая пористость по жидкости"][idx], idx])
+                self.parallel_number.append([self.df_result["Лабораторный номер"][idx], idx])
+                self.parallel_carbonate.append([self.df_result["Ск"][idx], idx])
             else:
-                self.perpendicular_density.append([self.data_dict["Плотность абсолютно сухого образца"][idx], idx])
-                self.perpendicular_porosity.append([self.data_dict["Открытая пористость по жидкости"][idx], idx])
-                self.perpendicular_number.append([self.data_dict["Лабораторный номер"][idx], idx])
-                self.perpendicular_carbonate.append([self.data_dict["Ск"][idx], idx])
+                self.perpendicular_density.append([self.df_result["Плотность абсолютно сухого образца"][idx], idx])
+                self.perpendicular_porosity.append([self.df_result["Открытая пористость по жидкости"][idx], idx])
+                self.perpendicular_number.append([self.df_result["Лабораторный номер"][idx], idx])
+                self.perpendicular_carbonate.append([self.df_result["Ск"][idx], idx])
 
     def interval_data_parsing(self):
-        top = self.data_dict["Кровля интервала отбора"]
-        bottom = self.data_dict["Подошва интервала отбора"]
+        top = self.df_result["Кровля интервала отбора"]
+        bottom = self.df_result["Подошва интервала отбора"]
         for i in range(len(top)):
             self.interval.append([top[i], bottom[i]])
 
     def error_flagging(self):
-        self.ws.cell(row=1, column=38, value="Примечание")
-        self.ws.merge_cells(start_row=1, start_column=38, end_row=1,
-                            end_column=42)
-        self.ws.cell(row=1, column=38).alignment = Alignment(horizontal="center",
-                                                             vertical="center")
-        for idx1, (test_name, failed_columns) in enumerate(self.failed_tests.items(), start=2):
-            self.ws.cell(row=2, column=38 + idx1 + 1, value=test_name)
-            letter = get_column_letter(38 + idx1 + 1)
-            self.ws.column_dimensions[letter].width = 30
-            for idx, column_data in enumerate(failed_columns[:-1]):
-                for col, values in column_data.items():
-                    col_idx = self.headers.index(col) + 1  # Index of the column in the headers
-                    for row_idx, value in enumerate(values, start=2):
-                        cell = self.ws.cell(row=value + 3, column=col_idx)
-                        cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
-                        self.ws.cell(row=int(value) + 3, column=38 + idx1 + 1, value=failed_columns[-1])
+        empty_series = pd.Series([])  # Создаем пустую Series
+        self.df_result[""] = empty_series
+        for test_name, failed_columns in self.failed_tests.items():
+            # Создайте новый столбец в df_result для текущего названия теста
+            self.df_result[test_name] = ""
+            for column_data in failed_columns[:-1]:
+                for col, indices in column_data.items():
+                    # Найдите соответствующий столбец в df_result
+                    if col in self.df_result.columns:
+                        if col in self.newdic:
+                            self.newdic[col].extend(indices)
+                        else:
+                            self.newdic[col]=indices
+                        # Закрасьте ячейки в красный цвет, если индекс находится в массиве indices
+                        for index in indices:
+                            self.df_result.at[index, test_name] = failed_columns[-1]
 
-    def save_file(self, output_excel_path="kern\\data", file_name="result"):
-        self.wb.save(f"{output_excel_path}\\{file_name}.xlsx")
+    def color_cells(self, df, col_index_dict, color='red'):
+        style = pd.DataFrame('', index=df.index, columns=df.columns)
+        for col, rows in col_index_dict.items():
+            for row in rows:
+                style.loc[row, col] = f'background-color: {color}'
+        return style
 
-
-input_files = [
-    "kern\\data\\59PObraz.xlsx",
-    "kern\\data\\Direction.xlsx"
-]
-dic = {
-    # "Ск": "Carbonate",
-    # "Эффективная проницаемость": "PermEf",
-    "59PObraz.xlsx": "MD",
-    "Direction.xlsx": "Глубина",
-    'Плотность абсолютно сухого образца': "Плотность",
-    # "Параметр пористости": "RI",
-    # "Направление": "Направление",
-    "Лабораторный номер": "Ном",
-    "Открытая пористость по жидкости": "Porosity (open)",
-    "Открытая пористость по газу": "PoroHe",
-    "Открытая пористость в пластовых условиях": "Porosity (open)",
-    "Открытая пористость по керосину": "Porosity (kerosine)",
-    # "Кпр_газ(гелий)": "Permeability (perpendicular)",
-    # "Параметр пористости": "So",
-    # "So": "So",
-    # "Кво": "Sw",
-    # "Плотность абсолютно сухого образца": "Density, g/cc",
-    # "Рн": "PoroTBU",
-    # "Sw": "Sw",
-    # "Газопроницаемость по Кликенбергу": "PoroTBU",
-    "Подошва интервала отбора": "Bottom",
-    "Кровля интервала отбора": "Top",
-    "Вынос керна, м": "Vynos, m",
-    "Газопроницаемость, mkm2 (parallel)": "Permeability, mkm2 (parallel)",
-    # "Вынос керна, %": "Vynos, %",
-    # "Газопроницаемость Кликенбергу": "PoroTBU",
-    # "Объемная плотность": "PoroTBU",
-    # "Минералогическая плотность": "PoroTBU",
-    # "Параметр насыщения": "PoroTBU",
-    # "Газопроницаемость по воде": "PoroTBU",
-    # "Плотность максимально увлажненного образца": "PoroTBU",
-    # "Упругие свойства": "PoroTBU",
-    "Примечание": "Примечание"
-}
-
-file_modal = DataPreprocessing(files=input_files, glossary_of_names=dic)
-file_modal.process_files()
-# file_modal.start_tests(
-#     ["test_correctness_of_p_sk_kp", "test_open_porosity", "test_porosity_TBU", "test_porosity_kerosine",
-#      "test_residual_water_saturation", "test_parallel_permeability", "test_monotony", "test_porosity_HE",
-#      "test_quo_kp_dependence", "test_kp_density_dependence", "test_effective_permeability", "test_coring_depths_third",
-#      "test_table_notes", "test_pmu_kp_dependence", "test_quo_and_qno"])
-# file_modal.save_file()
+    def save_to_excel(self):
+        styled_df = self.df_result.style.apply(self.color_cells, axis=None, col_index_dict=self.newdic, color='red')
+        styled_df.to_excel("post_test_table.xlsx", sheet_name='Sheet1', index=False)

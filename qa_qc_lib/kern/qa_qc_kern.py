@@ -2,36 +2,35 @@ import datetime
 from datetime import datetime
 from typing import Any
 import numpy as np
-from numpy import int32, float64, int64, float32
+from qa_qc_lib.qa_qc_main import QA_QC_main
 from scipy.stats import t
 from sklearn.metrics import r2_score
 from matplotlib import pyplot as plt
-from ..qa_qc_tools.math_tools import linear_dependence_function
-from ..qa_qc_tools.math_tools import exponential_function
+from qa_qc_lib.qa_qc_tools.math_tools import linear_dependence_function
+from qa_qc_lib.qa_qc_tools.math_tools import exponential_function
 
 
-class QA_QC_kern:
-    def __init__(self, pas=np.array([]), note=None, kno=np.array([]),
-                 kp_plast=None,
-                 density=None,
-                 water_permeability=None, kp_pov=None,
-                 perpendicular=None, perpendicular_density=None, kp=np.array([]), top=None,
-                 core_removal_in_meters=None,
-                 parallel_carbonate=None, perpendicular_carbonate=None, perpendicular_porosity=None,
-                 intervals=None, bottom=None, percent_core_removal=None, outreach_in_meters=None,
-                 sw_residual=np.array([]), core_sampling=None, kpr=None, parallel_density=None, parallel_porosity=None,
-                 parallel=None,
-                 rp=None, pmu=None, rn=None, obplnas=None, poroTBU=None, poroHe=None, porosity_open=np.array([]),
-                 porosity_kerosine=None, porosity_effective=None, sw=None, parallel_permeability=None,
-                 klickenberg_permeability=None, effective_permeability=None, md=None, lithology=None,
-                 file_report_name="test_report",show=True,file_path="C:\\Users\\nikit\\Downloads", file_name="не указан",
-                 r2=0.7) -> None:
+class QA_QC_kern(QA_QC_main):
+    def __init__(self, pas=np.array([]), note=None, kno=np.array([]), kp_plast=None, density=None,
+                 water_permeability=None, kp_pov=None, perpendicular=None, perpendicular_density=None, kp=np.array([]),
+                 top=None, core_removal_in_meters=None, parallel_carbonate=None, perpendicular_carbonate=None,
+                 perpendicular_porosity=None, intervals=None, bottom=None, percent_core_removal=None,
+                 outreach_in_meters=None, sw_residual=np.array([]), core_sampling=None, kpr=None, parallel_density=None,
+                 parallel_porosity=None, parallel=None, rp=None, pmu=None, rn=None, obplnas=None, poroTBU=None,
+                 poroHe=None, porosity_open=np.array([]), porosity_kerosine=None, porosity_effective=None, sw=None,
+                 parallel_permeability=None, klickenberg_permeability=None, effective_permeability=None, md=None,
+                 kgo=None,knmng=None,
+                 lithology=None, file_report_name="test_report", show=True, file_path="C:\\Users\\nikit\\Downloads",
+                 file_name="не указан", r2=0.7) -> None:
         """_summary_
 
         Args:
             data (str): _description_
         """
 
+        super().__init__()
+        self.knmng = knmng
+        self.kgo = kgo
         self.md = md
         self.water_permeability = water_permeability
         self.effective_permeability = effective_permeability
@@ -86,7 +85,7 @@ class QA_QC_kern:
     def __del__(self):
         self.file.close()
 
-    def __check_input(self, array, param_name, test_name):
+    def __check_data(self, array, param_name, test_name):
         """
         Тест предназначен для проверки условия - все элементы массива должны быть числовыми.
 
@@ -97,9 +96,9 @@ class QA_QC_kern:
                 bool: результат выполнения теста
         """
         if not isinstance(array, np.ndarray):
-            self.file.write(
-                f"Тест {test_name} не запускался. Причина {param_name}"
-                f" не является массивом. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / {test_name}:\n Не запускался. Причина {param_name}" \
+                                f" не является массивом. Входной файл {self.file_name}\n\n"
             self.dict_of_wrong_values[test_name] = [{param_name: [0]}, "не является массивом"]
             return False
 
@@ -107,26 +106,20 @@ class QA_QC_kern:
             lent = array.size
             elem = array[0]
         except:
-            self.file.write(
-                f"Тест {test_name} не запускался. Причина {param_name}"
-                f" пустой. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / {test_name}:\n Не запускался. Причина {param_name}" \
+                                f" пустой. Входной файл {self.file_name}\n\n"
             self.dict_of_wrong_values[test_name] = [{param_name: [0]}, "пустой"]
             return False
 
         for i in range(array.size):
-            if not isinstance(array[i], (int32, float64, int64, float32)):
-                self.dict_of_wrong_values[test_name] = [{
-                    param_name: [i]}, "содержит не числовые значения"]
-                self.file.write(
-                    f"Тест {test_name} не запускался. Причина {param_name}"
-                    f" содержит не числовые значения. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
-                return False
             if array[i] == "nan":
                 self.dict_of_wrong_values[test_name] = [{
                     param_name: [i]}, "содержит nan"]
-                self.file.write(
-                    f"Тест {test_name} не запускался. Причина {param_name}"
-                    f" содержит данные типа Nan. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self.report_text += f"{timestamp:10} / {test_name}:\n Не запускался. Причина {param_name}" \
+                                    f" содержит nan. Входной файл {self.file_name}\n\n"
+
                 return False
 
         return True
@@ -171,7 +164,8 @@ class QA_QC_kern:
                     self.kp_ef.append(self.porosity_open[i] * (1 - self.sw_residual[i]))
                 self.kp_ef = np.array(self.kp_ef)
         except:
-            self.file.write("Не удалось вычислить значение Эффективная пористость\n")
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10}:\nНе удалось вычислить значение Эффективная пористость\n\n"
             self.kp_ef = np.array([])
         try:
             if self.porosity_open is not None and self.sw_residual is not None and self.kno is not None:
@@ -179,7 +173,8 @@ class QA_QC_kern:
                     self.kp_din.append(self.porosity_open[i] * (1 - self.sw_residual[i] - self.kno[i]))
                 self.kp_din = np.array(self.kp_din)
         except:
-            self.file.write("Не удалось вычислить значение Динамическая пористость\n")
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10}:\nНе удалось вычислить значение Динамическая пористость\n\n"
             self.kp_din = np.array([])
         try:
             if self.pmu is None:
@@ -189,7 +184,8 @@ class QA_QC_kern:
                         self.pmu.append(self.pas[i] + (self.kp[i] * 1))
                     self.pmu = np.array(self.pmu)
         except:
-            self.file.write("Не удалось вычислить значение Объемная плотность\n")
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10}:\nНе удалось вычислить значение Объемная плотность\n\n"
             self.pmu = np.array([])
 
     """
@@ -201,6 +197,8 @@ class QA_QC_kern:
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 47,6]
 
+            Required data:
+                Открытая пористость по жидкости;
             Args:
                 self.porosity_open (array[int/float]): массив с открытой пористостью в атмосферных условия для проверки
 
@@ -208,18 +206,20 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.porosity_open, "Открытая пористость по жидкости", "test_open_porosity"):
+        if self.__check_data(self.porosity_open, "Открытая пористость по жидкости", "test_open_porosity"):
             result, wrong_values = self.__test_porosity(self.porosity_open)
             if not result:
                 report_text = f"Test 'test_open_porosity': {result}.\nДанные с индексом {wrong_values} лежат не в " \
-                              f"интервале от 0 до 47,6.\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n"
+                              f"интервале от 0 до 47,6."
             else:
-                report_text = f"Test 'test_open_porosity': {result}.\nВходной файл {self.file_name}." \
-                              f" Дата выполнения {self.dt_now}\n"
+                report_text = f"Test 'test_open_porosity': {result}."
             self.dict_of_wrong_values["test open porosity"] = [{
                 "Открытая пористость по жидкости": wrong_values,
             }, "не лежит в интервале от 0 до 47,6"]
-            self.file.write(report_text)
+
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_porosity_HE(self, get_report=True):
@@ -234,17 +234,17 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.poroHe, "Открытая пористость по газу", "test porosity HE"):
+        if self.__check_data(self.poroHe, "Открытая пористость по газу", "test porosity HE"):
             result, wrong_values = self.__test_porosity(self.poroHe)
             if not result:
                 report_text = f"Test 'test_open_porosity_HE': {result}.\nДанные с индексом {wrong_values} лежат не в " \
-                              f"интервале от 0 до 47,6.\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n"
+                              f"интервале от 0 до 47,6."
             else:
-                report_text = f"Test 'test_open_porosity_HE': {result}.\nВходной файл {self.file_name}." \
-                              f" Дата выполнения {self.dt_now}\n"
+                report_text = f"Test 'test_open_porosity_HE': {result}."
             self.dict_of_wrong_values["test open porosity HE"] = [{"Открытая пористость по газу": wrong_values},
                                                                   "не лежит в интервале от 0 до 47,6"]
-            self.file.write(report_text)
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_porosity_TBU(self, get_report=True):
@@ -252,6 +252,8 @@ class QA_QC_kern:
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 47,6]
 
+            Required data:
+                Открытая пористость в пластовых условиях
             Args:
                 self.poro_tbu (array[int/float]): массив с открытой пористостью в пластовых условиях для проверки
 
@@ -259,17 +261,17 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.poro_tbu, "Открытая пористость в пластовых условиях", "test porosity TBU"):
+        if self.__check_data(self.poro_tbu, "Открытая пористость в пластовых условиях", "test porosity TBU"):
             result, wrong_values = self.__test_porosity(self.poro_tbu)
             if not result:
                 report_text = f"Test 'test open porosity TBU': {result}.\nДанные с индексом {wrong_values} лежат не в " \
-                              f"интервале от 0 до 47,6.\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n"
+                              f"интервале от 0 до 47,6."
             else:
-                report_text = f"Test 'test open porosity TBU': {result}.\nВходной файл {self.file_name}." \
-                              f" Дата выполнения {self.dt_now}\n"
+                report_text = f"Test 'test open porosity TBU': {result}."
             self.dict_of_wrong_values["test open porosity TBU"] = [{
                 "Открытая пористость в пластовых условиях": wrong_values}, "не лежит в интервале от 0 до 47,6"]
-            self.file.write(report_text)
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_porosity_kerosine(self, get_report=True):
@@ -277,6 +279,8 @@ class QA_QC_kern:
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 47,6]
 
+            Required data:
+                Открытая пористость по керосину
             Args:
                 self.porosity_kerosine (array[int/float]): массив с открытой пористостью по керосину для проверки
 
@@ -284,15 +288,15 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.porosity_kerosine, "Открытая пористость по керосину", "test porosity kerosine"):
+        if self.__check_data(self.porosity_kerosine, "Открытая пористость по керосину", "test porosity kerosine"):
             result, wrong_values = self.__test_porosity(self.porosity_kerosine)
             if not result:
-                self.file.write(f"Test 'test_porosity kerosine': {result}.\nДанные с индексом {wrong_values} лежат не в"
-                                f"интервале от 0 до 47,6.\nВходной файл {self.file_name}."
-                                f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'test_porosity kerosine': {result}.\nДанные с индексом {wrong_values} лежат не в" \
+                              f"интервале от 0 до 47,6."
             else:
-                self.file.write(f"Test 'test_porosity kerosine': {result}.\nВходной файл {self.file_name}."
-                                f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'test_porosity kerosine': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             self.dict_of_wrong_values["test porosity kerosine"] = [{"Открытая пористость по керосину": wrong_values},
                                                                    "не лежит в интервале от 0 до 47,6"]
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
@@ -302,6 +306,8 @@ class QA_QC_kern:
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 47,6]
 
+            Required data:
+                Эффективная пористость;
             Args:
                 self.porosity_effective (array[int/float]): массив с эффективной пористостью для проверки
 
@@ -309,23 +315,26 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.porosity_effective, "porosity effective", "test porosity effective"):
+        if self.__check_data(self.porosity_effective, "porosity effective", "test porosity effective"):
             result, wrong_values = self.__test_porosity(self.porosity_effective)
             if not result:
-                self.file.write(f"Test 'test porosity effective': {result}."
-                                f"\nДанные с индексом {wrong_values} лежат не в"
-                                f"интервале от 0 до 47,6.\nВходной файл {self.file_name}."
-                                f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'test porosity effective': {result}." \
+                              f"\nДанные с индексом {wrong_values} лежат не в" \
+                              f"интервале от 0 до 47,6."
             else:
-                self.file.write(f"Test 'test porosity effective': {result}.\nВходной файл {self.file_name}."
-                                f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'test porosity effective': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.dict_of_wrong_values["test_porosity_effective"] = [{"Кво": wrong_values},
+                                                                           "не соответсвует интервалу от 0 до 1"]
+            self.report_text += f"{timestamp:10} / test_porosity_effective:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_residual_water_saturation(self, get_report=True):
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
-
+            Required data:
+                Кво;
             Args:
                 self.residual_water_saturation (array[int/float]): массив с остаточной водонасыщенностью для проверки
 
@@ -333,25 +342,26 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.residual_water_saturation, "Кво",
-                              "test residual water saturation"):
+        if self.__check_data(self.residual_water_saturation, "Кво",
+                             "test residual water saturation"):
             result, wrong_values = self.__water_saturation(self.residual_water_saturation)
             if not result:
                 report_text = f"Test 'test residual water saturation': {result}.\nДанные с индексом {wrong_values} лежат не в " \
-                              f"интервале от 0 до 1.\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n"
+                              f"интервале от 0 до 1."
             else:
-                report_text = f"Test 'test residual water saturation': {result}.\nВходной файл {self.file_name}." \
-                              f" Дата выполнения {self.dt_now}\n"
+                report_text = f"Test 'test residual water saturation': {result}."
             self.dict_of_wrong_values["test residual water saturation"] = [{"Кво": wrong_values},
                                                                            "не соответсвует интервалу от 0 до 1"]
-            self.file.write(report_text)
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_residual_water_saturation:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_water_saturation(self, get_report=True):
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
-
+            Required data:
+                Sw;
             Args:
                 self.water_saturation (array[int/float]): массив с водонасыщенностью для проверки
 
@@ -359,23 +369,25 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.water_saturation, "Sw", "test water saturation"):
+        if self.__check_data(self.water_saturation, "Sw", "test water saturation"):
             result, wrong_values = self.__water_saturation(self.water_saturation)
             if not result:
                 report_text = f"Test 'test water saturation': {result}.\nДанные с индексом {wrong_values} лежат не в " \
-                              f"интервале от 0 до 1.\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n"
+                              f"интервале от 0 до 1."
             else:
-                report_text = f"Test 'test water saturation': {result}.\nВходной файл {self.file_name}." \
-                              f" Дата выполнения {self.dt_now}\n"
+                report_text = f"Test 'test water saturation': {result}."
             self.dict_of_wrong_values["test water saturation"] = [{"Sw": wrong_values},
                                                                   "не соответсвует интервалу от 0 до 1"]
-            self.file.write(report_text)
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_water_saturation:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_parallel_permeability(self, get_report=True):
         """
         Тест предназначен для проверки физичности данных.
         Значение должно быть больше 0
+            Required data:
+                Газопроницаемость, mkm2 (parallel);
 
             Args:
                 self.parallel_permeability (array[int/float]): массив с газопроницаемостью
@@ -385,25 +397,29 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.parallel_permeability, "Газопроницаемость, mkm2 (parallel)",
-                              "test parallel permeability"):
+        if self.__check_data(self.parallel_permeability, "Газопроницаемость, mkm2 (parallel)",
+                             "test parallel permeability"):
             result, wrong_values = self.__permeability(self.parallel_permeability)
             if not result:
                 report_text = f"Test 'test_parallel_permeability': {result}." \
                               f"\nДанные с индексом {wrong_values} лежат не в " \
-                              f"интервале от 0 до 1.\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n"
+                              f"интервале от 0 до 1."
             else:
-                report_text = f"Test 'test_parallel_permeability': {result}.\nВходной файл {self.file_name}." \
+                report_text = f"Test 'test_parallel_permeability': {result}." \
                               f" Дата выполнения {self.dt_now}\n"
             self.dict_of_wrong_values["test parallel permeability"] = [
                 {"Газопроницаемость, mkm2 (parallel)": wrong_values}, "значение меньше 0"]
-            self.file.write(report_text)
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_parallel_permeability:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_klickenberg_permeability(self, get_report=True):
         """
         Тест предназначен для проверки физичности данных.
         Значение должно быть больше 0
+
+            Required data:
+                Газопроницаемость Кликенбергу;
 
             Args:
                 self.klickenberg_permeability (array[int/float]): массив с газопроницаемостью
@@ -413,26 +429,27 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.klickenberg_permeability, "Газопроницаемость Кликенбергу",
-                              "test klickenberg permeability"):
+        if self.__check_data(self.klickenberg_permeability, "Газопроницаемость Кликенбергу",
+                             "test klickenberg permeability"):
             result, wrong_values = self.__permeability(self.klickenberg_permeability)
             if not result:
                 report_text = f"Test 'test klickenberg permeability': {result}." \
                               f"\nДанные с индексом {wrong_values} лежат не в " \
-                              f"интервале от 0 до 1.\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n"
+                              f"интервале от 0 до 1."
             else:
-                report_text = f"Test 'test klickenberg permeability': {result}.\nВходной файл {self.file_name}." \
-                              f" Дата выполнения {self.dt_now}\n"
+                report_text = f"Test 'test klickenberg permeability': {result}.\nВходной файл {self.file_name}."
             self.dict_of_wrong_values["test klickenberg permeability"] = [
                 {"Газопроницаемость Кликенбергу": wrong_values}, "значение меньше 0"]
-            self.file.write(report_text)
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_klickenberg_permeability:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_effective_permeability(self, get_report=True):
         """
         Тест предназначен для проверки физичности данных.
         Значение должно быть больше 0
-
+            Required data:
+                Эффективная проницаемость;
             Args:
                 self.effective_permeability (array[int/float]): массив с эффективной проницаемостью для проверки
 
@@ -440,18 +457,18 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.effective_permeability, "Эффективная проницаемость", "test_effective_permeability"):
+        if self.__check_data(self.effective_permeability, "Эффективная проницаемость", "test_effective_permeability"):
             result, wrong_values = self.__permeability(self.effective_permeability)
             if not result:
-                self.file.write(f"Test 'test_effective_permeability': {result}."
-                                f"\nДанные с индексом {wrong_values} лежат не в "
-                                f"интервале от 0 до 1.\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'test_effective_permeability': {result}." \
+                              f"\nДанные с индексом {wrong_values} лежат не в " \
+                              f"интервале от 0 до 1."
             else:
-                self.file.write(f"Test 'test_effective_permeability': {result}.\nВходной файл {self.file_name}."
-                                f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'test_effective_permeability': {result}."
             self.dict_of_wrong_values["test effective permeability"] = [{"Эффективная проницаемость": wrong_values},
                                                                         "значение меньше 0"]
-
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name,
                     "date": self.dt_now}
 
@@ -460,6 +477,8 @@ class QA_QC_kern:
         Тест предназначен для проверки физичности данных.
         Значение должно быть больше 0
 
+           Required data:
+                Газопроницаемость по воде;
             Args:
                 self.water_permeability (array[int/float]): массив с газопроницаемостью по воде для проверки
 
@@ -467,18 +486,18 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.water_permeability, "Газопроницаемость по воде", "test_water_permeability"):
+        if self.__check_data(self.water_permeability, "Газопроницаемость по воде", "test_water_permeability"):
             result, wrong_values = self.__permeability(self.water_permeability)
             if not result:
-                self.file.write(f"Test 'test_water_permeability': {result}."
-                                f"\nДанные с индексом {wrong_values} лежат не в "
-                                f"интервале от 0 до 1.\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'test_water_permeability': {result}." \
+                              f"\nДанные с индексом {wrong_values} лежат не в " \
+                              f"интервале от 0 до 1."
             else:
-                self.file.write(f"Test 'test_water_permeability': {result}.\nВходной файл {self.file_name}."
-                                f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'test_water_permeability': {result}"
             self.dict_of_wrong_values["test water permeability"] = [{"Газопроницаемость по воде": wrong_values},
                                                                     "значение меньше 0"]
-
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name,
                     "date": self.dt_now}
 
@@ -486,6 +505,8 @@ class QA_QC_kern:
         """
         Тест предназначен для проверки монотонности возрастания значения глубины
 
+            Required data:
+                Глубина отбора, м
             Args:
                 self.core_sampling (array[int/float]): массив с местом отбора для проверки
 
@@ -493,7 +514,7 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.core_sampling, "Глубина отбора, м", "test monotony"):
+        if self.__check_data(self.core_sampling, "Глубина отбора, м", "test monotony"):
             result = True
             wrong_values = []
             for i in range(len(self.core_sampling) - 1):
@@ -503,13 +524,12 @@ class QA_QC_kern:
             self.dict_of_wrong_values["test monotony"] = [{"Глубина отбора, м": wrong_values},
                                                           "нарушена монотонность"]
             if not result:
-                self.file.write(
-                    f"Test 'monotony': {result}.\nДанные с индексом {wrong_values} не монотоны."
-                    f"\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
-            else:
-                self.file.write(
-                    f"Test 'monotony': {result}.\nВходной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'monotony': {result}.\nДанные с индексом {wrong_values} не монотоны."
 
+            else:
+                report_text = f"Test 'monotony': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name,
                     "date": self.dt_now}
 
@@ -524,6 +544,9 @@ class QA_QC_kern:
         В данном случае зависимость линейная по функции
         y=a*x+b, при этом a<0
 
+            Required data:
+                Кво; Коэффициентом пористости
+
             Args:
                 self.sw_residual (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
                 self.kp (array[int/float]): массив с данными Открытая пористость по жидкости для проверки
@@ -534,9 +557,9 @@ class QA_QC_kern:
                 file: запись результата теста для сохранения состояния
         """
 
-        if self.__check_input(self.sw_residual, "Кво",
-                              "test quo kp dependence") and \
-                self.__check_input(self.kp, "Открытая пористость по жидкости", "test quo kp dependence"):
+        if self.__check_data(self.sw_residual, "Кво",
+                             "test quo kp dependence") and \
+                self.__check_data(self.kp, "Открытая пористость по жидкости", "test quo kp dependence"):
 
             r2 = self.test_general_dependency_checking(self.sw_residual, self.kp, "test quo kp dependence",
                                                        "Кво",
@@ -548,6 +571,8 @@ class QA_QC_kern:
 
             wrong_values1 = []
             wrong_values2 = []
+            y_pred = a * self.sw_residual + b
+            x_pred = a * self.kp + b
             for i in range(len(self.sw_residual)):
                 if self.kp[i] < a * self.sw_residual[i] + b:
                     wrong_values1.append(i)
@@ -555,21 +580,30 @@ class QA_QC_kern:
             self.dict_of_wrong_values["test_quo_kp_dependence"] = [{"Кво": wrong_values1,
                                                                     "Открытая пористость по жидкости": wrong_values2
                                                                     }, "выпадает из линии тренда"]
-            self.file.write(
-                f"Test 'dependence quo kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
-            if get_report:
-                x_trend = np.linspace(np.min(self.sw_residual), np.max(self.sw_residual), 100)
-                y_trend = a * x_trend + b
+            report_text = f"Test 'dependence quo kp': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_quo_kp_dependence:\n{report_text}\n\n"
+            for kp_val, sw_residual, pred_val in zip(self.kp, self.sw_residual, y_pred):
+                if sw_residual + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_val, sw_residual, color='r')
 
-                # Построение кроссплота
-                plt.title("test quo kp dependence")
-                plt.scatter(self.sw_residual, self.kp, color='b', label='Данные')
-                plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-                plt.xlabel('sw_residual')
-                plt.ylabel('kp')
-                plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
-                plt.text(np.min(self.sw_residual), np.mean(self.kp), equation)
+            for kp_val, sw_residual, pred_val in zip(self.kp, self.sw_residual, x_pred):
+                if kp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(sw_residual, kp_val, color='r')
+            x_trend = np.linspace(np.min(self.sw_residual), np.max(self.sw_residual), 100)
+            y_trend = a * x_trend + b
+
+            # Построение кроссплота
+            plt.title("test quo kp dependence")
+            plt.scatter(self.sw_residual, self.kp, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('sw_residual')
+            plt.ylabel('kp')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
+            plt.text(np.min(self.sw_residual), np.mean(self.kp), equation)
+            plt.savefig("output\\test_quo_kp_dependence.png")
+            if get_report:
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -580,6 +614,8 @@ class QA_QC_kern:
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость линейная по функции y=a*x+b, при этом a<0
 
+        Required data:
+            Открытая пористость по жидкости;Плотность абсолютно сухого образца
         Args:
             self.kp (array[int/float]): массив с данными коэффициента пористости для проверки
             self.density (array[int/float]): массив с данными плотности для проверки
@@ -589,8 +625,8 @@ class QA_QC_kern:
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.kp, "Открытая пористость по жидкости", "test kp density dependence") and \
-                self.__check_input(self.density, "Плотность абсолютно сухого образца", "test kp density dependence"):
+        if self.__check_data(self.kp, "Открытая пористость по жидкости", "test kp density dependence") and \
+                self.__check_data(self.density, "Плотность абсолютно сухого образца", "test kp density dependence"):
 
             r2 = self.test_general_dependency_checking(self.kp, self.density, "test kp density dependence",
                                                        "Коэффициента пористости",
@@ -601,34 +637,272 @@ class QA_QC_kern:
             if a >= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.kp)):
-                if self.density[i] < a * self.kp[i] + b:
-                    wrong_values1.append(self.kp[i])
-                    wrong_values2.append(self.density[i])
+            # Вычисляем прогнозные значения
+            y_pred = a * self.kp + b
+            x_pred = a * self.density + b
 
-            self.file.write(
-                f"Test 'dependence quo kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            # Фильтруем точки, которые не соответствуют линии тренда
+            wrong_values1 = [kp_val for kp_val, density_val, pred_val in zip(self.kp, self.density, y_pred) if
+                             density_val < pred_val]
+            wrong_values2 = [density_val for kp_val, density_val, pred_val in zip(self.kp, self.density, y_pred) if
+                             density_val < pred_val]
+
+            report_text = f"Test 'dependence quo kp': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             self.dict_of_wrong_values["test kp density dependence"] = [
                 {"Открытая пористость по жидкости": wrong_values1,
                  "Плотность абсолютно сухого образца": wrong_values2,
                  }, "выпадает из линии тренда"]
+            x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
+            y_trend = a * x_trend + b
+
+            # Построение кроссплота
+            plt.title("test kp density dependence")
+            plt.scatter(self.kp, self.density, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kp_val, density_val, pred_val in zip(self.kp, self.density, y_pred):
+                if density_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_val, density_val, color='r')
+
+            for kp_val, density_val, pred_val in zip(self.kp, self.density, x_pred):
+                if kp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(density_val, kp_val, color='r')
+
+            plt.xlabel('X')
+            plt.ylabel('Y')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.kp), np.min(self.density), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_kp_density_dependence.png")
             if get_report:
-                x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
-                y_trend = a * x_trend + b
-
-                # Построение кроссплота
-                plt.title("test kp density dependence")
-                plt.scatter(self.kp, self.density, color='b', label='Данные')
-                plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-                plt.xlabel('X')
-                plt.ylabel('Y')
-                plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-                plt.text(np.mean(self.kp), np.min(self.density), equation, ha='center', va='bottom')
                 plt.show()
+            return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
+    def test_kp_kgo_dependence(self, get_report=True) -> dict[str, bool | datetime | str]:
+        """
+        Тест применяется для сравнения двух аппроксимаций: характерной
+        (эталонной для выбранного набора данных)
+        и текущей.  Характерной зависимостью является
+        линейная по функции y=a*x+b, при этом a<0
+
+        Required data:
+            Коэффициента пористости; Cвязанная газонасыщенность
+
+        Args:
+            self.kp (array[int/float]): массив с данными коэффициента пористости для проверки
+            self.kgo (array[int/float]): массив с данными связанная газонасыщенность для проверки
+
+        Returns:
+            image: визуализация кроссплота
+            dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
+            file: запись результата теста для сохранения состояния
+        """
+        if self.__check_data(self.kp, "Открытая пористость по жидкости", "test_kp_kgo_dependence") and \
+                self.__check_data(self.kgo, "Cвязанная газонасыщенность", "test_kp_kgo_dependence"):
+
+            r2 = self.test_general_dependency_checking(self.kp, self.kgo, "test_kp_kgo_dependence",
+                                                       "Коэффициента пористости",
+                                                       "Cвязанная газонасыщенность")["r2"]
+
+            result = True
+            a, b = linear_dependence_function(self.kp, self.kgo)
+            if a >= 0 or r2 < 0.7:
+                result = False
+
+            # Вычисляем прогнозные значения
+            y_pred = a * self.kp + b
+            x_pred = a * self.kgo + b
+
+            # Фильтруем точки, которые не соответствуют линии тренда
+            wrong_values1 = [kp_val for kp_val, density_val, pred_val in zip(self.kp, self.kgo, y_pred) if
+                             density_val < pred_val]
+            wrong_values2 = [density_val for kp_val, density_val, pred_val in zip(self.kp, self.kgo, y_pred) if
+                             density_val < pred_val]
+
+            report_text = f"Test 'kp_kgo_dependence': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_kp_kgo_dependence:\n{report_text}\n\n"
+            self.dict_of_wrong_values["test_kp_kgo_dependence"] = [
+                {"Открытая пористость по жидкости": wrong_values1,
+                 "Cвязанная газонасыщенность": wrong_values2,
+                 }, "выпадает из линии тренда"]
+            x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
+            y_trend = a * x_trend + b
+
+            # Построение кроссплота
+            plt.title("test_kp_kgo_dependence")
+            plt.scatter(self.kp, self.kgo, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kp_val, density_val, pred_val in zip(self.kp, self.kgo, y_pred):
+                if density_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_val, density_val, color='r')
+
+            for kp_val, density_val, pred_val in zip(self.kp, self.kgo, x_pred):
+                if kp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(density_val, kp_val, color='r')
+
+            plt.xlabel('X')
+            plt.ylabel('Y')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.kp), np.min(self.kgo), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_kp_kgo_dependence.png")
+            if get_report:
+                plt.show()
+            return {"result": result, "file_name": self.file_name, "date": self.dt_now}
+
+    def test_kp_knmng_dependence(self, get_report=True) -> dict[str, bool | datetime | str]:
+        """
+        Тест применяется для сравнения двух аппроксимаций: характерной
+        (эталонной для выбранного набора данных) и текущей.  Характерной
+        зависимостью является линейная по функции y=a*x+b, при этом a<0
+
+        Required data:
+            Коэффициента пористости; Критическая нефтенасыщенность
+
+        Args:
+            self.kp (array[int/float]): массив с данными коэффициента пористости для проверки
+            self.knmng (array[int/float]): массив с данными критическая нефтенасыщенность для проверки
+
+        Returns:
+            image: визуализация кроссплота
+            dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
+            file: запись результата теста для сохранения состояния
+        """
+        if self.__check_data(self.kp, "Открытая пористость по жидкости", "test_kp_knmng_dependence") and \
+                self.__check_data(self.knmng, "Критическая нефтенасыщенность", "test_kp_knmng_dependence"):
+
+            r2 = self.test_general_dependency_checking(self.kp, self.knmng, "test_kp_knmng_dependence",
+                                                       "Коэффициента пористости",
+                                                       "Критическая нефтенасыщенность")["r2"]
+
+            result = True
+            a, b = linear_dependence_function(self.kp, self.knmng)
+            if a >= 0 or r2 < 0.7:
+                result = False
+
+            # Вычисляем прогнозные значения
+            y_pred = a * self.kp + b
+            x_pred = a * self.knmng + b
+
+            # Фильтруем точки, которые не соответствуют линии тренда
+            wrong_values1 = [kp_val for kp_val, knmng_val, pred_val in zip(self.kp, self.knmng, y_pred) if
+                             knmng_val < pred_val]
+            wrong_values2 = [knmng_val for kp_val, knmng_val, pred_val in zip(self.kp, self.knmng, y_pred) if
+                             knmng_val < pred_val]
+
+            report_text = f"Test 'test_kp_knmng_dependence': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_kp_knmng_dependence:\n{report_text}\n\n"
+            self.dict_of_wrong_values["test_kp_knmng_dependence"] = [
+                {"Открытая пористость по жидкости": wrong_values1,
+                 "Критическая нефтенасыщенность": wrong_values2,
+                 }, "выпадает из линии тренда"]
+            x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
+            y_trend = a * x_trend + b
+
+            # Построение кроссплота
+            plt.title("test_kp_knmng_dependence")
+            plt.scatter(self.kp, self.knmng, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kp_val, knmng_val, pred_val in zip(self.kp, self.knmng, y_pred):
+                if knmng_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_val, knmng_val, color='r')
+
+            for kp_val, knmng_val, pred_val in zip(self.kp, self.knmng, x_pred):
+                if kp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(knmng_val, kp_val, color='r')
+
+            plt.xlabel('X')
+            plt.ylabel('Y')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.kp), np.min(self.knmng), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_kp_knmng_dependence.png")
+            if get_report:
+                plt.show()
+            return {"result": result, "file_name": self.file_name, "date": self.dt_now}
+
+    def test_kp_kno_dependence(self, get_report=True) -> dict[str, bool | datetime | str]:
+        """
+        Тест применяется для сравнения двух аппроксимаций: характерной
+        (эталонной для выбранного набора данных)
+        и текущей.  Характерной зависимостью является
+        линейная по функции y=a*x+b, при этом a<0
+
+        Required data:
+            Коэффициента пористости; Коэффициент остаточной нефтенасыщенности
+
+        Args:
+            self.kp (array[int/float]): массив с данными коэффициента пористости для проверки
+            self.kno (array[int/float]): массив с данными связанная газонасыщенность для проверки
+
+        Returns:
+            image: визуализация кроссплота
+            dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
+            file: запись результата теста для сохранения состояния
+        """
+        if self.__check_data(self.kp, "Открытая пористость по жидкости", "test_kp_kno_dependence") and \
+                self.__check_data(self.kno, "Коэффициент остаточной нефтенасыщенности", "test_kp_kno_dependence"):
+
+            r2 = self.test_general_dependency_checking(self.kp, self.kno, "test_kp_kno_dependence",
+                                                       "Коэффициента пористости",
+                                                       "Коэффициент остаточной нефтенасыщенности")["r2"]
+
+            result = True
+            a, b = linear_dependence_function(self.kp, self.kno)
+            if a >= 0 or r2 < 0.7:
+                result = False
+
+            # Вычисляем прогнозные значения
+            y_pred = a * self.kp + b
+            x_pred = a * self.kno + b
+
+            # Фильтруем точки, которые не соответствуют линии тренда
+            wrong_values1 = [kp_val for kp_val, kno_val, pred_val in zip(self.kp, self.kno, y_pred) if
+                             kno_val < pred_val]
+            wrong_values2 = [kno_val for kp_val, kno_val, pred_val in zip(self.kp, self.kno, y_pred) if
+                             kno_val < pred_val]
+
+            report_text = f"Test 'test_kp_kno_dependence': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_kp_kno_dependence:\n{report_text}\n\n"
+            self.dict_of_wrong_values["test_kp_kno_dependence"] = [
+                {"Открытая пористость по жидкости": wrong_values1,
+                 "Коэффициент остаточной нефтенасыщенности": wrong_values2,
+                 }, "выпадает из линии тренда"]
+            x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
+            y_trend = a * x_trend + b
+
+            # Построение кроссплота
+            plt.title("test_kp_kno_dependence")
+            plt.scatter(self.kp, self.kno, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kp_val, kno_val, pred_val in zip(self.kp, self.kno, y_pred):
+                if kno_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_val, kno_val, color='r')
+
+            for kp_val, kno_val, pred_val in zip(self.kp, self.kno, x_pred):
+                if kp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kno_val, kp_val, color='r')
+
+            plt.xlabel('X')
+            plt.ylabel('Y')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.kp), np.min(self.kno), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_kp_kno_dependence.png")
+            if get_report:
+                plt.show()
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
     def test_sw_residual_kp_din_dependence(self, get_report=True) -> dict[str, bool | datetime | str]:
@@ -636,6 +910,9 @@ class QA_QC_kern:
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость линейная по функции y=a*x+b, при этом a<0
+
+        Required data:
+            Кво; Коэффициент остаточной нефтенасыщенности; Открытая пористость по жидкости
 
         Args:
             self.sw_residual (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
@@ -646,8 +923,8 @@ class QA_QC_kern:
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.sw_residual, "Кво", "test sw_residual kp din dependence") and \
-                self.__check_input(self.kp_din, "kp din", "test sw_residual kp din dependence"):
+        if self.__check_data(self.sw_residual, "Кво", "test sw_residual kp din dependence") and \
+                self.__check_data(self.kp_din, "kp din", "test sw_residual kp din dependence"):
 
             r2 = self.test_general_dependency_checking(self.sw_residual, self.kp_din,
                                                        "test sw_residual kp din dependence",
@@ -665,23 +942,37 @@ class QA_QC_kern:
                     wrong_values1.append(self.sw_residual[i])
                     wrong_values2.append(self.kp_din[i])
 
-            self.file.write(
-                f"Test 'dependence quo kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            y_pred = a * self.sw_residual + b
+            x_pred = a * self.kp_din + b
+            report_text = f"Test 'sw_residual_kp_din_dependence': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_sw_residual_kp_din_dependence:\n{report_text}\n\n"
             self.dict_of_wrong_values["test_sw_residual_kp_din_dependence"] = [{"Кво": wrong_values1, },
                                                                                "выпадает из линии тренда"]
-            if get_report:
-                x_trend = np.linspace(np.max(self.sw_residual), np.min(self.kp_din), 100)
-                y_trend = a * x_trend + b
 
-                # Построение кроссплота
-                plt.title("test sw_residual kp din dependence")
-                plt.scatter(self.sw_residual, self.kp_din, color='b', label='Данные')
-                plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-                plt.xlabel('sw_residual')
-                plt.ylabel('kp din')
-                plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-                plt.text(np.mean(self.sw_residual), np.min(self.kp_din), equation, ha='center', va='bottom')
+            x_trend = np.linspace(np.max(self.sw_residual), np.min(self.kp_din), 100)
+            y_trend = a * x_trend + b
+
+            # Построение кроссплота
+            plt.title("test sw_residual kp din dependence")
+            plt.scatter(self.sw_residual, self.kp_din, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('sw_residual')
+            plt.ylabel('kp din')
+            plt.legend()
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for sw_residual_val, kp_din_val, pred_val in zip(self.sw_residual, self.kp_din, y_pred):
+                if sw_residual_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(sw_residual_val, kp_din_val, color='r')
+
+            for sw_residual_val, kp_din_val, pred_val in zip(self.sw_residual, self.kp_din, x_pred):
+                if kp_din_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_din_val, sw_residual_val, color='r')
+
+            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.sw_residual), np.min(self.kp_din), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_sw_residual_kp_din_dependence.png")
+            if get_report:
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -693,6 +984,8 @@ class QA_QC_kern:
         Минпл-Кп. Пусть первый аппроксимируется
         линией тренда y=a1*x+b1, а второй - y=a2*x+b2, при этом a1<a2
 
+        Required data:
+            Минералогическая плотность; Открытая пористость по жидкости; Объемная плотность
         Args:
             self.kp (array[int/float]): массив с данными коэффициента пористости для проверки
             self.obblnas (array[int/float]): массив с данными объемная плотность для проверки
@@ -703,9 +996,9 @@ class QA_QC_kern:
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.pmu, "Минералогическая плотность", "test obblnas kp dependence") and \
-                self.__check_input(self.kp, "Открытая пористость по жидкости", "test obblnas kp dependence") and \
-                self.__check_input(self.obplnas, "Объемная плотность", "test obblnas kp dependence"):
+        if self.__check_data(self.pmu, "Минералогическая плотность", "test obblnas kp dependence") and \
+                self.__check_data(self.kp, "Открытая пористость по жидкости", "test obblnas kp dependence") and \
+                self.__check_data(self.obplnas, "Объемная плотность", "test obblnas kp dependence"):
 
             r2_pmu = self.test_general_dependency_checking(self.pmu, self.kp, "test obblnas kp dependence",
                                                            "Минералогической плотность",
@@ -735,24 +1028,38 @@ class QA_QC_kern:
             self.dict_of_wrong_values["test_obblnas_kp_dependence"] = [{"Объемная плотность": wrong_values1,
                                                                         "Открытая пористость по жидкости": wrong_values2},
                                                                        "выпадает из линии тренда"]
-            self.file.write(
-                f"Test 'dependence obblnas kp': {result}. Входной файл {self.file_name}."
-                f" Дата выполнения {self.dt_now}\n")
 
+            report_text = f"Test 'dependence obblnas kp': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+
+            y_pred = a2 * self.kp + b2
+            x_pred = a2 * self.obplnas + b2
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for obplnas_val, kp_val, pred_val in zip(self.obplnas, self.kp, y_pred):
+                if obplnas_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(obplnas_val, kp_val, color='g')
+
+            for obplnas_val, kp_val, pred_val in zip(self.obplnas, self.kp, x_pred):
+                if kp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_val, obplnas_val, color='g')
+
+            plt.title("test obblnas kp dependence")
+            plt.scatter(self.obplnas, self.kp, color='red', label='Обплнас-Кп')
+            plt.scatter(self.pmu, self.kp, color='blue', label='Минпл-Кп')
+            plt.plot(self.obplnas, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
+            plt.plot(self.pmu, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
+            plt.xlabel('obplnas')
+            plt.ylabel('kp')
+            plt.legend()
+            plt.grid(True)
+            equation = f'y = {a1:.2f}x + {b1:.2f}, r2_pmu={r2_pmu:.2f}'
+            plt.text(np.mean(self.pmu) + 10, np.min(self.kp) + 2, equation, ha='center', va='bottom')
+            equation = f'y = {a2:.2f}x + {b2:.2f}, r2_obp={r2_obp:.2f}'
+            plt.text(np.mean(self.obplnas) + 10, np.min(self.kp), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_obblnas_kp_dependence.png")
             if get_report:
-                plt.title("test obblnas kp dependence")
-                plt.scatter(self.obplnas, self.kp, color='red', label='Обплнас-Кп')
-                plt.scatter(self.pmu, self.kp, color='blue', label='Минпл-Кп')
-                plt.plot(self.obplnas, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
-                plt.plot(self.pmu, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
-                plt.xlabel('obplnas')
-                plt.ylabel('kp')
-                plt.legend()
-                plt.grid(True)
-                equation = f'y = {a1:.2f}x + {b1:.2f}, r2_pmu={r2_pmu:.2f}'
-                plt.text(np.mean(self.pmu)+10, np.min(self.kp) + 2, equation, ha='center', va='bottom')
-                equation = f'y = {a2:.2f}x + {b2:.2f}, r2_obp={r2_obp:.2f}'
-                plt.text(np.mean(self.obplnas)+10, np.min(self.kp), equation, ha='center', va='bottom')
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -764,6 +1071,8 @@ class QA_QC_kern:
         Минпл-Кп. Пусть первый аппроксимируется
         линией тренда y=a1*x+b1, а второй - y=a2*x+b2, при этом a1<a2
 
+        Required data:
+            Минералогическая плотность; Открытая пористость по жидкости; Объемная плотность
         Args:
             self.kp (array[int/float]): массив с данными коэффициента пористости для проверки
             self.obblnas (array[int/float]): массив с данными объемная плотность для проверки
@@ -774,9 +1083,9 @@ class QA_QC_kern:
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.pmu, "Минералогическая плотность", "test pmu kp dependence") and \
-                self.__check_input(self.kp, "Открытая пористость по жидкости", "test pmu kp dependence") and \
-                self.__check_input(self.obplnas, "Объемная плотность", "test pmu kp dependence"):
+        if self.__check_data(self.pmu, "Минералогическая плотность", "test pmu kp dependence") and \
+                self.__check_data(self.kp, "Открытая пористость по жидкости", "test pmu kp dependence") and \
+                self.__check_data(self.obplnas, "Объемная плотность", "test pmu kp dependence"):
 
             r2_pmu = self.test_general_dependency_checking(self.pmu, self.kp, "test pmu kp dependence",
                                                            "Минералогической плотность",
@@ -806,23 +1115,36 @@ class QA_QC_kern:
             self.dict_of_wrong_values["test_pmu_kp_dependence"] = [{"Минералогическая плотность": wrong_values1,
                                                                     "Открытая пористость по жидкости": wrong_values2},
                                                                    "выпадает из линии тренда"]
-            self.file.write(
-                f"Test 'dependence pmu kp': {result}."
-                f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            report_text = f"Test 'dependence pmu kp': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_pmu_kp_dependence:\n{report_text}\n\n"
+            plt.title("test pmu kp dependence")
+            plt.scatter(self.obplnas, self.kp, color='red', label='Обплнас-Кп')
+            plt.scatter(self.pmu, self.kp, color='blue', label='Минпл-Кп')
+            y_pred = a2 * self.kp + b2
+            x_pred = a2 * self.pmu + b2
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for pmu_val, kp_val, pred_val in zip(self.pmu, self.kp, y_pred):
+                if pmu_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(pmu_val, kp_val, color='g')
+
+            for pmu_val, kp_val, pred_val in zip(self.pmu, self.kp, x_pred):
+                if kp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_val, pmu_val, color='g')
+            plt.plot(self.obplnas, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
+            plt.plot(self.pmu, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
+            plt.xlabel('pmu')
+            plt.ylabel('kp')
+            plt.legend()
+            plt.grid(True)
+            equation = f'y = {a1:.2f}x + {b1:.2f}, r2_obpl = {r2_obp}'
+            plt.text(np.mean(self.pmu), np.min(self.kp) + 0.5, equation, ha='center', va='bottom')
+            equation = f'y = {a2:.2f}x + {b2:.2f}, r2_pmu ={r2_pmu}'
+            plt.text(np.mean(self.obplnas), np.min(self.kp), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_pmu_kp_dependence.png")
+
             if get_report:
-                plt.title("test pmu kp dependence")
-                plt.scatter(self.obplnas, self.kp, color='red', label='Обплнас-Кп')
-                plt.scatter(self.pmu, self.kp, color='blue', label='Минпл-Кп')
-                plt.plot(self.obplnas, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
-                plt.plot(self.pmu, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
-                plt.xlabel('pmu')
-                plt.ylabel('kp')
-                plt.legend()
-                plt.grid(True)
-                equation = f'y = {a1:.2f}x + {b1:.2f}, r2_obpl = {r2_obp}'
-                plt.text(np.mean(self.pmu), np.min(self.kp) + 0.5, equation, ha='center', va='bottom')
-                equation = f'y = {a2:.2f}x + {b2:.2f}, r2_pmu ={r2_pmu}'
-                plt.text(np.mean(self.obplnas), np.min(self.kp), equation, ha='center', va='bottom')
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -833,7 +1155,8 @@ class QA_QC_kern:
         типовой для данного кроссплота и полученной
         аппроксимации. В данном случае зависимость
         линейная по функции y=a*x+b, при этом a>0, b>0
-
+        Required data:
+            Открытая пористость; Кво; So
         Args:
             self.kp_ef (array[int/float]): массив с данными коэффициент эффективной пористости для проверки
             self.kp_din (array[int/float]): массив с данными коэффициент динамической пористости для проверки
@@ -844,8 +1167,8 @@ class QA_QC_kern:
             file: запись результата теста для сохранения состояния
         """
 
-        if self.__check_input(self.kp_ef, "kp ef", "test kpf kp din dependence") \
-                and self.__check_input(self.kp_din, "kp din", "test kpf kp din dependence"):
+        if self.__check_data(self.kp_ef, "kp ef", "test kpf kp din dependence") \
+                and self.__check_data(self.kp_din, "kp din", "test kpf kp din dependence"):
 
             r2 = self.test_general_dependency_checking(self.kp_ef, self.kp_din, "test kpf kp din dependence",
                                                        "Коэффициента эффективной пористости",
@@ -862,21 +1185,33 @@ class QA_QC_kern:
                     wrong_values1.append(self.kp_ef[i])
                     wrong_values2.append(self.kp_din[i])
 
-            self.file.write(
-                f"Test 'dependence kpf kpdin': {result}."
-                f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            report_text = f"Test 'dependence kpf kpdin': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_kp_ef_kpdin_dependence:\n{report_text}\n\n"
+            x_trend = np.linspace(np.max(self.kp_ef), np.min(self.kp_din), 100)
+            y_trend = a * x_trend + b
+            plt.title("test kpf kpdin dependence")
+            plt.scatter(self.kp_ef, self.kp_din, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            y_pred = a * self.kp_ef + b
+            x_pred = a * self.kp_din + b
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kp_din_val, kp_ef_val, pred_val in zip(self.kp_din, self.kp_ef, y_pred):
+                if kp_ef_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_din_val, kp_ef_val, color='r')
+
+            for kp_din_val, kp_ef_val, pred_val in zip(self.kp_din, self.kp_ef, x_pred):
+                if kp_din_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_ef_val, kp_din_val, color='r')
+            plt.xlabel('kp ef')
+            plt.ylabel('kp din')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.kp_ef), np.min(self.kp_din), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_kp_ef_kpdin_dependence.png")
 
             if get_report:
-                x_trend = np.linspace(np.max(self.kp_ef), np.min(self.kp_din), 100)
-                y_trend = a * x_trend + b
-                plt.title("test kpf kpdin dependence")
-                plt.scatter(self.kp_ef, self.kp_din, color='b', label='Данные')
-                plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-                plt.xlabel('kp ef')
-                plt.ylabel('kp din')
-                plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-                plt.text(np.mean(self.kp_ef), np.min(self.kp_din), equation, ha='center', va='bottom')
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -888,6 +1223,8 @@ class QA_QC_kern:
         аппроксимации. В данном случае зависимость
         линейная по функции y=a*x+b, при этом a>0, b<0
 
+        Required data:
+            Открытая пористость; Кво; Открытая пористость по жидкости;
         Args:
             self.kp_ef (array[int/float]): массив с данными коэффициента эффективной пористости для проверки
             self.kp (array[int/float]): массив с данными коэффициента пористости для проверки
@@ -897,14 +1234,14 @@ class QA_QC_kern:
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.kp_ef, "kp ef", "test kp ef kp dependence") \
-                and self.__check_input(self.kp, "Открытая пористость по жидкости", "test kp ef kp dependence"):
+        if self.__check_data(self.kp_ef, "kp ef", "test kp ef kp dependence") \
+                and self.__check_data(self.kp, "Открытая пористость по жидкости", "test kp ef kp dependence"):
 
             r2 = self.test_general_dependency_checking(self.kp_ef, self.kp, "test kp ef kp dependence",
                                                        "Коэффициента эффективной пористости",
                                                        "Коэффициента пористости")["r2"]
             result = True
-            a, b = self.linear_dependence_function(self.kp_ef, self.kp)
+            a, b = linear_dependence_function(self.kp_ef, self.kp)
             if a <= 0 or b >= 0 or r2 < 0.7:
                 result = False
 
@@ -917,19 +1254,33 @@ class QA_QC_kern:
             self.dict_of_wrong_values["test_kp_ef_kp_dependence"] = [{
                 "Открытая пористость по жидкости": wrong_values2
             }, "выпадает из линии тренда"]
-            self.file.write(
-                f"Test 'dependence kp ef kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            report_text = f"Test 'dependence kp ef kp': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            x_trend = np.linspace(np.min(self.kp_ef), np.max(self.kp_ef), 100)
+            y_trend = a * x_trend + b
+            plt.title("test kp ef kp dependence")
+            y_pred = a * self.kp_ef + b
+            x_pred = a * self.kp + b
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kp_val, kp_ef_val, pred_val in zip(self.kp, self.kp_ef, y_pred):
+                if kp_ef_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_ef_val, kp_val, color='r')
+
+            for kp_val, kp_ef_val, pred_val in zip(self.kp, self.kp_ef, x_pred):
+                if kp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_val, kp_ef_val, color='r')
+
+            plt.scatter(self.kp_ef, self.kp, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kp ef')
+            plt.ylabel('kp')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.kp_ef), np.min(self.kp), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_kp_ef_kp_dependence.png")
             if get_report:
-                x_trend = np.linspace(np.min(self.kp_ef), np.max(self.kp_ef), 100)
-                y_trend = a * x_trend + b
-                plt.title("test kp ef kp dependence")
-                plt.scatter(self.kp_ef, self.kp, color='b', label='Данные')
-                plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-                plt.xlabel('kp ef')
-                plt.ylabel('kp')
-                plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-                plt.text(np.mean(self.kp_ef), np.min(self.kp), equation, ha='center', va='bottom')
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -941,6 +1292,9 @@ class QA_QC_kern:
         аппроксимации. В данном случае зависимость
         линейная по функции y=a*x+b, при этом a>0, b<0
 
+        Required data:
+            Открытая пористость; Кво; So; Открытая пористость по жидкости
+
         Args:
             self.kp (array[int/float]): массив с данными Открытая пористость по жидкости для проверки
             self.kp_din (array[int/float]): массив с данными коэффициент динамической пористости для проверки
@@ -950,8 +1304,8 @@ class QA_QC_kern:
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.kp, "Открытая пористость по жидкости", "test kp kp din dependence") \
-                and self.__check_input(self.kp_din, "kp din", "test kp kp din dependence"):
+        if self.__check_data(self.kp, "Открытая пористость по жидкости", "test kp kp din dependence") \
+                and self.__check_data(self.kp_din, "kp din", "test kp kp din dependence"):
             r2 = self.test_general_dependency_checking(self.kp, self.kp_din, "test kp kp din dependence",
                                                        "Коэффициента пористости",
                                                        "Коэффициента динамической пористости")["r2"]
@@ -968,19 +1322,36 @@ class QA_QC_kern:
                     wrong_values2.append(self.kp_din[i])
             self.dict_of_wrong_values["test_kp_kp_din_dependence"] = [{"Открытая пористость по жидкости": wrong_values1,
                                                                        }, "выпадает из линии тренда"]
-            self.file.write(
-                f"Test 'dependence kp ef kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            report_text = f"{result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_kp_kp_din_dependence:\n{report_text}\n\n"
+
+
+            x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
+            y_trend = a * x_trend + b
+            plt.title("test kp ef kp dependence")
+            y_pred = a * self.kp + b
+            x_pred = a * self.kp_din + b
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kp_val, kp_din_val, pred_val in zip(self.kp, self.kp_din, y_pred):
+                if kp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_val, kp_din_val, color='r')
+
+            for kp_val, kp_din_val, pred_val in zip(self.kp, self.kp_din, x_pred):
+                if kp_din_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_din_val, kp_val, color='r')
+
+            plt.scatter(self.kp, self.kp_din, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kp')
+            plt.ylabel('kp din')
+            plt.legend()
+            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.kp), np.min(self.kp_din), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_kp_kp_din_dependence.png")
+
             if get_report:
-                x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
-                y_trend = a * x_trend + b
-                plt.title("test kp ef kp dependence")
-                plt.scatter(self.kp, self.kp_din, color='b', label='Данные')
-                plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-                plt.xlabel('kp')
-                plt.ylabel('kp din')
-                plt.legend()
-                equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-                plt.text(np.mean(self.kp), np.min(self.kp_din), equation, ha='center', va='bottom')
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -992,6 +1363,9 @@ class QA_QC_kern:
         аппроксимации. В данном случае зависимость по
         функции y=a*exp(b*x) при этом b>0
 
+        Required data:
+            Кпр_газ(гелий); Открытая пористость по жидкости
+
         Args:
             self.kpr (array[int/float]): массив с данными коэффициент проницаемости для проверки
             self.kp (array[int/float]): массив с данными Открытая пористость по жидкости для проверки
@@ -1002,8 +1376,8 @@ class QA_QC_kern:
             file: запись результата теста для сохранения состояния
         """
 
-        if self.__check_input(self.kpr, "Кпр_газ(гелий)", "test dependence kpr kp") and \
-                self.__check_input(self.kp, "Открытая пористость по жидкости", "test dependence kpr kp"):
+        if self.__check_data(self.kpr, "Кпр_газ(гелий)", "test dependence kpr kp") and \
+                self.__check_data(self.kp, "Открытая пористость по жидкости", "test dependence kpr kp"):
             r2 = self.test_general_dependency_checking(self.kpr, self.kp, "test dependence kpr kp",
                                                        "Коэффициента проницаемости",
                                                        "Коэффициента пористости")["r2"]
@@ -1022,19 +1396,33 @@ class QA_QC_kern:
             self.dict_of_wrong_values["test_dependence_kpr_kp"] = [{"Кпр_газ(гелий)": wrong_values1,
                                                                     "Открытая пористость по жидкости": wrong_values2},
                                                                    "выпадает из линии тренда"]
-            self.file.write(
-                f"Test 'dependence kpr kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            report_text = f"Test 'dependence kpr kp': {result}"
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_dependence_kpr_kp:\n{report_text}\n\n"
+
+            x_trend = np.linspace(np.min(self.kpr), np.max(self.kpr), 100)
+            y_trend = a * x_trend + b
+            plt.title("test dependence kpr kp")
+            x_pred = a * np.exp(self.kpr*b)
+            y_pred = a * np.exp(self.kp*b)
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kp_val, kpr_val, pred_val in zip(self.kp, self.kpr, y_pred):
+                if kp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_val, kpr_val, color='r')
+
+            for kp_val, kpr_val, pred_val in zip(self.kp, self.kpr, x_pred):
+                if kpr_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kpr_val, kp_val, color='r')
+            plt.scatter(self.kpr, self.kp, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kpr')
+            plt.ylabel('kp')
+            plt.legend()
+            equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2:.2f}'
+            plt.text(np.mean(self.kpr), np.min(self.kp), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_dependence_kpr_kp.png")
             if get_report:
-                x_trend = np.linspace(np.min(self.kpr), np.max(self.kpr), 100)
-                y_trend = a * x_trend + b
-                plt.title("test dependence kpr kp")
-                plt.scatter(self.kpr, self.kp, color='b', label='Данные')
-                plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-                plt.xlabel('kpr')
-                plt.ylabel('kp')
-                plt.legend()
-                equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2:.2f}'
-                plt.text(np.mean(self.kpr), np.min(self.kp), equation, ha='center', va='bottom')
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -1044,6 +1432,9 @@ class QA_QC_kern:
         Тест предназначен для оценки соответствия типовой для
         данного кроссплота и полученной аппроксимации.
         В данном случае зависимость по функции y=a*exp(b*x) при этом b>0
+
+        Required data:
+            Открытая пористость; Кво; So; Кпр_газ(гелий)
 
         Args:
             self.kpr (array[int/float]): массив с данными коэффициента проницаемости для проверки
@@ -1055,8 +1446,8 @@ class QA_QC_kern:
             file: запись результата теста для сохранения состояния
         """
 
-        if self.__check_input(self.kpr, "Кпр_газ(гелий)", "test dependence kpr kp din") and \
-                self.__check_input(self.kp_din, "Kp_din", "test dependence kpr kp din"):
+        if self.__check_data(self.kpr, "Кпр_газ(гелий)", "test dependence kpr kp din") and \
+                self.__check_data(self.kp_din, "Kp_din", "test dependence kpr kp din"):
 
             r2 = self.test_general_dependency_checking(self.kpr, self.kp_din, "test dependence kpr kp din",
                                                        "Коэффициента проницаемости",
@@ -1074,19 +1465,33 @@ class QA_QC_kern:
                     wrong_values2.append(self.kp_din[i])
             self.dict_of_wrong_values["test_dependence_kpr_kp_din"] = [{"Кпр_газ(гелий)": wrong_values1,
                                                                         }, "выпадает из линии тренда"]
-            self.file.write(
-                f"Test 'dependence kpc kp': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            report_text = f"Test 'dependence kpc kp': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} :\n{report_text}\n\n"
+            x_pred = a * np.exp(self.kpr*b)
+            y_pred = a * np.exp(self.kp_din*b)
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kp_din_val, kpr_val, pred_val in zip(self.kp_din, self.kpr, y_pred):
+                if kp_din_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kp_din_val, kpr_val, color='r')
+
+            for kp_din_val, kpr_val, pred_val in zip(self.kp_din, self.kpr, x_pred):
+                if kpr_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kpr_val, kp_din_val, color='r')
+
+            x_trend = np.linspace(np.min(self.kpr), np.max(self.kpr), 100)
+            y_trend = a * x_trend + b
+            plt.title("test dependence kpc kp")
+            plt.scatter(self.kpr, self.kp_din, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kpr')
+            plt.ylabel('kp din')
+            plt.legend()
+            equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2:.2f}'
+            plt.text(np.mean(self.kpr), np.min(self.kp_din), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_dependence_kpr_kp_din.png")
             if get_report:
-                x_trend = np.linspace(np.min(self.kpr), np.max(self.kpr), 100)
-                y_trend = a * x_trend + b
-                plt.title("test dependence kpc kp")
-                plt.scatter(self.kpr, self.kp_din, color='b', label='Данные')
-                plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-                plt.xlabel('kpr')
-                plt.ylabel('kp din')
-                plt.legend()
-                equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2:.2f}'
-                plt.text(np.mean(self.kpr), np.min(self.kp_din), equation, ha='center', va='bottom')
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -1096,6 +1501,8 @@ class QA_QC_kern:
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость по функции y=a*ln(x)+b при этом a>0
+        Required data:
+            Кво; Кпр_газ(гелий)
 
         Args:
             self.sw_residual (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
@@ -1107,8 +1514,8 @@ class QA_QC_kern:
             file: запись результата теста для сохранения состояния
         """
 
-        if self.__check_input(self.sw_residual, "Кво", "test dependence sw_residual kpr") and \
-                self.__check_input(self.kpr, "Кпр_газ(гелий)", "test dependence sw_residual kpr"):
+        if self.__check_data(self.sw_residual, "Кво", "test dependence sw_residual kpr") and \
+                self.__check_data(self.kpr, "Кпр_газ(гелий)", "test dependence sw_residual kpr"):
 
             r2 = self.test_general_dependency_checking(self.sw_residual, self.kpr, "test dependence sw_residual kpr",
                                                        "Коэффициента остаточной водонасыщенности",
@@ -1125,24 +1532,37 @@ class QA_QC_kern:
                 if self.kpr[i] > a * np.log(self.sw_residual[i]) + b:
                     wrong_values1.append(self.sw_residual[i])
                     wrong_values2.append(self.kpr[i])
-            self.file.write(
-                f"Test 'dependence sw_residual kpr': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            report_text = f"{result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_dependence_sw_residual_kpr:\n{report_text}\n\n"
             self.dict_of_wrong_values["test_dependence_sw_residual_kpr"] = [{"Кво": wrong_values1,
                                                                              "Кпр_газ(гелий)": wrong_values2},
                                                                             "выпадает из линии тренда"]
-            if get_report:
-                x_trend = np.linspace(np.min(self.sw_residual), np.max(self.sw_residual), 100)
-                y_trend = a * x_trend + b
+            x_trend = np.linspace(np.min(self.sw_residual), np.max(self.sw_residual), 100)
+            y_trend = a * x_trend + b
 
-                # Построение кроссплота
-                plt.title("test dependence sw_residual kpr")
-                plt.scatter(self.sw_residual, self.kpr, color='b', label='Данные')
-                plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-                plt.xlabel('sw_residual')
-                plt.ylabel('kpr')
-                plt.legend()
-                equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
-                plt.text(np.mean(self.sw_residual), np.min(self.kpr), equation, ha='center', va='bottom')
+            # Построение кроссплота
+            plt.title("test dependence sw_residual kpr")
+            x_pred = a * np.log(self.sw_residual)+b
+            y_pred = a * np.log(self.kpr)+b
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for sw_residual_val, kpr_val, pred_val in zip(self.sw_residual, self.kpr, y_pred):
+                if kpr_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kpr_val, sw_residual_val, color='r')
+
+            for sw_residual_val, kpr_val, pred_val in zip(self.sw_residual, self.kpr, x_pred):
+                if sw_residual_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kpr_val, sw_residual_val, color='r')
+            plt.scatter(self.sw_residual, self.kpr, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('sw_residual')
+            plt.ylabel('kpr')
+            plt.legend()
+            equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.sw_residual), np.min(self.kpr), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_dependence_kpr_kp_din.png")
+            if get_report:
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -1152,7 +1572,8 @@ class QA_QC_kern:
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость по функции y=b/(kв^n) при этом 1,1<n<5
-
+        Required data:
+            Параметр насыщенности; Sw
         Args:
             self.rn (array[int/float]): массив с данными параметр насыщенности для проверки
             self.sw_residual (array[int/float]): массив с данными коэффициент водонасыщенности для проверки
@@ -1162,9 +1583,9 @@ class QA_QC_kern:
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.rn, "Параметр насыщенности", "test rn sw_residual dependencies") \
-                and self.__check_input(self.sw_residual, "Sw",
-                                       "test rn sw_residual dependencies"):
+        if self.__check_data(self.rn, "Параметр насыщенности", "test rn sw_residual dependencies") \
+                and self.__check_data(self.sw_residual, "Sw",
+                                      "test rn sw_residual dependencies"):
             r2 = self.test_general_dependency_checking(self.rn, self.sw_residual,
                                                        "est rn sw_residual dependencies",
                                                        "Рн",
@@ -1184,17 +1605,31 @@ class QA_QC_kern:
             self.dict_of_wrong_values["test_rn_sw_residual_dependence"] = [{"Параметр насыщенности": wrong_values1,
                                                                             "Sw": wrong_values2
                                                                             }, "выпадает из линии тренда"]
-            self.file.write(
-                f"Test 'dependence rn sw_residual': {result}. Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            report_text = f"{result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_rn_sw_residual_dependence:\n{report_text}\n\n"
+            plt.title("test rn sw_residual dependencies")
+            x_pred = b / (self.rn ** n)
+            y_pred = b / (self.sw_residual ** n)
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for sw_residual_val, rn_val, pred_val in zip(self.sw_residual, self.rn, y_pred):
+                if sw_residual_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(sw_residual_val, rn_val, color='r')
+
+            for sw_residual_val, rn_val, pred_val in zip(self.sw_residual, self.rn, x_pred):
+                if rn_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(rn_val, sw_residual_val, color='r')
+
+            plt.scatter(self.rn, self.sw_residual, color='blue', label='Исходные данные')
+            plt.plot(self.rn, b / (self.sw_residual ** n), color='red', label='Линия тренда')
+            plt.xlabel('rn')
+            plt.ylabel('sw_residual')
+            plt.legend()
+            equation = f'y = {b:.2f}/(x^{b:.2f}),  r2={r2:.2f}'
+            plt.text(np.mean(self.rn), np.min(self.sw_residual), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_dependence_kpr_kp_din.png")
             if get_report:
-                plt.title("test rn sw_residual dependencies")
-                plt.scatter(self.rn, self.sw_residual, color='blue', label='Исходные данные')
-                plt.plot(self.rn, b / (self.sw_residual ** n), color='red', label='Линия тренда')
-                plt.xlabel('rn')
-                plt.ylabel('sw_residual')
-                plt.legend()
-                equation = f'y = {b:.2f}/(x^{b:.2f}),  r2={r2:.2f}'
-                plt.text(np.mean(self.rn), np.min(self.sw_residual), equation, ha='center', va='bottom')
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -1206,6 +1641,9 @@ class QA_QC_kern:
         В данном случае зависимость по функции y=a/(kп^m)
         при этом m>0. a>0 и a<2,5, 1,1<m<3,8
 
+        Required data:
+            Параметр пористости; Открытая пористость по жидкости
+
         Args:
             self.rp (array[int/float]): массив с данными параметр пористости для проверки
             self.kp (array[int/float]): массив с данными Открытая пористость по жидкости для проверки
@@ -1215,8 +1653,8 @@ class QA_QC_kern:
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.rp, "Параметр пористости", "test rp kp dependencies") \
-                and self.__check_input(self.kp, "Открытая пористость по жидкости", "test rp kp dependencies"):
+        if self.__check_data(self.rp, "Параметр пористости", "test rp kp dependencies") \
+                and self.__check_data(self.kp, "Открытая пористость по жидкости", "test rp kp dependencies"):
             r2 = self.test_general_dependency_checking(self.rp, self.kp, "test rp kp dependencies",
                                                        "Параметр пористости",
                                                        "Коэффициента пористости")["r2"]
@@ -1232,20 +1670,33 @@ class QA_QC_kern:
                 if self.kp[i] > a / (self.rp[i] ** m):
                     wrong_values1.append(self.rp[i])
                     wrong_values2.append(self.kp[i])
-            self.file.write(f"Test 'dependence rp kp ': {result}."
-                            f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            report_text = f"Test 'dependence rp kp ': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             self.dict_of_wrong_values["test_rp_kp_dependencies"] = [{"Параметр пористости": wrong_values1,
                                                                      "Открытая пористость по жидкости": wrong_values2
                                                                      }, "выпадает из линии тренда"]
+            plt.scatter(self.rp, self.kp, color='blue', label='Исходные данные')
+            plt.plot(self.rp, a / (self.kp ** m), color='red', label='Линия тренда')
+            x_pred = a / (self.rp ** m)
+            y_pred = a / (self.kp ** m)
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for rp_val, kv_val, pred_val in zip(self.rp, self.kp, y_pred):
+                if kv_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(rp_val, kv_val, color='r')
+
+            for rp_val, kv_val, pred_val in zip(self.rp, self.kp, x_pred):
+                if rp_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kv_val, rp_val, color='r')
+            plt.title("test rp kp dependencies")
+            plt.xlabel('рп')
+            plt.ylabel('кп')
+            plt.legend()
+            equation = f'y = {a:.2f}/(x^{m:.2f}), r2={r2:.2f}'
+            plt.text(np.mean(self.rp), np.min(self.kp), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_rp_kp_dependencies.png")
             if get_report:
-                plt.scatter(self.rp, self.kp, color='blue', label='Исходные данные')
-                plt.plot(self.rp, a / (self.kp ** m), color='red', label='Линия тренда')
-                plt.title("test rp kp dependencies")
-                plt.xlabel('рп')
-                plt.ylabel('кп')
-                plt.legend()
-                equation = f'y = {a:.2f}/(x^{m:.2f}), r2={r2:.2f}'
-                plt.text(np.mean(self.rp), np.min(self.kp), equation, ha='center', va='bottom')
                 plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -1320,22 +1771,23 @@ class QA_QC_kern:
             # Проверка пройденного теста
             if r2 >= 0.7:
                 result = True
-                self.file.write(
-                    f"Test 'general dependency checking': {result}. "
-                    f"Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n")
+                report_text = f"Test 'general dependency checking': {result}. Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n"
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
                 return {"result": result, "r2": r2, "file_name": self.file_name, "date": self.dt_now}
             else:
                 result = False
-        self.file.write(
-            f"Test 'general dependency checking': {result}. "
-            f"Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n")
+        report_text = f"Test 'general dependency checking': {result}. Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n"
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
         return {"result": result, "r2": r2, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_first(self, get_report=True):
         """
         Тест проводится для оценки отсутствия монотонности интервалов долбления. Т.е.,
         подошва вышележащего интервала долбления должна быть выше или равна кровле нижележащего
-
+            Required data:
+                Кровля интервала отбора; Подошва интервала отбора
             Args:
                 self.top (array[int/float]): массив с данными кровли для проверки
                 self.bottom (array[int/float]): массив с данными подошвы для проверки
@@ -1344,8 +1796,8 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.top, "Кровля интервала отбора", "test coring depths first") \
-                and self.__check_input(self.bottom, "Подошва интервала отбора", "test coring depths first"):
+        if self.__check_data(self.top, "Кровля интервала отбора", "test coring depths first") \
+                and self.__check_data(self.bottom, "Подошва интервала отбора", "test coring depths first"):
             result = True
             wrong_values = []
             for i in range(len(self.top)):
@@ -1356,20 +1808,20 @@ class QA_QC_kern:
                                                                       "Подошва интервала отбора": wrong_values, },
                                                                      "подошва вышележащего интервала долбления ниже кровли нижележащего"]
             if result:
-                self.file.write(
-                    f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
-                    f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}."
+
             else:
-                self.file.write(
-                    f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
-                    f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
 
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_second(self, get_report=True):
         """
         Тест проводится для оценкци соответствия интервала долбления: подошва-кровля ≥ выносу в метрах
-
+             Required data:
+                Кровля интервала отбора; Подошва интервала отбора; Вынос керна, м
             Args:
                 self.top (array[int/float]): массив с данными кровли для проверки
                 self.bottom (array[int/float]): массив с данными подошвы для проверки
@@ -1379,10 +1831,10 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.top, "Кровля интервала отбора", "test coring depths second") \
-                and self.__check_input(self.bottom, "Подошва интервала отбора", "test coring depths second") \
-                and self.__check_input(self.core_removal_in_meters, "Вынос керна, м",
-                                       "test coring depths second"):
+        if self.__check_data(self.top, "Кровля интервала отбора", "test coring depths second") \
+                and self.__check_data(self.bottom, "Подошва интервала отбора", "test coring depths second") \
+                and self.__check_data(self.core_removal_in_meters, "Вынос керна, м",
+                                      "test coring depths second"):
             wrong_values = []
             result = True
             for i in range(len(self.top)):
@@ -1395,19 +1847,18 @@ class QA_QC_kern:
                                                                        },
                                                                       "разница между подошвой и кровлей меньше выноса в м"]
             if result:
-                self.file.write(
-                    f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
-                    f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}."
             else:
-                self.file.write(
-                    f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
-                    f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_third(self, get_report=True):
         """
         Тест оценивает соответствие значений выноса керна в метрах и в процентах
-
+             Required data:
+                Вынос керна, м; Вынос керна, %
             Args:
                 self.intervals (array[[int/float]]): массив с массивамими,
                                                     содержашими начало интервала и конец интервала
@@ -1418,8 +1869,8 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.outreach_in_meters, "Вынос керна, м", "test coring depths third") \
-                and self.__check_input(self.percent_core_removal, "Вынос керна, %", "test coring depths third"):
+        if self.__check_data(self.outreach_in_meters, "Вынос керна, м", "test coring depths third") \
+                and self.__check_data(self.percent_core_removal, "Вынос керна, %", "test coring depths third"):
             result = True
             wrong_values = []
             for i in range(len(self.intervals)):
@@ -1434,19 +1885,18 @@ class QA_QC_kern:
                                                                      "вынос керна в процентах и метрах не совпадает"]
 
             if result:
-                self.file.write(
-                    f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
-                    f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}."
             else:
-                self.file.write(
-                    f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
-                    f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_four(self, get_report=True):
         """
         Тест проводится с целью соответствия глубин отбора образцов с глубинами выноса керна
-
+            Required data:
+                Вынос керна, м; Глубина отбора, м; Подошва интервала отбора
             Args:
                 self.core_removal_in_meters (array[int/float]): массив с выносом керна в метрах
                 self.core_sampling (array[int/float]): массив с глубинами отбора образцов
@@ -1456,9 +1906,9 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.core_removal_in_meters, "Вынос керна, м", "test coring depths four") \
-                and self.__check_input(self.core_sampling, "Глубина отбора, м", "test coring depths four") \
-                and self.__check_input(self.bottom, "Подошва интервала отбора", "test coring depths four"):
+        if self.__check_data(self.core_removal_in_meters, "Вынос керна, м", "test coring depths four") \
+                and self.__check_data(self.core_sampling, "Глубина отбора, м", "test coring depths four") \
+                and self.__check_data(self.bottom, "Подошва интервала отбора", "test coring depths four"):
             result = True
             wrong_values = []
             for i in range(len(self.core_removal_in_meters)):
@@ -1471,13 +1921,12 @@ class QA_QC_kern:
                                                                      "Подошва интервала отбора": wrong_values,
                                                                      }, "глубина отбора ниже фактического выноса керна"]
             if result:
-                self.file.write(
-                    f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
-                    f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}."
             else:
-                self.file.write(
-                    f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
-                    f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_data_tampering(self, get_report=True):
@@ -1485,7 +1934,8 @@ class QA_QC_kern:
         Тест выполняется с целью фиксации подлога измерений.
         Подлог заключается в том, что существуют значения параметров,
         схожие вплоть до 3-его знака после запятой
-
+            Required data:
+                    Кпр_газ; Открытая пористость по жидкости; Кво; Параметр пористости; Плотность абсолютно сухого образца; Sw; Параметр насыщенности
             Args:
                 self.kpr (array[int/float]): массив с данными коэффициент проницаемости для сравнения
                 self.kp (array[int/float]): массив с данными Открытая пористость по жидкости для сравнения
@@ -1499,13 +1949,13 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
                 """
-        if self.__check_input(self.kpr, "Кпр_газ", "test data tampering") and \
-                self.__check_input(self.kp, "Открытая пористость по жидкости", "test data tampering") and \
-                self.__check_input(self.sw_residual, "Кво", "test data tampering") and \
-                self.__check_input(self.rp, "Параметр пористости", "test data tampering") and \
-                self.__check_input(self.density, "Плотность абсолютно сухого образца", "test data tampering") and \
-                self.__check_input(self.water_permeability, "Sw", "test data tampering") and \
-                self.__check_input(self.rn, "Параметр насыщенности", "test data tampering"):
+        if self.__check_data(self.kpr, "Кпр_газ", "test data tampering") and \
+                self.__check_data(self.kp, "Открытая пористость по жидкости", "test data tampering") and \
+                self.__check_data(self.sw_residual, "Кво", "test data tampering") and \
+                self.__check_data(self.rp, "Параметр пористости", "test data tampering") and \
+                self.__check_data(self.density, "Плотность абсолютно сухого образца", "test data tampering") and \
+                self.__check_data(self.water_permeability, "Sw", "test data tampering") and \
+                self.__check_data(self.rn, "Параметр насыщенности", "test data tampering"):
             result = True
             wrong_values_kpr = []
             wrong_values_kp = []
@@ -1565,19 +2015,20 @@ class QA_QC_kern:
                                                                  "Sw": wrong_values_water_permeability},
                                                                 "схожие значения"]
             if result:
-                self.file.write(
-                    f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
-                    f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}."
             else:
-                self.file.write(
-                    f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
-                    f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_in_surface_and_reservoir_conditions(self, get_report=True):
         """
         Тест выполянется для сравнения коэффициентов пористости, оцененных пластовых
         и атмосферных условиях. Кп в атмосферных условиях всегда больше чем Кп в пластовых условиях.
+
+            Required data:
+                Открытая пористость в пластовых условиях; Открытая пористость по жидкости
 
             Args:
                 self.kp_pov (array[int/float]): массив с данными Открытая пористость по жидкости в
@@ -1589,14 +2040,14 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
                 """
-        if self.__check_input(self.kp_pov, "Открытая пористость по жидкости",
-                              "test kp in surface and reservoir conditions") and \
-                self.__check_input(self.kp_plast, "Открытая пористость в пластовых условиях",
-                                   "test kp in surface and reservoir conditions"):
+        if self.__check_data(self.kp_pov, "Открытая пористость по жидкости",
+                             "test kp in surface and reservoir conditions") and \
+                self.__check_data(self.kp_plast, "Открытая пористость в пластовых условиях",
+                                  "test kp in surface and reservoir conditions"):
             result = True
             wrong_values = []
             for i in range(len(self.kp_pov)):
-                if self.kp_pov[i] - self.kp_plast[i] > 2:
+                if abs(self.kp_plast[i] - self.kp_pov[i]) < 0.05:
                     result = False
                     wrong_values.append(i)
             self.dict_of_wrong_values["test_kp_in_surface_and_reservoir_conditions"] = [
@@ -1604,13 +2055,11 @@ class QA_QC_kern:
                  "Открытая пористость в пластовых условиях": wrong_values,
                  }, "кп в пластовых больше или равно кп в атмосферных"]
             if result:
-                self.file.write(
-                    f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
-                    f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}."
             else:
-                self.file.write(
-                    f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
-                    f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_table_notes(self, get_report=True):
@@ -1618,6 +2067,8 @@ class QA_QC_kern:
         Тест проводится с целью ранее установленных несоответствий/аномалий
         при лаборатоном анализе керна, указанных в “примечаниях”
 
+           Required data:
+                Примечание
             Args:
                 self.table (array[int/float]): массив с данными из таблицы с
                 примечанием, при наличии ошибки в массиве будет находиться 1,
@@ -1628,9 +2079,14 @@ class QA_QC_kern:
                 file: запись результата теста для сохранения состояния
         """
         try:
-            indexes = [i for i, x in enumerate(self.table) if x != 'nan']
-            self.file.write("Test 'table notes': {}\n".format(indexes))
+            mask = np.array([isinstance(x, str) for x in self.table])
+
+            # Получаем индексы, где есть строки
+            indexes = np.where(mask)[0]
+            report_text = f"Test 'table notes': {indexes}\n"
             self.dict_of_wrong_values["test_table_notes"] = [{"Примечание": indexes}, "присутствует неисправность"]
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return indexes
         except:
             self.dict_of_wrong_values["test_table_notes"] = [{"Примечание": [0]}, "пустой"]
@@ -1639,7 +2095,8 @@ class QA_QC_kern:
         """
         Тест оценивает величину суммарную насыщения водой и нефтью,
         которая не должна привышать 100% или 1 в долях
-
+            Required data:
+                Sw; So
             Args:
                 self.water_permeability (array[int/float]): массив с данными коэффиент водонасыщенности для проверки
                 self.kno (array[int/float]): массив с данными коэффициент нефтенащенности для проверки
@@ -1648,8 +2105,8 @@ class QA_QC_kern:
                 bool: результат выполнения теста
                 file: запись результата теста для сохранения состояния
         """
-        if self.__check_input(self.sw_residual, "Sw", "test quo and qno") and \
-                self.__check_input(self.kno, "So", "test quo and qno"):
+        if self.__check_data(self.sw_residual, "Sw", "test quo and qno") and \
+                self.__check_data(self.kno, "So", "test quo and qno"):
             converted_sw_residual = []
             converted_kno = []
             result = True
@@ -1674,13 +2131,11 @@ class QA_QC_kern:
                                                               "So": wrong_values},
                                                              "суммарное насыщение превышает 1 или 100%"]
             if result:
-                self.file.write(
-                    f"Test 'coring depths second': {result}. Входной файл {self.file_name}."
-                    f" Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}."
             else:
-                self.file.write(
-                    f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
-                    f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_correctness_of_p_sk_kp(self, get_report=True):
@@ -1690,7 +2145,8 @@ class QA_QC_kern:
             (перпендикулярный или параллельный образец). Разница не должна превышать
             0.5 % абсолютных Например, 7.5 и 7.1 будут схожими замерами по пористости,
             а 7.5 и 6.9 уже непохожими
-
+            Required data:
+                 Плотность абсолютно сухого образца; Ск; Открытая пористость по жидкости
             Args:
                 self.parallel (array[int/float]): массив с параллельными образцами
                 self.parallel_density (array[int/float]): массив с плотностью для параллельных образцов
@@ -1753,26 +2209,231 @@ class QA_QC_kern:
         }, "расхождение параметров выше 5%"]
 
         if result:
-            self.file.write(
-                f"Test 'test_correctness_of_p_sk_kp': {result}. Входной файл {self.file_name}."
-                f" Дата выполнения {self.dt_now}\n")
+            report_text = f"Test 'test_correctness_of_p_sk_kp': {result}."
         else:
-            self.file.write(
-                f"Test 'test_correctness_of_p_sk_kp': {result}.Индексы элементов с ошибкой {wrong_values}."
-                f" Входной файл {self.file_name}. Дата выполнения {self.dt_now}\n")
+            report_text = f"Test 'test_correctness_of_p_sk_kp': {result}.Индексы элементов с ошибкой {wrong_values}."
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
         return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
-    def get_list_of_tests(self) -> list:
-        """_summary_
+    def test_dependence_kno_kpr(self, get_report=True) -> dict[str, bool | datetime | str]:
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость по функции y=a*ln(x)+b при этом a<0, b>0
+        Required data:
+             Кно; Кпр_газ(гелий)
+        Args:
+            self.kno (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
+            self.kpr (array[int/float]): массив с данными коэффициент проницаемости для проверки
 
         Returns:
-            list: _description_
+            image: визуализация кроссплота
+            dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
+            file: запись результата теста для сохранения состояния
         """
 
-        test_methods = [method for method in dir(self) if
-                        callable(getattr(self, method)) and method.startswith("test")]
-        return test_methods
+        if self.__check_data(self.kno, "Кно", "test dependence kno kpr") and \
+                self.__check_data(self.kpr, "Кпр_газ(гелий)", "test dependence kno kpr"):
 
+            r2 = self.test_general_dependency_checking(self.kno, self.kpr, "test dependence kno kpr",
+                                                       "коэффициент остаточной нефтенасыщенности",
+                                                       "Коэффициента проницаемости")["r2"]
+
+            coefficients = np.polyfit(self.kno, np.exp(self.kpr), 1)
+            a, b = coefficients[0], coefficients[1]
+            result = True
+            if a >= 0 or b <= 0 or r2 < 0.7:
+                result = False
+
+            wrong_values1 = []
+            wrong_values2 = []
+            for i in range(len(self.kno)):
+                if self.kpr[i] > a * np.log(self.kno[i]) + b:
+                    wrong_values1.append(self.kno[i])
+                    wrong_values2.append(self.kpr[i])
+
+            report_text = f"{result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_dependence_kno_kpr:\n{report_text}\n\n"
+            self.dict_of_wrong_values["test_dependence_kno_kpr"] = [{"Кно": wrong_values1,
+                                                                     "Кпр_газ(гелий)": wrong_values2},
+                                                                    "выпадает из линии тренда"]
+            x_trend = np.linspace(np.min(self.kno), np.max(self.kno), 100)
+            y_trend = a * x_trend + b
+            y_pred = a * self.kno + b
+            x_pred = a * self.kpr + b
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kno_val, kpr_val, pred_val in zip(self.kno, self.kpr, y_pred):
+                if kno_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kno_val, kpr_val, color='r')
+
+            for kno_val, kpr_val, pred_val in zip(self.kno, self.kpr, x_pred):
+                if kpr_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kpr_val, kno_val, color='r')
+            # Построение кроссплота
+            plt.title("test dependence kno kpr")
+            plt.scatter(self.kno, self.kpr, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kno')
+            plt.ylabel('kpr')
+            plt.legend()
+            equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.kno), np.min(self.kpr), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_dependence_kno_kpr.png")
+            if get_report:
+                plt.show()
+
+            return {"result": result, "file_name": self.file_name, "date": self.dt_now}
+
+    def test_dependence_kno_knmng(self, get_report=True) -> dict[str, bool | datetime | str]:
+        """
+        Тест применяется для сравнения двух аппроксимаций: характерной
+        (эталонной для выбранного набора данных) и текущей.  Характерной
+        зависимостью является логарифмическая по функции y=a*ln(x)+b, при этом a<0, b>0.
+        Required data:
+             Кно; Критическая нефтенасыщенность
+        Args:
+            self.kno (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
+            self.knmng (array[int/float]): массив с данными критическая нефтенасыщенность для проверки
+
+        Returns:
+            image: визуализация кроссплота
+            dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
+            file: запись результата теста для сохранения состояния
+        """
+
+        if self.__check_data(self.kno, "Кно", "test_dependence_kno_knmng") and \
+                self.__check_data(self.knmng, "Критическая нефтенасыщенность", "test_dependence_kno_knmng"):
+
+            r2 = self.test_general_dependency_checking(self.kno, self.knmng, "test_dependence_kno_knmng",
+                                                       "Коэффициент остаточной нефтенасыщенности",
+                                                       "Критическая нефтенасыщенность")["r2"]
+
+            coefficients = np.polyfit(self.kno, np.exp(self.knmng), 1)
+            a, b = coefficients[0], coefficients[1]
+            result = True
+            if a >= 0 or b <= 0 or r2 < 0.7:
+                result = False
+
+            wrong_values1 = []
+            wrong_values2 = []
+            for i in range(len(self.kno)):
+                if self.knmng[i] > a * np.log(self.kno[i]) + b:
+                    wrong_values1.append(self.kno[i])
+                    wrong_values2.append(self.knmng[i])
+
+            report_text = f"{result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_dependence_kno_knmng:\n{report_text}\n\n"
+            self.dict_of_wrong_values["test_dependence_kno_knmng"] = [{"Кно": wrong_values1,
+                                                                     "Кпр_газ(гелий)": wrong_values2},
+                                                                    "выпадает из линии тренда"]
+
+            x_trend = np.linspace(np.min(self.kno), np.max(self.kno), 100)
+            y_trend = a * x_trend + b
+
+            # Построение кроссплота
+            plt.title("test_dependence_kno_knmng")
+            plt.scatter(self.kno, self.knmng, color='b', label='Данные')
+            y_pred = a * self.kno + b
+            x_pred = a * self.knmng + b
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kno_val, knmng_val, pred_val in zip(self.kno, self.knmng, y_pred):
+                if kno_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kno_val, knmng_val, color='r')
+
+            for kno_val, knmng_val, pred_val in zip(self.kno, self.knmng, x_pred):
+                if knmng_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(knmng_val, kno_val, color='r')
+
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kno')
+            plt.ylabel('knmng')
+            plt.legend()
+            equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.kno), np.min(self.knmng), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_dependence_kno_knmng.png")
+
+            if get_report:
+                plt.show()
+
+            return {"result": result, "file_name": self.file_name, "date": self.dt_now}
+
+    def test_dependence_kno_kgo(self, get_report=True) -> dict[str, bool | datetime | str]:
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость по функции y=a*ln(x)+b при этом a<0, b>0
+
+        Required data:
+             Кно; Cвязанная газонасыщенность
+        Args:
+            self.kno (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
+            self.kgo (array[int/float]): массив с данными связанная газонасыщенность для проверки
+
+        Returns:
+            image: визуализация кроссплота
+            dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
+            file: запись результата теста для сохранения состояния
+        """
+
+        if self.__check_data(self.kno, "Кно", "test_dependence_kno_kgo") and \
+                self.__check_data(self.kgo, "Cвязанная газонасыщенность", "test_dependence_kno_kgo"):
+
+            r2 = self.test_general_dependency_checking(self.kno, self.kgo, "test_dependence_kno_kgo",
+                                                       "коэффициент остаточной нефтенасыщенности",
+                                                       "Cвязанная газонасыщенность")["r2"]
+
+            coefficients = np.polyfit(self.kno, np.exp(self.kgo), 1)
+            a, b = coefficients[0], coefficients[1]
+            result = True
+            if a >= 0 or b <= 0 or r2 < 0.7:
+                result = False
+
+            wrong_values1 = []
+            wrong_values2 = []
+            for i in range(len(self.kno)):
+                if self.kgo[i] > a * np.log(self.kno[i]) + b:
+                    wrong_values1.append(self.kno[i])
+                    wrong_values2.append(self.kgo[i])
+
+            report_text = f"Test 'test_dependence_kno_kgo': {result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_dependence_kno_kgo:\n{report_text}\n\n"
+            self.dict_of_wrong_values["test_dependence_kno_kgo"] = [{"Кно": wrong_values1,
+                                                                     "Cвязанная газонасыщенность": wrong_values2},
+                                                                    "выпадает из линии тренда"]
+
+            x_trend = np.linspace(np.min(self.kno), np.max(self.kno), 100)
+            y_trend = a * x_trend + b
+
+            y_pred = a * self.kno + b
+            x_pred = a * self.kgo + b
+
+            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
+            for kno_val, kgo_val, pred_val in zip(self.kno, self.kgo, y_pred):
+                if kno_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kno_val, kgo_val, color='r')
+
+            for kno_val, kgo_val, pred_val in zip(self.kno, self.kgo, y_pred):
+                if kgo_val + (pred_val * 0.1) < pred_val:
+                    plt.scatter(kgo_val, kno_val, color='r')
+            # Построение кроссплота
+            plt.title("test_dependence_kno_kgo")
+            plt.scatter(self.kno, self.kgo, color='b', label='Данные')
+            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+            plt.xlabel('kno')
+            plt.ylabel('kgo')
+            plt.legend()
+            equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
+            plt.text(np.mean(self.kno), np.min(self.kgo), equation, ha='center', va='bottom')
+            plt.savefig("output\\test_dependence_kno_kgo.png")
+            plt.show()
+
+            return {"result": result, "file_name": self.file_name, "date": self.dt_now}
     def start_tests(self, list_of_tests: list) -> dict[str | Any, dict[Any, Any] | Any]:
         """_summary_
 
@@ -1786,25 +2447,3 @@ class QA_QC_kern:
             results[method_name] = method(get_report=self.get_report)
         results["wrong_parameters"] = self.dict_of_wrong_values
         return results
-
-    def get_method_description(self, method_name: str) -> str:
-        """Метод для получение описания теста по названию теста
-
-         Args:
-             method_name(str) - название теста
-        Returns:
-             str - описание теста
-         """
-        method = getattr(self, method_name, None)
-        if method is not None:
-            return method.__doc__
-        else:
-            return "Метод не найден."
-
-    def generate_test_report(self):
-        """_summary_
-
-        Returns:
-            str: _description_
-        """
-        self.file.close()
