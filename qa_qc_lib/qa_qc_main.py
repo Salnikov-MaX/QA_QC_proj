@@ -4,6 +4,7 @@ class QA_QC_main():
     def __init__(self):
         self.report_text = ""
         self.ident = ' '*5   # отступ при формировании отчета
+        self.delimeter = '\n------------------------------------------------------------------------------------'
     
     def get_list_of_tests(self) -> list:
         """
@@ -66,3 +67,7 @@ class QA_QC_main():
         report = f"Отчет о тестировании от {timestamp}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
         with open(f"{file_path}/{file_name}.txt", "w") as file:
             file.write(report)
+
+    def _update_report(self, report_text):
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{self.ident}{report_text}\n\n"

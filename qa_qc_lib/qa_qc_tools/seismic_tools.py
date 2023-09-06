@@ -7,65 +7,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from shapely.geometry import MultiPoint
 from scipy.signal import convolve2d
+from scipy.spatial import cKDTree
 from .math_tools import compute_variance
-
-def visualize_intersection(polygon1, polygon2, intersection_area=None, text=None):
-    """
-    Функция формирующая визуальный отчет о проведении теста test_coordinate_validation
-
-    Args:
-        polygon1 (_type_): полигон-проекция сейсмического куба
-        polygon2 (_type_): полигон границы лицензионного участка
-        intersection_area (_type_, optional): пололигон отражающий площадь пересечения polygon1 и polygon2. Defaults to None.
-        text (_type_, optional): текст с выводами результата тестирования который будет отображен в визуальном отчете. Defaults to None.
-    """    
-    fig, ax = plt.subplots()
-
-    x_coords1, y_coords1 = polygon1.exterior.xy
-    ax.plot(x_coords1, y_coords1, label='Проекция сейсмического куба', color='red')
-
-    x_coords2, y_coords2 = polygon2.exterior.xy
-    ax.plot(x_coords2, y_coords2, label='Граница лицензионного участка', color='orange')
-
-    if intersection_area:
-        intersection_x, intersection_y = intersection_area.exterior.xy
-        ax.fill(intersection_x, intersection_y, color='red', alpha=0.5, label='Зона пересечения полигонов')
-
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_title('Проверка корректности координат')
-    ax.legend(loc='center left', bbox_to_anchor=(1.01, 0.945))   
-    ax.grid()
-
-    if text:
-        ax.text(0.99, 0.5, text, transform=ax.transAxes, fontsize=12, verticalalignment='center', style='italic')
-    
-    fig.set_size_inches(8, 8)
-    plt.show()
-
-
-def visualize_miss_traces(mask, percent_false):
-    """
-    Функция формирующая визуальный отчет о проведении теста test_miss_traces
-
-    Args:
-        mask (_type_): 2D масиив с булевими значениями, где True означает пыстые сейсмические трассы
-        percent_false (_type_): процент отсутствующих сейсмических трасс от общего их колличества в кубе
-    """    
-    colors = ['red','blue']
-    percent_true = 100 - percent_false
-    labels = [f'Сейсмические трассы отсутствуют ({percent_true:.1f}%)',
-              f'Сейсмические трассы присутствуют ({percent_false:.1f}%)']
-
-    plt.figure(figsize=(8, 8))
-    plt.imshow(mask, cmap='seismic')
-
-    legend_elements = [plt.Rectangle((0, 0), 1, 1, color=colors[i], label=labels[i]) for i in range(len(colors))]
-    plt.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 1.09))
-
-    plt.grid(ls=':', alpha=.5)
-    plt.gca().invert_yaxis()
-    plt.show()
+import pandas as pd
 
 
 def build_polygon_from_points(x_coords:np.array, y_coords:np.array):
@@ -132,6 +76,86 @@ def best_split_point(variance_list):
     return best_point
 
 
+def find_closest_indices_x_y(x_coords, y_coords, target_x_array, target_y_array):
+    """
+    Метод находит индексы ближайших точек для массива целевых точек.
+
+    Args:
+        x_coords (np.array): массив x-координат.
+        y_coords (np.array): массив y-координат.
+        target_x_array (np.array): массив x-координат целевых точек.
+        target_y_array (np.array): массив y-координат целевых точек.
+
+    Returns:
+        np.array: массив индексов ближайших точек.
+    """
+    
+    tree = cKDTree(list(zip(x_coords, y_coords)))
+    distances, indices = tree.query(list(zip(target_x_array, target_y_array)))
+    return indices
+
+
+def find_closest_indices_z(z_coords, target_z_array):
+    """
+    Метод находит индексы ближайших значений для каждого значения в target_z_array внутри массива z_coords.
+
+    Args:
+        z_coords (np.array): массив z-координат (или значений).
+        target_z_array (np.array): массив z-координат (или значений), для которых необходимо найти ближайшие совпадения.
+
+    Returns:
+        np.array: массив индексов ближайших значений в z_coords для каждого значения в target_z_array.
+    """
+    
+    tree = cKDTree(z_coords.reshape(-1, 1))
+    distances, indices = tree.query(target_z_array.reshape(-1, 1))
+    return indices
+
+
+#########################################################################################################
+######################################| ФУНКЦИИ ДЛЯ ВИЗУАЛИЗАЦИИ |#######################################
+#########################################################################################################
+
+def visualize_seismic_slice(df: pd.DataFrame, surf_name: str) -> None:
+    """
+    Визуализирует срез значений сейсмического куба по отражающему горизонту.
+
+    Args:
+    - df (pd.DataFrame): Датафрейм содержащий столбцы 'X', 'Y' и 'Value', 
+                         где 'X' и 'Y' представляют координаты, а 'Value' - 
+                         сейсмические значения.
+    - surf_name (str): Название отражающего горизонта.
+    """
+    total_values = df['Value'].size
+    zero_percent = (df['Value'] == 0).sum() / total_values * 100
+    less_than_zero_percent = (df['Value'] < 0).sum() / total_values * 100
+    greater_than_zero_percent = (df['Value'] > 0).sum() / total_values * 100
+
+    title = (f"{surf_name}\n"
+             f"Значений: | {zero_percent:.2f}% = 0 |"
+             f" {less_than_zero_percent:.2f}% < 0 |"
+             f" {greater_than_zero_percent:.2f}% > 0 |")
+
+    pivot_df = df.pivot_table(index='Y', columns='X', values='Value', aggfunc='sum')
+    plt.figure(figsize=(10, 8))
+    
+    max_abs_value = max(-df['Value'].min(), df['Value'].max())
+    x_min, x_max, y_min, y_max = df['X'].min(), df['X'].max(), df['Y'].min(), df['Y'].max()
+    
+    plt.imshow(pivot_df, 
+               cmap='seismic', 
+               vmin=-max_abs_value, 
+               vmax=max_abs_value,
+               extent=[x_min, x_max, y_min, y_max])
+    
+    plt.title(title)
+    plt.colorbar()
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.show()
+
+
+
 def visualize_edge_zone_evaluation(mask, variance_list, split_point):
     """
     Визуализирует оценку наличия краевой зоны на основе маски и списка дисперсий.
@@ -170,5 +194,65 @@ def visualize_edge_zone_evaluation(mask, variance_list, split_point):
     axes[1].legend(handles=legend_labels, loc='center left', bbox_to_anchor=(1, 0.945))
     plt.tight_layout()
     plt.show()
+
+
+def visualize_miss_traces(mask, percent_false):
+    """
+    Функция формирующая визуальный отчет о проведении теста test_miss_traces
+
+    Args:
+        mask (_type_): 2D масиив с булевими значениями, где True означает пыстые сейсмические трассы
+        percent_false (_type_): процент отсутствующих сейсмических трасс от общего их колличества в кубе
+    """    
+    colors = ['red','blue']
+    percent_true = 100 - percent_false
+    labels = [f'Сейсмические трассы отсутствуют ({percent_true:.1f}%)',
+              f'Сейсмические трассы присутствуют ({percent_false:.1f}%)']
+
+    plt.figure(figsize=(8, 8))
+    plt.imshow(mask, cmap='seismic')
+
+    legend_elements = [plt.Rectangle((0, 0), 1, 1, color=colors[i], label=labels[i]) for i in range(len(colors))]
+    plt.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 1.09))
+
+    plt.grid(ls=':', alpha=.5)
+    plt.gca().invert_yaxis()
+    plt.show()
+
+
+def visualize_intersection(polygon1, polygon2, intersection_area=None, text=None):
+    """
+    Функция формирующая визуальный отчет о проведении теста test_coordinate_validation
+
+    Args:
+        polygon1 (_type_): полигон-проекция сейсмического куба
+        polygon2 (_type_): полигон границы лицензионного участка
+        intersection_area (_type_, optional): пололигон отражающий площадь пересечения polygon1 и polygon2. Defaults to None.
+        text (_type_, optional): текст с выводами результата тестирования который будет отображен в визуальном отчете. Defaults to None.
+    """    
+    fig, ax = plt.subplots()
+
+    x_coords1, y_coords1 = polygon1.exterior.xy
+    ax.plot(x_coords1, y_coords1, label='Проекция сейсмического куба', color='red')
+
+    x_coords2, y_coords2 = polygon2.exterior.xy
+    ax.plot(x_coords2, y_coords2, label='Граница лицензионного участка', color='orange')
+
+    if intersection_area:
+        intersection_x, intersection_y = intersection_area.exterior.xy
+        ax.fill(intersection_x, intersection_y, color='red', alpha=0.5, label='Зона пересечения полигонов')
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_title('Проверка корректности координат')
+    ax.legend(loc='center left', bbox_to_anchor=(1.01, 0.945))   
+    ax.grid()
+
+    if text:
+        ax.text(0.99, 0.5, text, transform=ax.transAxes, fontsize=12, verticalalignment='center', style='italic')
+    
+    fig.set_size_inches(8, 8)
+    plt.show()
+
 
 

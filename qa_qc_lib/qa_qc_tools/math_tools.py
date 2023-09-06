@@ -214,8 +214,7 @@ class Anomaly_Search_Stat_Methods():
         return anomalies_count
 
 
-    def find_anomalies_with_window_iqr(self, shld=13) -> list:
-        
+    def find_anomalies_with_window_iqr(self, shld=13) -> list:        
         """
         Обнаруживает аномалии в временном ряду, используя скользящее окно с методом интерквартильного размаха (IQR).
 

@@ -46,19 +46,39 @@ class QA_QC_seismic(QA_QC_main):
             path (_type_): путь к irap файлу 
 
         Returns:
-            _type_: минимальное значение на карте, максимальное значение на карте, полигон в котором лежит карта
+            _type_: датафрейм хранящий карту, полигон в котором лежит карта
         """        
-        with open(path, 'r') as text:
-            text = text.read().replace('\n', ' ').split(' ') 
-            text = [float(i) for i in text if i != '']
-            grid_values = np.array(text[19:]).reshape(int(text[1]), int(text[9-1])) # хардкодом заданы значения из шапки файла согласно его структуре
+        with open(path, 'r') as f:
+            # Читаем заголовок
+            unknown, nrows, dy, dx = map(float, f.readline().split())
+            x_min, x_max, y_min, y_max = map(float, f.readline().split())
+            n_cols, rotation, rot_x, rot_y = map(float, f.readline().split())
+            f.readline()  # Строка из нулей
+            
+            data_vector = []
+            for line in f:
+                data_vector.extend(map(float, line.split()))
+            data_matrix = [data_vector[i:i+int(n_cols)] for i in range(0, len(data_vector), int(n_cols))]
 
-            min_val, max_val = grid_values[grid_values != 9999900.0].min(), grid_values[grid_values != 9999900.0].max() 
-            min_x, max_x = text[4], text[5]
-            min_y, max_y = text[6], text[7]
-            rectangle_points = [(min_x, min_y), (min_x, max_y), (max_x, max_y), (max_x, min_y)]
+            rectangle_points = [(x_min, y_min), (x_min, y_max), (x_max, y_max), (x_max, y_min)]
 
-        return min_val, max_val, rectangle_points
+            data = []
+            for row in range(int(nrows)):
+                for col in range(int(n_cols)):
+                    x = x_min + col * dx
+                    y = y_max - row * dy  # Если Y уменьшается вниз страницы
+                    value = data_matrix[row][col]
+
+                    # Применяем преобразование координат с учетом поворота
+                    theta = np.radians(rotation)  # Переводим градусы в радианы
+                    x_rotated = rot_x + (x - rot_x) * np.cos(theta) - (y - rot_y) * np.sin(theta)
+                    y_rotated = rot_y + (x - rot_x) * np.sin(theta) + (y - rot_y) * np.cos(theta)
+                    data.append({'X': x_rotated, 'Y': y_rotated, 'Dept': value})
+
+            df = pd.DataFrame(data)   
+            df.replace(9999900.0, np.nan, inplace=True)
+
+            return df.dropna(), rectangle_points
 
 
     def __parse_faults(self, path: str) -> dict:
@@ -108,7 +128,7 @@ class QA_QC_seismic(QA_QC_main):
             coordinate_existence = self.coordinate_x is not None or self.coordinate_y is not None
             license_area_poly_existence = self.license_area_poly is not None
             report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Наличие координат:{coordinate_existence}, Наличие границ лицензионного участка:{license_area_poly_existence}'
-            if get_report: print('\n'+report_text) 
+            if get_report: print('\n'+report_text+self.delimeter) 
             all_results_dict["result"] = 'Fail'
         # Непосредственно проведение теста
         else:
@@ -124,7 +144,9 @@ class QA_QC_seismic(QA_QC_main):
                 report_text = f"{self.ident}Тест не пройден. \n{self.ident}Сейсмический куб не входит в границы лицензионного участка"
                 all_results_dict["result"] = 'False'
             
-            if get_report: visualize_intersection(self.cube_poly, polygon2, intersection_area, report_text) 
+            if get_report: 
+                visualize_intersection(self.cube_poly, polygon2, intersection_area, report_text)
+                print(self.delimeter) 
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_coordinate_validation:\n{report_text}\n\n"
@@ -154,7 +176,7 @@ class QA_QC_seismic(QA_QC_main):
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_monotony:\n{report_text}\n\n"
-        if get_report: print('\n'+report_text)
+        if get_report: print('\n'+report_text+self.delimeter)
 
         return {"result": result, "wrong_values": ~result_mask, "file_name": self.file_name, "date": timestamp}
 
@@ -185,7 +207,9 @@ class QA_QC_seismic(QA_QC_main):
         self.report_text += f"{timestamp:10} / test_miss_traces:\n{report_text}\n\n"
 
         mask_2d = mask.reshape((self.seismic_cube.shape[0], self.seismic_cube.shape[1]))
-        if get_report: visualize_miss_traces(mask_2d, percent_false)
+        if get_report: 
+            visualize_miss_traces(mask_2d, percent_false)
+            print(self.delimeter)
 
         return {"result": result, "wrong_values": mask_2d, "file_name": self.file_name, "date": timestamp}
 
@@ -212,7 +236,7 @@ class QA_QC_seismic(QA_QC_main):
             report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о поверхностях не были переданы'
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
-            if get_report: print('\n'+report_text)
+            if get_report: print('\n'+report_text+self.delimeter)
             all_results_dict['data availability'] = False 
         
         # Непосредственно проведение теста
@@ -224,7 +248,8 @@ class QA_QC_seismic(QA_QC_main):
                 name = path.split('/')[-1]
                 results_dict = {}
                 try:
-                    min_val, max_val, rectangle_points = self.__open_irap_ascii_grid(path)
+                    map_df, rectangle_points = self.__open_irap_ascii_grid(path)
+                    min_val, max_val = map_df.Dept.min(), map_df.Dept.max()
                     # проверяем совпадение по X и Y коррдинатам
                     polygon2 = Polygon(rectangle_points)
                     x_y_coords_validation = self.cube_poly.intersects(polygon2)
@@ -241,14 +266,14 @@ class QA_QC_seismic(QA_QC_main):
                     if not test_result: report_text = report_text + f' (совпадение по X,Y:{x_y_coords_validation}, по вертикальной шкале:{z_coords_validation})'
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
-                    if get_report: print('\n'+report_text)
+                    if get_report: print('\n'+report_text+self.delimeter)
 
                 except FileNotFoundError: 
                     results_dict['x_y_coords_validation'], results_dict['z_coords_validation'] = 'Fail', 'Fail'
                     report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{path}"'
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
-                    if get_report: print('\n'+report_text)
+                    if get_report: print('\n'+report_text+self.delimeter)
 
                 all_results_dict[name] = results_dict
         return all_results_dict | {"date" : timestamp}
@@ -276,7 +301,7 @@ class QA_QC_seismic(QA_QC_main):
             report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о разломах не были переданы'
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
-            if get_report: print('\n'+report_text) 
+            if get_report: print('\n'+report_text+self.delimeter) 
             all_results_dict['data availability'] = False
         
         # Непосредственно проведение теста
@@ -310,14 +335,14 @@ class QA_QC_seismic(QA_QC_main):
                     report_text = f'{self.ident}{text}\n{self.ident}Разлом:"{key}"; {income_points_percent}% точек разлома из {len(points)} входит в границы сейсмического куба'
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
-                    if get_report: print('\n'+report_text)
+                    if get_report: print('\n'+report_text+self.delimeter)
 
             except FileNotFoundError:
                 all_results_dict['data availability'] = False 
                 report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{self.faults_file_path}"'
                 timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
-                if get_report: print('\n'+report_text)
+                if get_report: print('\n'+report_text+self.delimeter)
         
         return all_results_dict | {"date" : timestamp}
 
@@ -358,9 +383,102 @@ class QA_QC_seismic(QA_QC_main):
         for i in range(split_point+1):   # задаём ширину краевой зоны в дискретах сейсмического куба`
             edge_zone_mask[find_border(edge_zone_mask==1)] = 2
 
-        if get_report: visualize_edge_zone_evaluation(edge_zone_mask, variance_list, split_point)
+        if get_report: 
+            visualize_edge_zone_evaluation(edge_zone_mask, variance_list, split_point)
+            print(self.delimeter)
         # Логирование результата
         report_text = f'{self.ident}Тест пройден успешно.\n{self.ident}Ширина краевой зоны оценена в {split_point+1} дискретов сейсмического куба'
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_edge_zone_evaluation:\n{report_text}\n\n"
         return {'variance_list': variance_list, 'split_point': split_point, 'edge_zone_mask': edge_zone_mask, "file_name": self.file_name, "date": timestamp}
+
+
+    def test_surfaces_values_validation(self, get_report=True) -> dict: 
+        """
+        Метод делает срез значений сейсмического куба по отражающему горизонту и оценивает процент
+        положительных, отрицательных и равных 0 значений
+
+        Required data:
+            self.seismic_cube (np.ndarray): сейсмический куб
+            self.surfaces_path_list (list): список содержащий пути к файлам с отражающими горизонтами
+            self.coordinate_x (np.ndarray): координаты x сейсмического куба
+            self.coordinate_y (np.ndarray): координаты y сейсмического куба
+            self.coordinate_z (np.ndarray): координаты z сейсмического куба (глубины/время)
+
+        Args:
+            get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+
+        Returns:
+            dict: Словарь с ключевыми данными о прохождении теста
+        """        
+        all_results_dict = {}
+        # Проверка наличия данных для проведения теста
+        if not self.surfaces_path_list:
+            report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о поверхностях не были переданы'
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{report_text}\n\n"
+            if get_report: print('\n'+report_text)
+            all_results_dict['data availability'] = False 
+        
+        # Непосредственно проведение теста
+        else:
+            all_results_dict['data availability'] = True
+            # Проведем тест для каждой поврхности отдельно
+            for path in self.surfaces_path_list:
+                name = path.split('/')[-1]
+                results_dict = {}
+                try:
+                    map_df, _ = self.__open_irap_ascii_grid(path)
+                    # Проверка, если есть строки вне полигона и их исключение, если есть
+                    inside_polygon = map_df.apply(lambda row: Point(row['X'], row['Y']).within(self.cube_poly), axis=1)
+                    inside_depth_range = (map_df['Dept'] >= self.coordinate_z.min()) & (map_df['Dept'] <= self.coordinate_z.max())
+                    if not inside_polygon.all():
+                        print("ВНИМАНИЕ! Часть точек поверхности выходит за пределы сейсмического куба по X, Y!")
+                    if not inside_depth_range.all():
+                         print("ВНИМАНИЕ! Найдены точки вне заданного диапазона глубины!")
+                    map_df = map_df[inside_polygon & inside_depth_range]
+                    
+                    if map_df.empty:
+                        empty_df = True
+                        test_result = False
+                        result_text = f'отражающий горизонт {name} не попадает в границы сейсмического куба'
+                    else:
+                        empty_df = False
+                        # получаем срез сейсмических значений
+                        seismic_cube_r = self.seismic_cube.reshape(-1, self.seismic_cube.shape[2])
+                        indxs_0 = find_closest_indices_x_y(self.coordinate_x, self.coordinate_y, map_df.X.to_numpy(), map_df.Y.to_numpy())
+                        indxs_1 = find_closest_indices_z(self.coordinate_z, map_df.Dept.to_numpy())
+                        map_df['Value'] = seismic_cube_r[indxs_0, indxs_1]
+
+                        # получаем статистику этих значений
+                        total_values = map_df['Value'].size
+                        zero_percent = (map_df['Value'] == 0).sum() / total_values * 100
+                        less_than_zero_percent = (map_df['Value'] < 0).sum() / total_values * 100
+                        greater_than_zero_percent = (map_df['Value'] > 0).sum() / total_values * 100
+
+                        # формируем отчет о прохождении теста
+                        text_2 = 'положительной' if greater_than_zero_percent > less_than_zero_percent else 'отрицательной'
+                        test_result = zero_percent > 90 or less_than_zero_percent > 90 or greater_than_zero_percent > 90
+                        result_text = f'отражающий горизонт снят по {text_2} амплитуде (>0:{greater_than_zero_percent:.2f}%, <0:{less_than_zero_percent:.2f})'
+                        if get_report: 
+                            visualize_seismic_slice(map_df, name)
+                            print(self.delimeter)
+
+                    text = 'Тест пройден успешно.' if test_result else 'Тест не пройден.'
+                    report_text = f'{self.ident}{text}\n{self.ident}Путь к файлу:"{path}";' + result_text
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{report_text}\n\n"
+                    if get_report and empty_df: print('\n'+report_text+self.delimeter)
+                    
+                    results_dict['result'] = test_result
+                    results_dict['slise_map'] = map_df
+    
+                except FileNotFoundError: 
+                    results_dict['x_y_coords_validation'], results_dict['z_coords_validation'] = 'Fail', 'Fail'
+                    report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{path}"'
+                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{report_text}\n\n"
+                    if get_report: print('\n'+report_text+self.delimeter)
+
+                all_results_dict[name] = results_dict
+        return all_results_dict | {"date" : timestamp}
