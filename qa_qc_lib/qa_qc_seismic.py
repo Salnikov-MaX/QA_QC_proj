@@ -9,7 +9,18 @@ from .qa_qc_tools.math_tools import compute_variance
 
 class QA_QC_seismic(QA_QC_main):
     def __init__(self, file_path: str, license_area_poly: list = None, surfaces_path_list: list = None, faults_file_path: str = None) -> None:
-        
+        """
+        Args:
+            file_path (str): путь к SEG-Y файлу содержащему данные сейсмического куба
+            license_area_poly (list, optional): список кортежей содержащий координаты X и Y 
+                                                полигона лицензионного участка. Defaults to None.
+            surfaces_path_list (list, optional): список путей к файлам с поверхностями 
+                                                 структурных карт / карт изохрон (в зависимости от 
+                                                 типа куба переданного на вход). Данный список должен 
+                                                 быть упорядочен по глубине залегания (последняя 
+                                                 поверхность в списке залегает глубже всех остальных). Defaults to None.
+            faults_file_path (str, optional): путь к файлу содержащему данные о разломах. Defaults to None.
+        """        
         super().__init__()
         self.seismic_cube, self.coordinate_x, self.coordinate_y, self.coordinate_z = self.__get_seismic_grid(file_path)
         self.file_name = file_path.split('/')[-1]
@@ -217,6 +228,8 @@ class QA_QC_seismic(QA_QC_main):
     def test_surfaces_location_validation(self, get_report=True) -> dict:
         """
         Метод оценивает соответствие отражающего горизонта сейсмическому кубу
+        Внимание, метод test_surfaces_values_validation имеет аналогичный и более 
+        точный функционал, рекомендуется использовать его.
 
         Required data:
             self.surfaces_path_list (list): список содержащий пути к файлам с отражающими горизонтами
@@ -417,7 +430,7 @@ class QA_QC_seismic(QA_QC_main):
             report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о поверхностях не были переданы'
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{report_text}\n\n"
-            if get_report: print('\n'+report_text)
+            if get_report: print('\n'+report_text+self.delimeter)
             all_results_dict['data availability'] = False 
         
         # Непосредственно проведение теста
@@ -481,4 +494,72 @@ class QA_QC_seismic(QA_QC_main):
                     if get_report: print('\n'+report_text+self.delimeter)
 
                 all_results_dict[name] = results_dict
+        return all_results_dict | {"date" : timestamp}
+
+
+    def test_surfaces_dept_validation(self, get_report=True) -> dict: 
+        """
+        Метод оценивает положение структурных поверхностей относительно друг друга.
+        Внимание, пути к файлам содержащим поверности в списке self.surfaces_path_list 
+        должны быть в порядке их залегания (сверху вниз).
+
+        Required data:
+            self.surfaces_path_list (list): список содержащий пути к файлам с отражающими горизонтами
+            
+        Args:
+            get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+
+        Returns:
+            dict: Словарь с ключевыми данными о прохождении теста
+        """        
+        all_results_dict = {}
+        # Проверка наличия данных для проведения теста
+        if not self.surfaces_path_list:
+            report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о поверхностях не были переданы'
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_surfaces_dept_validation:\n{report_text}\n\n"
+            if get_report: print('\n'+report_text+self.delimeter)
+            all_results_dict['data availability'] = False 
+        
+        # Непосредственно проведение теста
+        else:
+            all_results_dict['data availability'] = True
+            dataframes, names, err_files = [], [], []
+            for path in self.surfaces_path_list:
+                try:
+                    map_df, _ = self.__open_irap_ascii_grid(path)
+                    dataframes.append(map_df)
+                    names.append(path.split('/')[-1])
+                except FileNotFoundError:
+                    print(f'ВНИМАНИЕ! Файл {path} отсутствует по указанному пути!'+self.delimeter)
+                    err_files.append(path)
+
+            # непосредственно проведение теста
+            results_dict = {}
+            for i in range(1, len(dataframes)):
+                merged = dataframes[i].merge(dataframes[i - 1], on=['X', 'Y'], how='inner', suffixes=('_curr', '_prev'))
+                # Интерполяция для учета того, что координаты могут не совпадать точно
+                merged.interpolate(inplace=True)
+                non_conformity = merged[merged['Dept_curr'] > merged['Dept_prev']]
+                if not non_conformity.empty:
+                    percent_mismatch = (non_conformity.shape[0] / merged.shape[0]) * 100
+                    text = f'Нижележащая структурная карта "{names[i]}" оказалась выше вышележащей структурной карты "{names[i-1]}" (несоответствие на {percent_mismatch:.2f}% площади)'
+                    report_text = f"{self.ident}Тест не пройден. \n{self.ident}{text}"
+                    results_dict['result'] = False
+                    results_dict['result report'] = text
+                else:
+                    text = f'Нижележащая структурная карта "{names[i]}" оказалась ниже вышележащей структурной карты "{names[i-1]}"'
+                    report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}{text}"
+                    results_dict['result'] = True
+                    results_dict['result report'] = text
+                
+                all_results_dict[names[i-1]] = results_dict
+                
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self.report_text += f"{timestamp:10} / test_surfaces_dept_validation:\n{report_text}\n\n"
+                if get_report: print('\n'+report_text+self.delimeter)
+
+            if err_files: print(f'Не удалось найти следующие файлы: {err_files}') 
+            all_results_dict['files not found'] = err_files
+
         return all_results_dict | {"date" : timestamp}
