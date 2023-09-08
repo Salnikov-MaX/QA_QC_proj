@@ -8,7 +8,7 @@ data/NP4_TVD_TOP
 data/Faults TWT
 data/Check-shots(probably).xlsx
 data/Faults TVD
-workflow.ipynb
+workflow/workflow.ipynb
 data/seismic_data/Check-shots(probably).xlsx
 data/seismic_data/Faults TVD
 data/seismic_data/Faults TWT

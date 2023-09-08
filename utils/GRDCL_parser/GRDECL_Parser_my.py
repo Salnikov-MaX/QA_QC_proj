@@ -25,7 +25,9 @@ SupportKeyWords=[
     'PERMX' , 'PERMXY', 'PERMXZ', 
     'PERMYX', 'PERMY' , 'PERMYZ', 
     'PERMZX', 'PERMZY', 'PERMZ',
-    'SW_NPSL', 'ACTNUM', 'FACIES'
+    'SW_NPSL', 'ACTNUM', 'FACIES',
+    #Custom key word
+    'SGAS', 'SGCR', 'GASSATURATION', 'SGAS_U', 'SOIL', 'CRITICALOILSATURATION', 'SWAT', 'SWAT_U', 'ABOVECONTACT_OWC', 'ABOVECONTACT_GOC',
 ]
 
 KeyWordsDatatypes=[#Corrsponding data types
@@ -36,7 +38,8 @@ KeyWordsDatatypes=[#Corrsponding data types
     float,
     float,float,float,
     float,float,float,
-    float,float,float
+    float,float,float,
+    float,float,float,float,float,float,float,float,float,float,
 ]
 
 
@@ -55,6 +58,8 @@ class GRDECL_Parser_my:
         Author:Bin Wang(binwang.0213@gmail.com)
         Date: Sep. 2017
         """
+        self.KeyData = {}
+        self.TypePetrel = None
         self.fname=filename
         self.NX=nx
         self.NY=ny
@@ -109,6 +114,7 @@ class GRDECL_Parser_my:
         #Read whole file into list
         f=open(self.fname)
         contents=f.read()
+        self.TypePetrel = getNameInPetrel(contents)
         contents=RemoveCommentLines(contents,commenter='--')
         contents_in_block=contents.strip().split('/') #Sepeart input file by slash /
         contents_in_block = [x for x in contents_in_block if x]#Remove empty block at the end
@@ -129,6 +135,7 @@ class GRDECL_Parser_my:
                 else:
                     Keyword,DataArray=blockData_raw[0],blockData_raw[1:]
 
+            print(Keyword)
             #Read Grid Dimension [SPECGRID] or [DIMENS] 
             if(Keyword=='DIMENS'):
                 DataArray=np.array(DataArray[:3],dtype=int)
@@ -171,7 +178,7 @@ class GRDECL_Parser_my:
             #Corner point cell
             if(Keyword=='COORD'):# Pillar coords
                 assert len(DataArray)==6*(self.NX+1)*(self.NY+1),'[Error] Incompatible COORD data size!'
-                self.COORD=np.array(DataArray,dtype=float)       
+                self.COORD=np.array(DataArray,dtype=float)
             elif(Keyword=='ZCORN'):# Depth coords
                 assert len(DataArray)==8*self.N, '[Error] Incompatible ZCORN data size!'
                 self.ZCORN=np.array(DataArray,dtype=float)
@@ -201,6 +208,18 @@ class GRDECL_Parser_my:
             elif(Keyword == 'PORO'):  # TOP position
                 assert len(DataArray) == self.N, '[Error] Incompatible TOPS data size!'
                 self.PORO = np.array(DataArray, dtype=float)
+            elif(Keyword == 'SW_NPSL'):
+                assert len(DataArray) == self.N, '[Error] Incompatible TOPS data size!'
+                self.SW_NPSL = np.array(DataArray, dtype=float)
+            elif (Keyword == 'SGAS'):
+                assert len(DataArray) == self.N, '[Error] Incompatible TOPS data size!'
+                self.SGAS = np.array(DataArray, dtype=float)
+            elif (Keyword == 'SGCR'):
+                assert len(DataArray) == self.N, '[Error] Incompatible TOPS data size!'
+                self.SW_NPSL = np.array(DataArray, dtype=float)
+            elif (Keyword == 'GASSATURATION'):
+                assert len(DataArray) == self.N, '[Error] Incompatible TOPS data size!'
+                self.SW_NPSL = np.array(DataArray, dtype=float)
 
             #Read Grid Properties information
             # else:
@@ -775,6 +794,11 @@ def RemoveCommentLines(data,commenter='--'):
         newdata.append(line)
     return '\n'.join(newdata)
 
+def getNameInPetrel(data):
+    data_lines = data.strip().split('\n')
+    for line in data_lines:
+        if "Property name in Petrel" in line:
+            return line.split(":")[1].strip()
 def scanKeyword(data):
     #scan and find the keyword
     #e.g. ['INIT','DX','2500*30.0'] -> ['DX','2500*30.0']
