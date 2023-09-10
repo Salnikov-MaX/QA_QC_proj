@@ -1,47 +1,13 @@
 import os
 import pandas as pd
 import numpy as np
-from qa_qc_kern import QA_QC_kern
+from qa_qc_lib.qa_qc_kern import QA_QC_kern
 from qa_qc_lib.qa_qc_tools.kern_tools import find_test_methods_with_params
 
 
 class DataPreprocessing:
     def __init__(self):
         self.failed_tests = {}
-        self.glossary_of_names = {
-            "Направление": "",
-            "Лабораторный номер": "",
-            "Кровля интервала отбора": "",
-            "Подошва интервала отбора": "",
-            "Место отбора (ниже кровли), м": "",
-            "Глубина отбора, м": "",
-            "Вынос керна, м": "",
-            "Вынос керна, %": "",
-            "Ск %": "",
-            "Открытая пористость по жидкости": "",
-            "Открытая пористость по газу": "",
-            "Открытая пористость в пластовых условиях": "",
-            "Открытая пористость по керосину": "",
-            "Кпр_газ(гелий)": "",
-            "Параметр пористости": "",
-            "So": "",
-            "Кво": "",
-            "Плотность абсолютно сухого образца": "",
-            "Рн": "",
-            "Sw": "",
-            "Газопроницаемость по Кликенбергу": "",
-            "Газопроницаемость, mkm2 (parallel)": "",
-            "Газопроницаемость Кликенбергу": "",
-            "Объемная плотность": "",
-            "Минералогическая плотность": "",
-            "Эффективная проницаемость": "",
-            "Ск": "",
-            "Параметр насыщения": "",
-            "Газопроницаемость по воде": "",
-            "Плотность максимально увлажненного образца": "",
-            "Упругие свойства": "",
-            "Примечание": ""
-        }
         self.headers = [
             "Лабораторный номер", "Кровля интервала отбора", "Подошва интервала отбора",
             "Эффективная проницаемость", "Параметр насыщения",
@@ -54,7 +20,7 @@ class DataPreprocessing:
             "Sw", "Газопроницаемость, mkm2 (parallel)", "Газопроницаемость по Кликенбергу",
             "Объемная плотность", "Минералогическая плотность", "Ск", "Газопроницаемость по воде",
             "Плотность максимально увлажненного образца","Эффективная пористость",
-            "Упругие свойства",
+            "Упругие свойства","Критическая нефтенасыщенность","Sgl","Sogcr "
             "Примечание", "Направление"
         ]
         self.parallel_density = []
@@ -70,12 +36,26 @@ class DataPreprocessing:
         self.newdic = {}
 
     def get_possible_tests(self, columns_with_data):
+        '''
+        Опрделяет список тестов, которые возможно провести с текущеми данными
+
+        :param columns_with_data: array[string]  массив с названиями не пустых колонок
+        :return: array[string] - массив возможных тестов
+        '''
         test = find_test_methods_with_params(columns_with_data, QA_QC_kern())
         return test
 
     def process_data(self, columns_mapping):
+        '''
+        Проходится по файлам и из каждого файла берет нужный столбец. Собирает единую таблицу.
+
+        :param columns_mapping:- {string:string} -словарь с расшифровками колонок
+        :return: array[string] - список возможных тестов
+        '''
         self.df_result = pd.DataFrame(columns=self.headers)
+        #получаем название столбца и путь, откуда его брать
         for col_name, file_col_list in columns_mapping.items():
+            #делим путь до файла и название колонки в файлах пользователя
             for file_col in file_col_list:
                 file_path, col_name_in_file = file_col.split("->")
                 if not os.path.exists(file_path):
@@ -91,7 +71,7 @@ class DataPreprocessing:
                     continue
 
                 self.df_result.loc[:, col_name] = data[col_name_in_file]
-
+        #сортируем df так, чтобы все пустые колонки были справа
         column_order = np.concatenate(
             [self.df_result.columns[~self.df_result.isna().all(axis=0)], self.df_result.columns[self.df_result.isna().all(axis=0)]])
         self.df_result = self.df_result[column_order]
@@ -104,11 +84,17 @@ class DataPreprocessing:
         return self.get_possible_tests(columns_with_data)
 
     def start_tests(self, tests=None):
+        '''
+        Запускает выбранные тесты через QA_QC_kern
+        :param tests: {string:[string]}
+        :return: {string:{string:[int]}}
+        '''
         test_array = set()
         if tests is not None:
             for test in tests.items():
                 for t in test[-1]:
                     test_array.add(t)
+        #в случае, если необходимы тесты связанные с напрвалением
         if self.df_result["Направление"].notna().any() and\
                 self.df_result["Ск"].notna().any() and\
                 self.df_result["Лабораторный номер"].notna().any() and\
@@ -163,6 +149,10 @@ class DataPreprocessing:
         return self.failed_tests
 
     def parallel_data_parsing(self):
+        '''
+        Делит данные на параллельные и перпендикулярные
+        :return:
+        '''
         direction_array = self.df_result["Направление"]
         for idx, is_parallel in enumerate(direction_array):
             if is_parallel == 1:
@@ -177,12 +167,20 @@ class DataPreprocessing:
                 self.perpendicular_carbonate.append([self.df_result["Ск"][idx], idx])
 
     def interval_data_parsing(self):
+        '''
+        Составляет массив из интервалов
+        :return:
+        '''
         top = self.df_result["Кровля интервала отбора"]
         bottom = self.df_result["Подошва интервала отбора"]
         for i in range(len(top)):
             self.interval.append([top[i], bottom[i]])
 
     def error_flagging(self):
+        '''
+        Красит в красный ячейки с ошибками
+        :return:
+        '''
         empty_series = pd.Series([])  # Создаем пустую Series
         self.df_result[""] = empty_series
         for test_name, failed_columns in self.failed_tests.items():
@@ -209,4 +207,4 @@ class DataPreprocessing:
 
     def save_to_excel(self):
         styled_df = self.df_result.style.apply(self.color_cells, axis=None, col_index_dict=self.newdic, color='red')
-        styled_df.to_excel("post_test_table.xlsx", sheet_name='Sheet1', index=False)
+        styled_df.to_excel("report\\post_test_table.xlsx", sheet_name='Sheet1', index=False)

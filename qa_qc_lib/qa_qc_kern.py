@@ -8,6 +8,8 @@ from sklearn.metrics import r2_score
 from matplotlib import pyplot as plt
 from qa_qc_lib.qa_qc_tools.math_tools import linear_dependence_function
 from qa_qc_lib.qa_qc_tools.math_tools import exponential_function
+from qa_qc_lib.qa_qc_tools.kern_tools import linear_function_visualization, expon_function_visualization, \
+    logarithmic_function_visualization
 
 
 class QA_QC_kern(QA_QC_main):
@@ -19,8 +21,8 @@ class QA_QC_kern(QA_QC_main):
                  parallel_porosity=None, parallel=None, rp=None, pmu=None, rn=None, obplnas=None, poroTBU=None,
                  poroHe=None, porosity_open=np.array([]), porosity_kerosine=None, porosity_effective=None, sw=None,
                  parallel_permeability=None, klickenberg_permeability=None, effective_permeability=None, md=None,
-                 kgo=None,knmng=None,
-                 lithology=None, file_report_name="test_report", show=True, file_path="C:\\Users\\nikit\\Downloads",
+                 kgo=None, knmng=None,
+                 lithology=None, file_report_name="test_report", show=True, file_path="report\\",
                  file_name="не указан", r2=0.7) -> None:
         """_summary_
 
@@ -209,10 +211,10 @@ class QA_QC_kern(QA_QC_main):
         if self.__check_data(self.porosity_open, "Открытая пористость по жидкости", "test_open_porosity"):
             result, wrong_values = self.__test_porosity(self.porosity_open)
             if not result:
-                report_text = f"Test 'test_open_porosity': {result}.\nДанные с индексом {wrong_values} лежат не в " \
+                report_text = f"{result}.\nДанные с индексом {wrong_values} лежат не в " \
                               f"интервале от 0 до 47,6."
             else:
-                report_text = f"Test 'test_open_porosity': {result}."
+                report_text = f"{result}."
             self.dict_of_wrong_values["test open porosity"] = [{
                 "Открытая пористость по жидкости": wrong_values,
             }, "не лежит в интервале от 0 до 47,6"]
@@ -237,14 +239,14 @@ class QA_QC_kern(QA_QC_main):
         if self.__check_data(self.poroHe, "Открытая пористость по газу", "test porosity HE"):
             result, wrong_values = self.__test_porosity(self.poroHe)
             if not result:
-                report_text = f"Test 'test_open_porosity_HE': {result}.\nДанные с индексом {wrong_values} лежат не в " \
+                report_text = f"{result}.\nДанные с индексом {wrong_values} лежат не в " \
                               f"интервале от 0 до 47,6."
             else:
-                report_text = f"Test 'test_open_porosity_HE': {result}."
+                report_text = f"{result}."
             self.dict_of_wrong_values["test open porosity HE"] = [{"Открытая пористость по газу": wrong_values},
                                                                   "не лежит в интервале от 0 до 47,6"]
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_porosity_HE:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_porosity_TBU(self, get_report=True):
@@ -264,14 +266,14 @@ class QA_QC_kern(QA_QC_main):
         if self.__check_data(self.poro_tbu, "Открытая пористость в пластовых условиях", "test porosity TBU"):
             result, wrong_values = self.__test_porosity(self.poro_tbu)
             if not result:
-                report_text = f"Test 'test open porosity TBU': {result}.\nДанные с индексом {wrong_values} лежат не в " \
+                report_text = f"{result}.\nДанные с индексом {wrong_values} лежат не в " \
                               f"интервале от 0 до 47,6."
             else:
-                report_text = f"Test 'test open porosity TBU': {result}."
+                report_text = f" {result}."
             self.dict_of_wrong_values["test open porosity TBU"] = [{
                 "Открытая пористость в пластовых условиях": wrong_values}, "не лежит в интервале от 0 до 47,6"]
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_porosity_TBU:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_porosity_kerosine(self, get_report=True):
@@ -291,12 +293,12 @@ class QA_QC_kern(QA_QC_main):
         if self.__check_data(self.porosity_kerosine, "Открытая пористость по керосину", "test porosity kerosine"):
             result, wrong_values = self.__test_porosity(self.porosity_kerosine)
             if not result:
-                report_text = f"Test 'test_porosity kerosine': {result}.\nДанные с индексом {wrong_values} лежат не в" \
+                report_text = f"{result}.\nДанные с индексом {wrong_values} лежат не в" \
                               f"интервале от 0 до 47,6."
             else:
-                report_text = f"Test 'test_porosity kerosine': {result}."
+                report_text = f" {result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_porosity_kerosine:\n{report_text}\n\n"
             self.dict_of_wrong_values["test porosity kerosine"] = [{"Открытая пористость по керосину": wrong_values},
                                                                    "не лежит в интервале от 0 до 47,6"]
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
@@ -325,7 +327,7 @@ class QA_QC_kern(QA_QC_main):
                 report_text = f"Test 'test porosity effective': {result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.dict_of_wrong_values["test_porosity_effective"] = [{"Кво": wrong_values},
-                                                                           "не соответсвует интервалу от 0 до 1"]
+                                                                    "не соответсвует интервалу от 0 до 1"]
             self.report_text += f"{timestamp:10} / test_porosity_effective:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
@@ -433,11 +435,11 @@ class QA_QC_kern(QA_QC_main):
                              "test klickenberg permeability"):
             result, wrong_values = self.__permeability(self.klickenberg_permeability)
             if not result:
-                report_text = f"Test 'test klickenberg permeability': {result}." \
+                report_text = f"{result}." \
                               f"\nДанные с индексом {wrong_values} лежат не в " \
                               f"интервале от 0 до 1."
             else:
-                report_text = f"Test 'test klickenberg permeability': {result}.\nВходной файл {self.file_name}."
+                report_text = f"{result}.\nВходной файл {self.file_name}."
             self.dict_of_wrong_values["test klickenberg permeability"] = [
                 {"Газопроницаемость Кликенбергу": wrong_values}, "значение меньше 0"]
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -460,15 +462,15 @@ class QA_QC_kern(QA_QC_main):
         if self.__check_data(self.effective_permeability, "Эффективная проницаемость", "test_effective_permeability"):
             result, wrong_values = self.__permeability(self.effective_permeability)
             if not result:
-                report_text = f"Test 'test_effective_permeability': {result}." \
+                report_text = f"{result}." \
                               f"\nДанные с индексом {wrong_values} лежат не в " \
                               f"интервале от 0 до 1."
             else:
-                report_text = f"Test 'test_effective_permeability': {result}."
+                report_text = f"{result}."
             self.dict_of_wrong_values["test effective permeability"] = [{"Эффективная проницаемость": wrong_values},
                                                                         "значение меньше 0"]
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_effective_permeability:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name,
                     "date": self.dt_now}
 
@@ -489,15 +491,15 @@ class QA_QC_kern(QA_QC_main):
         if self.__check_data(self.water_permeability, "Газопроницаемость по воде", "test_water_permeability"):
             result, wrong_values = self.__permeability(self.water_permeability)
             if not result:
-                report_text = f"Test 'test_water_permeability': {result}." \
+                report_text = f"{result}." \
                               f"\nДанные с индексом {wrong_values} лежат не в " \
                               f"интервале от 0 до 1."
             else:
-                report_text = f"Test 'test_water_permeability': {result}"
+                report_text = f"result"
             self.dict_of_wrong_values["test water permeability"] = [{"Газопроницаемость по воде": wrong_values},
                                                                     "значение меньше 0"]
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_water_permeability:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name,
                     "date": self.dt_now}
 
@@ -524,12 +526,12 @@ class QA_QC_kern(QA_QC_main):
             self.dict_of_wrong_values["test monotony"] = [{"Глубина отбора, м": wrong_values},
                                                           "нарушена монотонность"]
             if not result:
-                report_text = f"Test 'monotony': {result}.\nДанные с индексом {wrong_values} не монотоны."
+                report_text = f"{result}.\nДанные с индексом {wrong_values} не монотоны."
 
             else:
-                report_text = f"Test 'monotony': {result}."
+                report_text = f"{result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_monotony:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name,
                     "date": self.dt_now}
 
@@ -565,46 +567,20 @@ class QA_QC_kern(QA_QC_main):
                                                        "Кво",
                                                        "Коэффициентом пористости")["r2"]
             result = True
-            a, b = linear_dependence_function(self.sw_residual, self.kp)
+            a, b = linear_dependence_function(self.kp, self.sw_residual)
             if a >= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1 = []
-            wrong_values2 = []
-            y_pred = a * self.sw_residual + b
-            x_pred = a * self.kp + b
-            for i in range(len(self.sw_residual)):
-                if self.kp[i] < a * self.sw_residual[i] + b:
-                    wrong_values1.append(i)
-                    wrong_values2.append(i)
+            wrong_values1, wrong_values2 = linear_function_visualization(self.kp, self.sw_residual, a, b, r2,
+                                                                         get_report, "Коэффициентом пористости", "Кво",
+                                                                         "test_quo_kp_dependence")
+
             self.dict_of_wrong_values["test_quo_kp_dependence"] = [{"Кво": wrong_values1,
                                                                     "Открытая пористость по жидкости": wrong_values2
                                                                     }, "выпадает из линии тренда"]
-            report_text = f"Test 'dependence quo kp': {result}."
+            report_text = f"{result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_quo_kp_dependence:\n{report_text}\n\n"
-            for kp_val, sw_residual, pred_val in zip(self.kp, self.sw_residual, y_pred):
-                if sw_residual + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_val, sw_residual, color='r')
-
-            for kp_val, sw_residual, pred_val in zip(self.kp, self.sw_residual, x_pred):
-                if kp_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(sw_residual, kp_val, color='r')
-            x_trend = np.linspace(np.min(self.sw_residual), np.max(self.sw_residual), 100)
-            y_trend = a * x_trend + b
-
-            # Построение кроссплота
-            plt.title("test quo kp dependence")
-            plt.scatter(self.sw_residual, self.kp, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('sw_residual')
-            plt.ylabel('kp')
-            plt.legend()
-            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
-            plt.text(np.min(self.sw_residual), np.mean(self.kp), equation)
-            plt.savefig("output\\test_quo_kp_dependence.png")
-            if get_report:
-                plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
@@ -637,48 +613,17 @@ class QA_QC_kern(QA_QC_main):
             if a >= 0 or r2 < 0.7:
                 result = False
 
-            # Вычисляем прогнозные значения
-            y_pred = a * self.kp + b
-            x_pred = a * self.density + b
-
-            # Фильтруем точки, которые не соответствуют линии тренда
-            wrong_values1 = [kp_val for kp_val, density_val, pred_val in zip(self.kp, self.density, y_pred) if
-                             density_val < pred_val]
-            wrong_values2 = [density_val for kp_val, density_val, pred_val in zip(self.kp, self.density, y_pred) if
-                             density_val < pred_val]
-
-            report_text = f"Test 'dependence quo kp': {result}."
+            report_text = f"{result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_kp_density_dependence:\n{report_text}\n\n"
+            wrong_values1, wrong_values2 = linear_function_visualization(self.kp, self.density, a, b, r2, get_report,
+                                                                         "Коэффициента пористости", "Плотности",
+                                                                         "kp_density_dependence")
             self.dict_of_wrong_values["test kp density dependence"] = [
                 {"Открытая пористость по жидкости": wrong_values1,
                  "Плотность абсолютно сухого образца": wrong_values2,
                  }, "выпадает из линии тренда"]
-            x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
-            y_trend = a * x_trend + b
 
-            # Построение кроссплота
-            plt.title("test kp density dependence")
-            plt.scatter(self.kp, self.density, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kp_val, density_val, pred_val in zip(self.kp, self.density, y_pred):
-                if density_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_val, density_val, color='r')
-
-            for kp_val, density_val, pred_val in zip(self.kp, self.density, x_pred):
-                if kp_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(density_val, kp_val, color='r')
-
-            plt.xlabel('X')
-            plt.ylabel('Y')
-            plt.legend()
-            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.kp), np.min(self.density), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_kp_density_dependence.png")
-            if get_report:
-                plt.show()
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_kgo_dependence(self, get_report=True) -> dict[str, bool | datetime | str]:
@@ -712,16 +657,10 @@ class QA_QC_kern(QA_QC_main):
             if a >= 0 or r2 < 0.7:
                 result = False
 
-            # Вычисляем прогнозные значения
-            y_pred = a * self.kp + b
-            x_pred = a * self.kgo + b
-
-            # Фильтруем точки, которые не соответствуют линии тренда
-            wrong_values1 = [kp_val for kp_val, density_val, pred_val in zip(self.kp, self.kgo, y_pred) if
-                             density_val < pred_val]
-            wrong_values2 = [density_val for kp_val, density_val, pred_val in zip(self.kp, self.kgo, y_pred) if
-                             density_val < pred_val]
-
+            wrong_values1, wrong_values2 = linear_function_visualization(self.kp, self.kgo, a, b, r2, get_report,
+                                                                         "Коэффициента пористости",
+                                                                         "Cвязанная газонасыщенность",
+                                                                         "test_kp_kgo_dependence")
             report_text = f"Test 'kp_kgo_dependence': {result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_kp_kgo_dependence:\n{report_text}\n\n"
@@ -729,31 +668,7 @@ class QA_QC_kern(QA_QC_main):
                 {"Открытая пористость по жидкости": wrong_values1,
                  "Cвязанная газонасыщенность": wrong_values2,
                  }, "выпадает из линии тренда"]
-            x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
-            y_trend = a * x_trend + b
 
-            # Построение кроссплота
-            plt.title("test_kp_kgo_dependence")
-            plt.scatter(self.kp, self.kgo, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kp_val, density_val, pred_val in zip(self.kp, self.kgo, y_pred):
-                if density_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_val, density_val, color='r')
-
-            for kp_val, density_val, pred_val in zip(self.kp, self.kgo, x_pred):
-                if kp_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(density_val, kp_val, color='r')
-
-            plt.xlabel('X')
-            plt.ylabel('Y')
-            plt.legend()
-            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.kp), np.min(self.kgo), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_kp_kgo_dependence.png")
-            if get_report:
-                plt.show()
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_knmng_dependence(self, get_report=True) -> dict[str, bool | datetime | str]:
@@ -786,48 +701,18 @@ class QA_QC_kern(QA_QC_main):
             if a >= 0 or r2 < 0.7:
                 result = False
 
-            # Вычисляем прогнозные значения
-            y_pred = a * self.kp + b
-            x_pred = a * self.knmng + b
-
-            # Фильтруем точки, которые не соответствуют линии тренда
-            wrong_values1 = [kp_val for kp_val, knmng_val, pred_val in zip(self.kp, self.knmng, y_pred) if
-                             knmng_val < pred_val]
-            wrong_values2 = [knmng_val for kp_val, knmng_val, pred_val in zip(self.kp, self.knmng, y_pred) if
-                             knmng_val < pred_val]
-
-            report_text = f"Test 'test_kp_knmng_dependence': {result}."
+            report_text = f"{result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_kp_knmng_dependence:\n{report_text}\n\n"
+            wrong_values1, wrong_values2 = linear_function_visualization(self.kp, self.knmng, a, b, r2, get_report,
+                                                                         "Коэффициента пористости",
+                                                                         "Cвязанная газонасыщенность",
+                                                                         "test_kp_knmng_dependence")
             self.dict_of_wrong_values["test_kp_knmng_dependence"] = [
                 {"Открытая пористость по жидкости": wrong_values1,
                  "Критическая нефтенасыщенность": wrong_values2,
                  }, "выпадает из линии тренда"]
-            x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
-            y_trend = a * x_trend + b
 
-            # Построение кроссплота
-            plt.title("test_kp_knmng_dependence")
-            plt.scatter(self.kp, self.knmng, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kp_val, knmng_val, pred_val in zip(self.kp, self.knmng, y_pred):
-                if knmng_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_val, knmng_val, color='r')
-
-            for kp_val, knmng_val, pred_val in zip(self.kp, self.knmng, x_pred):
-                if kp_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(knmng_val, kp_val, color='r')
-
-            plt.xlabel('X')
-            plt.ylabel('Y')
-            plt.legend()
-            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.kp), np.min(self.knmng), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_kp_knmng_dependence.png")
-            if get_report:
-                plt.show()
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_kno_dependence(self, get_report=True) -> dict[str, bool | datetime | str]:
@@ -861,48 +746,19 @@ class QA_QC_kern(QA_QC_main):
             if a >= 0 or r2 < 0.7:
                 result = False
 
-            # Вычисляем прогнозные значения
-            y_pred = a * self.kp + b
-            x_pred = a * self.kno + b
+            wrong_values1, wrong_values2 = linear_function_visualization(self.kp, self.knmng, a, b, r2, get_report,
+                                                                         "Коэффициента пористости",
+                                                                         "Коэффициент остаточной нефтенасыщенности",
+                                                                         "test_kp_kno_dependence")
 
-            # Фильтруем точки, которые не соответствуют линии тренда
-            wrong_values1 = [kp_val for kp_val, kno_val, pred_val in zip(self.kp, self.kno, y_pred) if
-                             kno_val < pred_val]
-            wrong_values2 = [kno_val for kp_val, kno_val, pred_val in zip(self.kp, self.kno, y_pred) if
-                             kno_val < pred_val]
-
-            report_text = f"Test 'test_kp_kno_dependence': {result}."
+            report_text = f"{result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_kp_kno_dependence:\n{report_text}\n\n"
             self.dict_of_wrong_values["test_kp_kno_dependence"] = [
                 {"Открытая пористость по жидкости": wrong_values1,
                  "Коэффициент остаточной нефтенасыщенности": wrong_values2,
                  }, "выпадает из линии тренда"]
-            x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
-            y_trend = a * x_trend + b
 
-            # Построение кроссплота
-            plt.title("test_kp_kno_dependence")
-            plt.scatter(self.kp, self.kno, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kp_val, kno_val, pred_val in zip(self.kp, self.kno, y_pred):
-                if kno_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_val, kno_val, color='r')
-
-            for kp_val, kno_val, pred_val in zip(self.kp, self.kno, x_pred):
-                if kp_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kno_val, kp_val, color='r')
-
-            plt.xlabel('X')
-            plt.ylabel('Y')
-            plt.legend()
-            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.kp), np.min(self.kno), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_kp_kno_dependence.png")
-            if get_report:
-                plt.show()
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
     def test_sw_residual_kp_din_dependence(self, get_report=True) -> dict[str, bool | datetime | str]:
@@ -931,50 +787,21 @@ class QA_QC_kern(QA_QC_main):
                                                        "Коэффициента остаточной водонасыщенности",
                                                        "Коэффициента динамической пористости")["r2"]
             result = True
-            a, b = linear_dependence_function(self.sw_residual, self.kp_din)
+            a, b = linear_dependence_function(self.kp_din, self.sw_residual)
             if a >= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.sw_residual)):
-                if self.kp_din[i] < a * self.sw_residual[i] + b:
-                    wrong_values1.append(self.sw_residual[i])
-                    wrong_values2.append(self.kp_din[i])
+            wrong_values1, wrong_values2 = linear_function_visualization(self.sw_residual, self.kp_din, a, b, r2,
+                                                                         get_report,
+                                                                         "Коэффициент остаточной водонасыщенности",
+                                                                         "Коэффициент динамической пористости",
+                                                                         "test_sw_residual_kp_din_dependence")
 
-            y_pred = a * self.sw_residual + b
-            x_pred = a * self.kp_din + b
-            report_text = f"Test 'sw_residual_kp_din_dependence': {result}."
+            report_text = {result}
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_sw_residual_kp_din_dependence:\n{report_text}\n\n"
-            self.dict_of_wrong_values["test_sw_residual_kp_din_dependence"] = [{"Кво": wrong_values1, },
+            self.dict_of_wrong_values["test_sw_residual_kp_din_dependence"] = [{"Кво": wrong_values1},
                                                                                "выпадает из линии тренда"]
-
-            x_trend = np.linspace(np.max(self.sw_residual), np.min(self.kp_din), 100)
-            y_trend = a * x_trend + b
-
-            # Построение кроссплота
-            plt.title("test sw_residual kp din dependence")
-            plt.scatter(self.sw_residual, self.kp_din, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('sw_residual')
-            plt.ylabel('kp din')
-            plt.legend()
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for sw_residual_val, kp_din_val, pred_val in zip(self.sw_residual, self.kp_din, y_pred):
-                if sw_residual_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(sw_residual_val, kp_din_val, color='r')
-
-            for sw_residual_val, kp_din_val, pred_val in zip(self.sw_residual, self.kp_din, x_pred):
-                if kp_din_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_din_val, sw_residual_val, color='r')
-
-            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.sw_residual), np.min(self.kp_din), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_sw_residual_kp_din_dependence.png")
-            if get_report:
-                plt.show()
-
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
     def test_obblnas_kp_dependence(self, get_report=True) -> dict[str, bool | datetime | str]:
@@ -1007,11 +834,11 @@ class QA_QC_kern(QA_QC_main):
                                                            "Объемной плотность",
                                                            "Коэффициента пористости")["r2"]
 
-            coeffs1 = np.polyfit(self.pmu, self.kp, 1)
+            coeffs1 = np.polyfit(self.kp, self.pmu, 1)
             a1, b1 = coeffs1[0], coeffs1[1]
             trend_line1 = np.polyval(coeffs1, self.pmu)
 
-            coeffs2 = np.polyfit(self.obplnas, self.kp, 1)
+            coeffs2 = np.polyfit(self.kp, self.obplnas, 1)
             a2, b2 = coeffs2[0], coeffs2[1]
             trend_line2 = np.polyval(coeffs2, self.obplnas)
 
@@ -1022,43 +849,38 @@ class QA_QC_kern(QA_QC_main):
             wrong_values1 = []
             wrong_values2 = []
             for i in range(len(self.obplnas)):
-                if self.kp[i] < a1 * self.obplnas[i] + b1:
+                if self.obplnas[i] < a1 * self.kp[i] + b1:
                     wrong_values1.append(self.obplnas[i])
                     wrong_values2.append(self.kp[i])
             self.dict_of_wrong_values["test_obblnas_kp_dependence"] = [{"Объемная плотность": wrong_values1,
                                                                         "Открытая пористость по жидкости": wrong_values2},
                                                                        "выпадает из линии тренда"]
 
-            report_text = f"Test 'dependence obblnas kp': {result}."
+            report_text = f" {result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_obblnas_kp_dependence:\n{report_text}\n\n"
 
             y_pred = a2 * self.kp + b2
-            x_pred = a2 * self.obplnas + b2
 
             # Окрашиваем точки, которые не соответствуют линии тренда, в красный
             for obplnas_val, kp_val, pred_val in zip(self.obplnas, self.kp, y_pred):
                 if obplnas_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(obplnas_val, kp_val, color='g')
-
-            for obplnas_val, kp_val, pred_val in zip(self.obplnas, self.kp, x_pred):
-                if kp_val + (pred_val * 0.1) < pred_val:
                     plt.scatter(kp_val, obplnas_val, color='g')
 
             plt.title("test obblnas kp dependence")
-            plt.scatter(self.obplnas, self.kp, color='red', label='Обплнас-Кп')
-            plt.scatter(self.pmu, self.kp, color='blue', label='Минпл-Кп')
-            plt.plot(self.obplnas, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
-            plt.plot(self.pmu, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
-            plt.xlabel('obplnas')
-            plt.ylabel('kp')
+            plt.scatter(self.kp, self.obplnas, color='red', label='Обплнас-Кп')
+            plt.scatter(self.kp, self.pmu, color='blue', label='Минпл-Кп')
+            plt.plot(self.kp, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
+            plt.plot(self.kp, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
+            plt.xlabel('kp')
+            plt.ylabel('obplnas')
             plt.legend()
             plt.grid(True)
             equation = f'y = {a1:.2f}x + {b1:.2f}, r2_pmu={r2_pmu:.2f}'
-            plt.text(np.mean(self.pmu) + 10, np.min(self.kp) + 2, equation, ha='center', va='bottom')
+            plt.text(np.mean(self.kp), np.min(self.pmu) + 2, equation, ha='center', va='bottom')
             equation = f'y = {a2:.2f}x + {b2:.2f}, r2_obp={r2_obp:.2f}'
-            plt.text(np.mean(self.obplnas) + 10, np.min(self.kp), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_obblnas_kp_dependence.png")
+            plt.text(np.mean(self.kp), np.min(self.obplnas), equation, ha='center', va='bottom')
+            plt.savefig("report\\test_obblnas_kp_dependence.png")
             if get_report:
                 plt.show()
 
@@ -1094,11 +916,11 @@ class QA_QC_kern(QA_QC_main):
                                                            "Объемной плотность",
                                                            "Коэффициента пористости")["r2"]
 
-            coeffs1 = np.polyfit(self.obplnas, self.kp, 1)
+            coeffs1 = np.polyfit(self.kp, self.obplnas, 1)
             a1, b1 = coeffs1[0], coeffs1[1]
             trend_line1 = np.polyval(coeffs1, self.obplnas)
 
-            coeffs2 = np.polyfit(self.pmu, self.kp, 1)
+            coeffs2 = np.polyfit(self.kp, self.pmu, 1)
             a2, b2 = coeffs2[0], coeffs2[1]
             trend_line2 = np.polyval(coeffs2, self.pmu)
 
@@ -1109,7 +931,7 @@ class QA_QC_kern(QA_QC_main):
             wrong_values1 = []
             wrong_values2 = []
             for i in range(len(self.pmu)):
-                if self.kp[i] < a2 * self.pmu[i] + b2:
+                if self.pmu[i] < a2 * self.kp[i] + b2:
                     wrong_values1.append(self.pmu[i])
                     wrong_values2.append(self.kp[i])
             self.dict_of_wrong_values["test_pmu_kp_dependence"] = [{"Минералогическая плотность": wrong_values1,
@@ -1122,27 +944,23 @@ class QA_QC_kern(QA_QC_main):
             plt.scatter(self.obplnas, self.kp, color='red', label='Обплнас-Кп')
             plt.scatter(self.pmu, self.kp, color='blue', label='Минпл-Кп')
             y_pred = a2 * self.kp + b2
-            x_pred = a2 * self.pmu + b2
 
             # Окрашиваем точки, которые не соответствуют линии тренда, в красный
             for pmu_val, kp_val, pred_val in zip(self.pmu, self.kp, y_pred):
                 if pmu_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(pmu_val, kp_val, color='g')
-
-            for pmu_val, kp_val, pred_val in zip(self.pmu, self.kp, x_pred):
-                if kp_val + (pred_val * 0.1) < pred_val:
                     plt.scatter(kp_val, pmu_val, color='g')
-            plt.plot(self.obplnas, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
-            plt.plot(self.pmu, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
-            plt.xlabel('pmu')
-            plt.ylabel('kp')
+
+            plt.plot(self.kp, trend_line1, color='red', label=f'Обплнас-Кп: y={a1:.2f}x + {b1:.2f}')
+            plt.plot(self.kp, trend_line2, color='blue', label=f'Минпл-Кп: y={a2:.2f}x + {b2:.2f}')
+            plt.xlabel('kp')
+            plt.ylabel('pmu')
             plt.legend()
             plt.grid(True)
             equation = f'y = {a1:.2f}x + {b1:.2f}, r2_obpl = {r2_obp}'
-            plt.text(np.mean(self.pmu), np.min(self.kp) + 0.5, equation, ha='center', va='bottom')
+            plt.text(np.mean(self.pmu), np.min(self.kp) + 2, equation, ha='center', va='bottom')
             equation = f'y = {a2:.2f}x + {b2:.2f}, r2_pmu ={r2_pmu}'
             plt.text(np.mean(self.obplnas), np.min(self.kp), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_pmu_kp_dependence.png")
+            plt.savefig("report\\test_pmu_kp_dependence.png")
 
             if get_report:
                 plt.show()
@@ -1174,45 +992,17 @@ class QA_QC_kern(QA_QC_main):
                                                        "Коэффициента эффективной пористости",
                                                        "Динамическая пористость")["r2"]
             result = True
-            a, b = linear_dependence_function(self.kp_ef, self.kp_din)
+            a, b = linear_dependence_function(self.kp_din, self.kp_ef)
             if a <= 0 or b <= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.kp_ef)):
-                if self.kp_din[i] < a * self.kp_ef[i] + b:
-                    wrong_values1.append(self.kp_ef[i])
-                    wrong_values2.append(self.kp_din[i])
-
-            report_text = f"Test 'dependence kpf kpdin': {result}."
+            wrong_values1, wrong_values2 = linear_function_visualization(self.kp_din, self.kp_ef, a, b, r2, get_report,
+                                                                         "Коэффициент эффективной пористости",
+                                                                         "Динамическая пористость",
+                                                                         "test_kp_ef_kp_din_dependence")
+            report_text = result
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_kp_ef_kpdin_dependence:\n{report_text}\n\n"
-            x_trend = np.linspace(np.max(self.kp_ef), np.min(self.kp_din), 100)
-            y_trend = a * x_trend + b
-            plt.title("test kpf kpdin dependence")
-            plt.scatter(self.kp_ef, self.kp_din, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            y_pred = a * self.kp_ef + b
-            x_pred = a * self.kp_din + b
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kp_din_val, kp_ef_val, pred_val in zip(self.kp_din, self.kp_ef, y_pred):
-                if kp_ef_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_din_val, kp_ef_val, color='r')
-
-            for kp_din_val, kp_ef_val, pred_val in zip(self.kp_din, self.kp_ef, x_pred):
-                if kp_din_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_ef_val, kp_din_val, color='r')
-            plt.xlabel('kp ef')
-            plt.ylabel('kp din')
-            plt.legend()
-            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.kp_ef), np.min(self.kp_din), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_kp_ef_kpdin_dependence.png")
-
-            if get_report:
-                plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
@@ -1241,47 +1031,20 @@ class QA_QC_kern(QA_QC_main):
                                                        "Коэффициента эффективной пористости",
                                                        "Коэффициента пористости")["r2"]
             result = True
-            a, b = linear_dependence_function(self.kp_ef, self.kp)
+            a, b = linear_dependence_function(self.kp, self.kp_ef)
             if a <= 0 or b >= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.kp_ef)):
-                if self.kp[i] < a * self.kp_ef[i] + b:
-                    wrong_values1.append(self.kp_ef[i])
-                    wrong_values2.append(self.kp[i])
+            wrong_values1, wrong_values2 = linear_function_visualization(self.kp, self.kp_ef, a, b, r2, get_report,
+                                                                         "Коэффициента пористости",
+                                                                         "Коэффициент эффективной пористости",
+                                                                         "test_kp_ef_kp_dependence")
             self.dict_of_wrong_values["test_kp_ef_kp_dependence"] = [{
                 "Открытая пористость по жидкости": wrong_values2
             }, "выпадает из линии тренда"]
-            report_text = f"Test 'dependence kp ef kp': {result}."
+            report_text = {result}
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
-            x_trend = np.linspace(np.min(self.kp_ef), np.max(self.kp_ef), 100)
-            y_trend = a * x_trend + b
-            plt.title("test kp ef kp dependence")
-            y_pred = a * self.kp_ef + b
-            x_pred = a * self.kp + b
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kp_val, kp_ef_val, pred_val in zip(self.kp, self.kp_ef, y_pred):
-                if kp_ef_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_ef_val, kp_val, color='r')
-
-            for kp_val, kp_ef_val, pred_val in zip(self.kp, self.kp_ef, x_pred):
-                if kp_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_val, kp_ef_val, color='r')
-
-            plt.scatter(self.kp_ef, self.kp, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('kp ef')
-            plt.ylabel('kp')
-            plt.legend()
-            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.kp_ef), np.min(self.kp), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_kp_ef_kp_dependence.png")
-            if get_report:
-                plt.show()
+            self.report_text += f"{timestamp:10} / test_kp_ef_kp_dependence:\n{report_text}\n\n"
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
@@ -1314,45 +1077,15 @@ class QA_QC_kern(QA_QC_main):
             if a <= 0 or b >= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.kp)):
-                if self.kp_din[i] < a * self.kp[i] + b:
-                    wrong_values1.append(self.kp[i])
-                    wrong_values2.append(self.kp_din[i])
+            wrong_values1, wrong_values2 = linear_function_visualization(self.kp, self.kp_din, a, b, r2, get_report,
+                                                                         "Коэффициента пористости",
+                                                                         "Коэффициент динамической пористости",
+                                                                         "test_kp_kp_din_dependence")
             self.dict_of_wrong_values["test_kp_kp_din_dependence"] = [{"Открытая пористость по жидкости": wrong_values1,
                                                                        }, "выпадает из линии тренда"]
             report_text = f"{result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_kp_kp_din_dependence:\n{report_text}\n\n"
-
-
-            x_trend = np.linspace(np.min(self.kp), np.max(self.kp), 100)
-            y_trend = a * x_trend + b
-            plt.title("test kp ef kp dependence")
-            y_pred = a * self.kp + b
-            x_pred = a * self.kp_din + b
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kp_val, kp_din_val, pred_val in zip(self.kp, self.kp_din, y_pred):
-                if kp_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_val, kp_din_val, color='r')
-
-            for kp_val, kp_din_val, pred_val in zip(self.kp, self.kp_din, x_pred):
-                if kp_din_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_din_val, kp_val, color='r')
-
-            plt.scatter(self.kp, self.kp_din, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('kp')
-            plt.ylabel('kp din')
-            plt.legend()
-            equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.kp), np.min(self.kp_din), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_kp_kp_din_dependence.png")
-
-            if get_report:
-                plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
@@ -1383,48 +1116,21 @@ class QA_QC_kern(QA_QC_main):
                                                        "Коэффициента пористости")["r2"]
 
             result = True
-            a, b = exponential_function(self.kpr, self.kp)
+            a, b = exponential_function(self.kp, self.kpr)
             if b <= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.kpr)):
-                if self.kp[i] > a * np.exp(b * self.kpr[i]):
-                    wrong_values1.append(self.kpr[i])
-                    wrong_values2.append(self.kp[i])
+            wrong_values1, wrong_values2 = expon_function_visualization(self.kp, self.kpr, a, b, r2, get_report,
+                                                                        "Коэффициент пористости",
+                                                                        "Коэффициент проницаемости",
+                                                                        "test_dependence_kpr_kp")
+
             self.dict_of_wrong_values["test_dependence_kpr_kp"] = [{"Кпр_газ(гелий)": wrong_values1,
                                                                     "Открытая пористость по жидкости": wrong_values2},
                                                                    "выпадает из линии тренда"]
-            report_text = f"Test 'dependence kpr kp': {result}"
+            report_text = {result}
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_dependence_kpr_kp:\n{report_text}\n\n"
-
-            x_trend = np.linspace(np.min(self.kpr), np.max(self.kpr), 100)
-            y_trend = a * x_trend + b
-            plt.title("test dependence kpr kp")
-            x_pred = a * np.exp(self.kpr*b)
-            y_pred = a * np.exp(self.kp*b)
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kp_val, kpr_val, pred_val in zip(self.kp, self.kpr, y_pred):
-                if kp_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_val, kpr_val, color='r')
-
-            for kp_val, kpr_val, pred_val in zip(self.kp, self.kpr, x_pred):
-                if kpr_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kpr_val, kp_val, color='r')
-            plt.scatter(self.kpr, self.kp, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('kpr')
-            plt.ylabel('kp')
-            plt.legend()
-            equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2:.2f}'
-            plt.text(np.mean(self.kpr), np.min(self.kp), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_dependence_kpr_kp.png")
-            if get_report:
-                plt.show()
-
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
     def test_dependence_kpr_kp_din(self, get_report=True) -> dict[str, bool | datetime | str]:
@@ -1453,47 +1159,20 @@ class QA_QC_kern(QA_QC_main):
                                                        "Коэффициента проницаемости",
                                                        "Коэффициента динамической пористости")["r2"]
             result = True
-            a, b = exponential_function(self.kpr, self.kp_din)
+            a, b = exponential_function(self.kp_din, self.kpr)
             if b <= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.kpr)):
-                if self.kp_din[i] > a * np.exp(b * self.kpr[i]):
-                    wrong_values1.append(self.kpr[i])
-                    wrong_values2.append(self.kp_din[i])
+            wrong_values1, wrong_values2 = expon_function_visualization(self.kpr, self.kp_din, a, b, r2, get_report,
+                                                                        "Коэффициент проницаемости",
+                                                                        "Коэффициент динамической пористости",
+                                                                        "test_dependence_kpr_kp_din")
+
             self.dict_of_wrong_values["test_dependence_kpr_kp_din"] = [{"Кпр_газ(гелий)": wrong_values1,
                                                                         }, "выпадает из линии тренда"]
-            report_text = f"Test 'dependence kpc kp': {result}."
+            report_text =  {result}
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} :\n{report_text}\n\n"
-            x_pred = a * np.exp(self.kpr*b)
-            y_pred = a * np.exp(self.kp_din*b)
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kp_din_val, kpr_val, pred_val in zip(self.kp_din, self.kpr, y_pred):
-                if kp_din_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kp_din_val, kpr_val, color='r')
-
-            for kp_din_val, kpr_val, pred_val in zip(self.kp_din, self.kpr, x_pred):
-                if kpr_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kpr_val, kp_din_val, color='r')
-
-            x_trend = np.linspace(np.min(self.kpr), np.max(self.kpr), 100)
-            y_trend = a * x_trend + b
-            plt.title("test dependence kpc kp")
-            plt.scatter(self.kpr, self.kp_din, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('kpr')
-            plt.ylabel('kp din')
-            plt.legend()
-            equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2:.2f}'
-            plt.text(np.mean(self.kpr), np.min(self.kp_din), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_dependence_kpr_kp_din.png")
-            if get_report:
-                plt.show()
-
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
     def test_dependence_sw_residual_kpr(self, get_report=True) -> dict[str, bool | datetime | str]:
@@ -1520,50 +1199,22 @@ class QA_QC_kern(QA_QC_main):
             r2 = self.test_general_dependency_checking(self.sw_residual, self.kpr, "test dependence sw_residual kpr",
                                                        "Коэффициента остаточной водонасыщенности",
                                                        "Коэффициента проницаемости")["r2"]
-            coefficients = np.polyfit(self.sw_residual, np.exp(self.kpr), 1)
+            coefficients = np.polyfit(self.kpr, np.exp(self.sw_residual), 1)
             a, b = coefficients[0], coefficients[1]
             result = True
             if a <= 0 or r2 < 0.7:
                 result = False
-
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.sw_residual)):
-                if self.kpr[i] > a * np.log(self.sw_residual[i]) + b:
-                    wrong_values1.append(self.sw_residual[i])
-                    wrong_values2.append(self.kpr[i])
             report_text = f"{result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_dependence_sw_residual_kpr:\n{report_text}\n\n"
+            wrong_values1, wrong_values2 = logarithmic_function_visualization(self.kpr, self.sw_residual, a, b, r2,
+                                                                              get_report, "Коэффициент проницаемости",
+                                                                              "Коэффициент остаточной водонасыщенности",
+                                                                              "test_dependence_sw_residual_kpr")
+
             self.dict_of_wrong_values["test_dependence_sw_residual_kpr"] = [{"Кво": wrong_values1,
                                                                              "Кпр_газ(гелий)": wrong_values2},
                                                                             "выпадает из линии тренда"]
-            x_trend = np.linspace(np.min(self.sw_residual), np.max(self.sw_residual), 100)
-            y_trend = a * x_trend + b
-
-            # Построение кроссплота
-            plt.title("test dependence sw_residual kpr")
-            x_pred = a * np.log(self.sw_residual)+b
-            y_pred = a * np.log(self.kpr)+b
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for sw_residual_val, kpr_val, pred_val in zip(self.sw_residual, self.kpr, y_pred):
-                if kpr_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kpr_val, sw_residual_val, color='r')
-
-            for sw_residual_val, kpr_val, pred_val in zip(self.sw_residual, self.kpr, x_pred):
-                if sw_residual_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kpr_val, sw_residual_val, color='r')
-            plt.scatter(self.sw_residual, self.kpr, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('sw_residual')
-            plt.ylabel('kpr')
-            plt.legend()
-            equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.sw_residual), np.min(self.kpr), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_dependence_kpr_kp_din.png")
-            if get_report:
-                plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
@@ -1590,7 +1241,7 @@ class QA_QC_kern(QA_QC_main):
                                                        "est rn sw_residual dependencies",
                                                        "Рн",
                                                        "Коэффициента водонасыщенности")["r2"]
-            coefficients = np.polyfit(np.log(self.rn), np.log(self.sw_residual), 1)
+            coefficients = np.polyfit(np.log(self.sw_residual), np.log(self.rn), 1)
             b, n = np.exp(coefficients[1]), coefficients[0]
             result = True
             if 1.1 >= n or n >= 5 or r2 < 0:
@@ -1599,7 +1250,7 @@ class QA_QC_kern(QA_QC_main):
             wrong_values1 = []
             wrong_values2 = []
             for i in range(len(self.rn)):
-                if self.sw_residual[i] > b / (self.rn[i] ** n):
+                if self.rn[i] > b / (self.sw_residual[i] ** n):
                     wrong_values1.append(self.rn[i])
                     wrong_values2.append(self.sw_residual[i])
             self.dict_of_wrong_values["test_rn_sw_residual_dependence"] = [{"Параметр насыщенности": wrong_values1,
@@ -1609,26 +1260,21 @@ class QA_QC_kern(QA_QC_main):
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_rn_sw_residual_dependence:\n{report_text}\n\n"
             plt.title("test rn sw_residual dependencies")
-            x_pred = b / (self.rn ** n)
             y_pred = b / (self.sw_residual ** n)
 
             # Окрашиваем точки, которые не соответствуют линии тренда, в красный
             for sw_residual_val, rn_val, pred_val in zip(self.sw_residual, self.rn, y_pred):
-                if sw_residual_val + (pred_val * 0.1) < pred_val:
+                if rn_val + (pred_val * 0.1) < pred_val:
                     plt.scatter(sw_residual_val, rn_val, color='r')
 
-            for sw_residual_val, rn_val, pred_val in zip(self.sw_residual, self.rn, x_pred):
-                if rn_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(rn_val, sw_residual_val, color='r')
-
-            plt.scatter(self.rn, self.sw_residual, color='blue', label='Исходные данные')
+            plt.scatter(self.sw_residual, self.rn, color='blue', label='Исходные данные')
             plt.plot(self.rn, b / (self.sw_residual ** n), color='red', label='Линия тренда')
-            plt.xlabel('rn')
-            plt.ylabel('sw_residual')
+            plt.xlabel('sw_residual')
+            plt.ylabel('rn')
             plt.legend()
             equation = f'y = {b:.2f}/(x^{b:.2f}),  r2={r2:.2f}'
-            plt.text(np.mean(self.rn), np.min(self.sw_residual), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_dependence_kpr_kp_din.png")
+            plt.text(np.mean(self.sw_residual), np.min(self.rn), equation, ha='center', va='bottom')
+            plt.savefig("report\\test_dependence_kpr_kp_din.png")
             if get_report:
                 plt.show()
 
@@ -1658,7 +1304,7 @@ class QA_QC_kern(QA_QC_main):
             r2 = self.test_general_dependency_checking(self.rp, self.kp, "test rp kp dependencies",
                                                        "Параметр пористости",
                                                        "Коэффициента пористости")["r2"]
-            coefficients = np.polyfit(np.log(self.rp), -np.log(self.kp), 1)
+            coefficients = np.polyfit(np.log(self.kp), -np.log(self.rp), 1)
             a, m = np.exp(-coefficients[1]), coefficients[0]
             result = True
             if 1.1 >= m or m >= 3.8 or 0 >= a or a >= 2.5 or r2 < 0.7:
@@ -1667,35 +1313,31 @@ class QA_QC_kern(QA_QC_main):
             wrong_values1 = []
             wrong_values2 = []
             for i in range(len(self.rp)):
-                if self.kp[i] > a / (self.rp[i] ** m):
+                if self.rp[i] > a / (self.kp[i] ** m):
                     wrong_values1.append(self.rp[i])
                     wrong_values2.append(self.kp[i])
-            report_text = f"Test 'dependence rp kp ': {result}."
+            report_text = f"{result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_rp_kp_dependencies:\n{report_text}\n\n"
             self.dict_of_wrong_values["test_rp_kp_dependencies"] = [{"Параметр пористости": wrong_values1,
                                                                      "Открытая пористость по жидкости": wrong_values2
                                                                      }, "выпадает из линии тренда"]
-            plt.scatter(self.rp, self.kp, color='blue', label='Исходные данные')
-            plt.plot(self.rp, a / (self.kp ** m), color='red', label='Линия тренда')
-            x_pred = a / (self.rp ** m)
+            plt.scatter(self.kp, self.rp, color='blue', label='Исходные данные')
+            plt.plot(self.kp, a / (self.kp ** m), color='red', label='Линия тренда')
             y_pred = a / (self.kp ** m)
 
             # Окрашиваем точки, которые не соответствуют линии тренда, в красный
             for rp_val, kv_val, pred_val in zip(self.rp, self.kp, y_pred):
-                if kv_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(rp_val, kv_val, color='r')
-
-            for rp_val, kv_val, pred_val in zip(self.rp, self.kp, x_pred):
                 if rp_val + (pred_val * 0.1) < pred_val:
                     plt.scatter(kv_val, rp_val, color='r')
+
             plt.title("test rp kp dependencies")
-            plt.xlabel('рп')
-            plt.ylabel('кп')
+            plt.xlabel('kp')
+            plt.ylabel('rp')
             plt.legend()
             equation = f'y = {a:.2f}/(x^{m:.2f}), r2={r2:.2f}'
             plt.text(np.mean(self.rp), np.min(self.kp), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_rp_kp_dependencies.png")
+            plt.savefig("report\\test_rp_kp_dependencies.png")
             if get_report:
                 plt.show()
 
@@ -1771,15 +1413,15 @@ class QA_QC_kern(QA_QC_main):
             # Проверка пройденного теста
             if r2 >= 0.7:
                 result = True
-                report_text = f"Test 'general dependency checking': {result}. Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n"
+                report_text = f"{result}. Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n"
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+                self.report_text += f"{timestamp:10} / test_general_dependency_checking:\n{report_text}\n\n"
                 return {"result": result, "r2": r2, "file_name": self.file_name, "date": self.dt_now}
             else:
                 result = False
-        report_text = f"Test 'general dependency checking': {result}. Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n"
+        report_text = f"{result}. Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n"
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+        self.report_text += f"{timestamp:10} / test_general_dependency_checking:\n{report_text}\n\n"
         return {"result": result, "r2": r2, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_first(self, get_report=True):
@@ -1808,12 +1450,12 @@ class QA_QC_kern(QA_QC_main):
                                                                       "Подошва интервала отбора": wrong_values, },
                                                                      "подошва вышележащего интервала долбления ниже кровли нижележащего"]
             if result:
-                report_text = f"Test 'coring depths second': {result}."
+                report_text = f"{result}."
 
             else:
-                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+                report_text = f"{result}.Индексы элементов с ошибкой {wrong_values}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_coring_depths_first:\n{report_text}\n\n"
 
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
@@ -1847,11 +1489,11 @@ class QA_QC_kern(QA_QC_main):
                                                                        },
                                                                       "разница между подошвой и кровлей меньше выноса в м"]
             if result:
-                report_text = f"Test 'coring depths second': {result}."
+                report_text = f" {result}."
             else:
-                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+                report_text = f"{result}.Индексы элементов с ошибкой {wrong_values}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_coring_depths_second:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_third(self, get_report=True):
@@ -1885,11 +1527,11 @@ class QA_QC_kern(QA_QC_main):
                                                                      "вынос керна в процентах и метрах не совпадает"]
 
             if result:
-                report_text = f"Test 'coring depths second': {result}."
+                report_text = f" {result}."
             else:
-                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+                report_text = f"{result}.Индексы элементов с ошибкой {wrong_values}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_coring_depths_third:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_four(self, get_report=True):
@@ -1921,12 +1563,12 @@ class QA_QC_kern(QA_QC_main):
                                                                      "Подошва интервала отбора": wrong_values,
                                                                      }, "глубина отбора ниже фактического выноса керна"]
             if result:
-                report_text = f"Test 'coring depths second': {result}."
+                report_text =result
             else:
-                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+                report_text =  f"{result}.Индексы элементов с ошибкой {wrong_values}."
 
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_coring_depths_four:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_data_tampering(self, get_report=True):
@@ -1965,39 +1607,62 @@ class QA_QC_kern(QA_QC_main):
             wrong_values_rn = []
             wrong_values_water_permeability = []
 
-            for i in range(len(self.kpr)):
-                for j in range(len(self.kp)):
-                    if abs(self.kpr[i] - self.kp[j]) < 0.01:
-                        result = False
-                        wrong_values_kpr.append(i)
-                        wrong_values_kp.append(j)
-                for k in range(len(self.sw_residual)):
-                    if abs(self.kpr[i] - self.sw_residual[k]) < 0.01:
-                        result = False
-                        wrong_values_kpr.append(i)
-                        wrong_values_sw_residual.append(i)
-            for i in range(len(self.kp)):
-                for j in range(len(self.rp)):
-                    if abs(self.kp[i] - self.rp[j]) < 0.01:
-                        result = False
-                        wrong_values_kp.append(i)
-                        wrong_values_rp.append(i)
-                for k in range(len(self.sw_residual)):
-                    if abs(self.kp[i] - self.sw_residual[k]) < 0.01:
-                        result = False
-                        wrong_values_kp.append(i)
-                        wrong_values_sw_residual.append(i)
-                for d in range(len(self.density)):
-                    if abs(self.kp[i] - self.density[d]) < 0.01:
-                        result = False
-                        wrong_values_kp.append(i)
-                        wrong_values_density.append(i)
-            for i in range(len(self.rn)):
-                for k in range(len(self.water_permeability)):
-                    if abs(self.rn[i] - self.water_permeability[k]) < 0.01:
-                        result = False
-                        wrong_values_rn.append(i)
-                        wrong_values_water_permeability.append(i)
+            unique, indices, counts = np.unique(self.kpr, return_inverse=True, return_counts=True)
+            duplicates = unique[counts > 1]
+
+            for dup in duplicates:
+                result=False
+                dup_indices = np.where(self.kpr == dup)[0]
+                wrong_values_kpr.extend(dup_indices)
+
+            unique, indices, counts = np.unique(self.kp, return_inverse=True, return_counts=True)
+            duplicates = unique[counts > 1]
+
+            for dup in duplicates:
+                result = False
+                dup_indices = np.where(self.kp == dup)[0]
+                wrong_values_kp.extend(dup_indices)
+
+            unique, indices, counts = np.unique(self.sw_residual, return_inverse=True, return_counts=True)
+            duplicates = unique[counts > 1]
+
+            for dup in duplicates:
+                result = False
+                dup_indices = np.where(self.sw_residual == dup)[0]
+                wrong_values_sw_residual.extend(dup_indices)
+
+            unique, indices, counts = np.unique(self.rp, return_inverse=True, return_counts=True)
+            duplicates = unique[counts > 1]
+
+            for dup in duplicates:
+                result = False
+                dup_indices = np.where(self.rp == dup)[0]
+                wrong_values_rp.extend(dup_indices)
+
+            unique, indices, counts = np.unique(self.density, return_inverse=True, return_counts=True)
+            duplicates = unique[counts > 1]
+
+            for dup in duplicates:
+                result = False
+                dup_indices = np.where(self.density == dup)[0]
+                wrong_values_density.extend(dup_indices)
+
+            unique, indices, counts = np.unique(self.water_permeability, return_inverse=True, return_counts=True)
+            duplicates = unique[counts > 1]
+
+            for dup in duplicates:
+                result = False
+                dup_indices = np.where(self.water_permeability == dup)[0]
+                wrong_values_water_permeability.extend(dup_indices)
+
+            unique, indices, counts = np.unique(self.rn, return_inverse=True, return_counts=True)
+            duplicates = unique[counts > 1]
+
+            for dup in duplicates:
+                result = False
+                dup_indices = np.where(self.rn == dup)[0]
+                wrong_values_rn.extend(dup_indices)
+
             wrong_values = []
             wrong_values.append(wrong_values_kpr)
             wrong_values.append(wrong_values_kp)
@@ -2015,11 +1680,11 @@ class QA_QC_kern(QA_QC_main):
                                                                  "Sw": wrong_values_water_permeability},
                                                                 "схожие значения"]
             if result:
-                report_text = f"Test 'coring depths second': {result}."
+                report_text = result
             else:
-                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
+                report_text = f" {result}.Индексы элементов с ошибкой {wrong_values}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            self.report_text += f"{timestamp:10} / test_data_tampering:\n{report_text}\n\n"
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_in_surface_and_reservoir_conditions(self, get_report=True):
@@ -2237,7 +1902,7 @@ class QA_QC_kern(QA_QC_main):
                 self.__check_data(self.kpr, "Кпр_газ(гелий)", "test dependence kno kpr"):
 
             r2 = self.test_general_dependency_checking(self.kno, self.kpr, "test dependence kno kpr",
-                                                       "коэффициент остаточной нефтенасыщенности",
+                                                       "Коэффициент остаточной нефтенасыщенности",
                                                        "Коэффициента проницаемости")["r2"]
 
             coefficients = np.polyfit(self.kno, np.exp(self.kpr), 1)
@@ -2246,12 +1911,10 @@ class QA_QC_kern(QA_QC_main):
             if a >= 0 or b <= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.kno)):
-                if self.kpr[i] > a * np.log(self.kno[i]) + b:
-                    wrong_values1.append(self.kno[i])
-                    wrong_values2.append(self.kpr[i])
+            wrong_values1, wrong_values2 = logarithmic_function_visualization(self.kno, self.kpr, a, b, r2, get_report,
+                                                                              "Коэффициент остаточной нефтенасыщенности",
+                                                                              "Коэффициента проницаемости",
+                                                                              "test_dependence_kno_kpr")
 
             report_text = f"{result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -2259,120 +1922,19 @@ class QA_QC_kern(QA_QC_main):
             self.dict_of_wrong_values["test_dependence_kno_kpr"] = [{"Кно": wrong_values1,
                                                                      "Кпр_газ(гелий)": wrong_values2},
                                                                     "выпадает из линии тренда"]
-            x_trend = np.linspace(np.min(self.kno), np.max(self.kno), 100)
-            y_trend = a * x_trend + b
-            y_pred = a * self.kno + b
-            x_pred = a * self.kpr + b
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kno_val, kpr_val, pred_val in zip(self.kno, self.kpr, y_pred):
-                if kno_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kno_val, kpr_val, color='r')
-
-            for kno_val, kpr_val, pred_val in zip(self.kno, self.kpr, x_pred):
-                if kpr_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kpr_val, kno_val, color='r')
-            # Построение кроссплота
-            plt.title("test dependence kno kpr")
-            plt.scatter(self.kno, self.kpr, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('kno')
-            plt.ylabel('kpr')
-            plt.legend()
-            equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.kno), np.min(self.kpr), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_dependence_kno_kpr.png")
-            if get_report:
-                plt.show()
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
-    def test_dependence_kno_knmng(self, get_report=True) -> dict[str, bool | datetime | str]:
-        """
-        Тест применяется для сравнения двух аппроксимаций: характерной
-        (эталонной для выбранного набора данных) и текущей.  Характерной
-        зависимостью является логарифмическая по функции y=a*ln(x)+b, при этом a<0, b>0.
-        Required data:
-             Кно; Критическая нефтенасыщенность
-        Args:
-            self.kno (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
-            self.knmng (array[int/float]): массив с данными критическая нефтенасыщенность для проверки
-
-        Returns:
-            image: визуализация кроссплота
-            dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
-            file: запись результата теста для сохранения состояния
-        """
-
-        if self.__check_data(self.kno, "Кно", "test_dependence_kno_knmng") and \
-                self.__check_data(self.knmng, "Критическая нефтенасыщенность", "test_dependence_kno_knmng"):
-
-            r2 = self.test_general_dependency_checking(self.kno, self.knmng, "test_dependence_kno_knmng",
-                                                       "Коэффициент остаточной нефтенасыщенности",
-                                                       "Критическая нефтенасыщенность")["r2"]
-
-            coefficients = np.polyfit(self.kno, np.exp(self.knmng), 1)
-            a, b = coefficients[0], coefficients[1]
-            result = True
-            if a >= 0 or b <= 0 or r2 < 0.7:
-                result = False
-
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.kno)):
-                if self.knmng[i] > a * np.log(self.kno[i]) + b:
-                    wrong_values1.append(self.kno[i])
-                    wrong_values2.append(self.knmng[i])
-
-            report_text = f"{result}."
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_dependence_kno_knmng:\n{report_text}\n\n"
-            self.dict_of_wrong_values["test_dependence_kno_knmng"] = [{"Кно": wrong_values1,
-                                                                     "Кпр_газ(гелий)": wrong_values2},
-                                                                    "выпадает из линии тренда"]
-
-            x_trend = np.linspace(np.min(self.kno), np.max(self.kno), 100)
-            y_trend = a * x_trend + b
-
-            # Построение кроссплота
-            plt.title("test_dependence_kno_knmng")
-            plt.scatter(self.kno, self.knmng, color='b', label='Данные')
-            y_pred = a * self.kno + b
-            x_pred = a * self.knmng + b
-
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kno_val, knmng_val, pred_val in zip(self.kno, self.knmng, y_pred):
-                if kno_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kno_val, knmng_val, color='r')
-
-            for kno_val, knmng_val, pred_val in zip(self.kno, self.knmng, x_pred):
-                if knmng_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(knmng_val, kno_val, color='r')
-
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('kno')
-            plt.ylabel('knmng')
-            plt.legend()
-            equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.kno), np.min(self.knmng), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_dependence_kno_knmng.png")
-
-            if get_report:
-                plt.show()
-
-            return {"result": result, "file_name": self.file_name, "date": self.dt_now}
-
-    def test_dependence_kno_kgo(self, get_report=True) -> dict[str, bool | datetime | str]:
+    def test_dependence_kpr_kgo(self, get_report=True) -> dict[str, bool | datetime | str]:
         """
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
         В данном случае зависимость по функции y=a*ln(x)+b при этом a<0, b>0
-
         Required data:
-             Кно; Cвязанная газонасыщенность
+             Sgl; Кпр_газ(гелий)
         Args:
-            self.kno (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
-            self.kgo (array[int/float]): массив с данными связанная газонасыщенность для проверки
+            self.kgo (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
+            self.kpr (array[int/float]): массив с данными коэффициент проницаемости для проверки
 
         Returns:
             image: визуализация кроссплота
@@ -2380,60 +1942,78 @@ class QA_QC_kern(QA_QC_main):
             file: запись результата теста для сохранения состояния
         """
 
-        if self.__check_data(self.kno, "Кно", "test_dependence_kno_kgo") and \
-                self.__check_data(self.kgo, "Cвязанная газонасыщенность", "test_dependence_kno_kgo"):
+        if self.__check_data(self.kgo, "Кго", "test dependence kpr kgo") and \
+                self.__check_data(self.kpr, "Кпр_газ(гелий)", "test dependence kpr kgo"):
 
-            r2 = self.test_general_dependency_checking(self.kno, self.kgo, "test_dependence_kno_kgo",
-                                                       "коэффициент остаточной нефтенасыщенности",
-                                                       "Cвязанная газонасыщенность")["r2"]
+            r2 = self.test_general_dependency_checking(self.kgo, self.kpr, "test dependence kno kpr",
+                                                       "Коэффициент остаточной нефтенасыщенности",
+                                                       "Коэффициента проницаемости")["r2"]
 
-            coefficients = np.polyfit(self.kno, np.exp(self.kgo), 1)
+            coefficients = np.polyfit(self.kpr, np.exp(self.kgo), 1)
             a, b = coefficients[0], coefficients[1]
             result = True
             if a >= 0 or b <= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1 = []
-            wrong_values2 = []
-            for i in range(len(self.kno)):
-                if self.kgo[i] > a * np.log(self.kno[i]) + b:
-                    wrong_values1.append(self.kno[i])
-                    wrong_values2.append(self.kgo[i])
+            wrong_values1, wrong_values2 = logarithmic_function_visualization(self.kgo, self.kpr, a, b, r2, get_report,
+                                                                              "Cвязанная газонасыщенность",
+                                                                              "Коэффициента проницаемости",
+                                                                              "test_dependence_kno_kpr")
 
-            report_text = f"Test 'test_dependence_kno_kgo': {result}."
+            report_text = f"{result}."
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_dependence_kno_kgo:\n{report_text}\n\n"
-            self.dict_of_wrong_values["test_dependence_kno_kgo"] = [{"Кно": wrong_values1,
-                                                                     "Cвязанная газонасыщенность": wrong_values2},
+            self.report_text += f"{timestamp:10} / test_dependence_kno_kpr:\n{report_text}\n\n"
+            self.dict_of_wrong_values["test_dependence_kno_kpr"] = [{"Sgl": wrong_values1,
+                                                                     "Кпр_газ(гелий)": wrong_values2},
                                                                     "выпадает из линии тренда"]
 
-            x_trend = np.linspace(np.min(self.kno), np.max(self.kno), 100)
-            y_trend = a * x_trend + b
+            return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
-            y_pred = a * self.kno + b
-            x_pred = a * self.kgo + b
+    def test_dependence_kpr_knmng(self, get_report=True) -> dict[str, bool | datetime | str]:
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость по функции y=a*ln(x)+b при этом a<0, b>0
+        Required data:
+             Sogcr; Кпр_газ(гелий)
+        Args:
+            self.knmng (array[int/float]): массив с данными критическая нефтенасыщенность для проверки
+            self.kpr (array[int/float]): массив с данными коэффициент проницаемости для проверки
 
-            # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for kno_val, kgo_val, pred_val in zip(self.kno, self.kgo, y_pred):
-                if kno_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kno_val, kgo_val, color='r')
+        Returns:
+            image: визуализация кроссплота
+            dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
+            file: запись результата теста для сохранения состояния
+        """
 
-            for kno_val, kgo_val, pred_val in zip(self.kno, self.kgo, y_pred):
-                if kgo_val + (pred_val * 0.1) < pred_val:
-                    plt.scatter(kgo_val, kno_val, color='r')
-            # Построение кроссплота
-            plt.title("test_dependence_kno_kgo")
-            plt.scatter(self.kno, self.kgo, color='b', label='Данные')
-            plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
-            plt.xlabel('kno')
-            plt.ylabel('kgo')
-            plt.legend()
-            equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
-            plt.text(np.mean(self.kno), np.min(self.kgo), equation, ha='center', va='bottom')
-            plt.savefig("output\\test_dependence_kno_kgo.png")
-            plt.show()
+        if self.__check_data(self.knmng, "Кнмнг", "test dependence kpr knmng") and \
+                self.__check_data(self.kpr, "Кпр_газ(гелий)", "test dependence kpr knmng"):
+
+            r2 = self.test_general_dependency_checking(self.knmng, self.kpr, "test dependence kno kpr",
+                                                       "Коэффициент остаточной нефтенасыщенности",
+                                                       "Коэффициента проницаемости")["r2"]
+
+            coefficients = np.polyfit(self.kpr, np.exp(self.knmng), 1)
+            a, b = coefficients[0], coefficients[1]
+            result = True
+            if a >= 0 or b <= 0 or r2 < 0.7:
+                result = False
+
+            wrong_values1, wrong_values2 = logarithmic_function_visualization(self.knmng, self.kpr, a, b, r2,
+                                                                              get_report,
+                                                                              "Критическая нефтенасыщенность",
+                                                                              "Коэффициента проницаемости",
+                                                                              "test_dependence_kpr_knmng")
+
+            report_text = f"{result}."
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_dependence_kno_kpr:\n{report_text}\n\n"
+            self.dict_of_wrong_values["test_dependence_kno_kpr"] = [{"Sgl": wrong_values1,
+                                                                     "Кпр_газ(гелий)": wrong_values2},
+                                                                    "выпадает из линии тренда"]
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
+
     def start_tests(self, list_of_tests: list) -> dict[str | Any, dict[Any, Any] | Any]:
         """_summary_
 
