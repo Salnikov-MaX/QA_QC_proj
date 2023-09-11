@@ -152,6 +152,8 @@ def visualize_seismic_slice(df: pd.DataFrame, surf_name: str) -> None:
     plt.colorbar()
     plt.xlabel("X")
     plt.ylabel("Y")
+    plt.grid(ls=':', alpha=.5)
+    plt.gca().invert_yaxis()
     plt.show()
 
 

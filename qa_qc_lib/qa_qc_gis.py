@@ -1,19 +1,25 @@
 import lasio
-#import pandas as pd
+import pandas as pd
 import numpy as np
 import datetime
 import re
 from .qa_qc_main import QA_QC_main
+from .qa_qc_tools.gis_tools import *
 
 
 class QA_QC_gis(QA_QC_main):
-    def __init__(self, las_path:str,) -> None:
+    def __init__(self, las_path:str, well_tops_path:str = None) -> None:
 
         super().__init__()
         las = lasio.read(las_path)
         self.file_name = las_path.split('/')[-1]
         self.las_df = las.df()
         self.units_dict = {curve.mnemonic.upper() : curve.unit for curve in las.curves}
+
+        if well_tops_path: 
+            self.well_tops_df = pd.read_excel(well_tops_path)  # структура "Surface", "X", "Y", "Z", "MD" | в файле должны быть данные только по данной скважине
+            income_list = [name in self.well_tops_df.columns for name in ["Surface", "X", "Y", "Z", "MD"]]
+            assert all(income_list), 'В файле отсутствуют ожидаемые колонки ("Surface", "X", "Y", "Z", "MD" ), убедитесь в корректности файла'
 
         self.__mnemonics = {'SP'   : ['SP', 'PS', 'ПС', 'СП', 'PS_1', 'PS_2'],
                             'GR'   : ['GR', 'GK', 'ГК', 'ECGR', 'GK_1', 'GK_2'],
@@ -125,6 +131,7 @@ class QA_QC_gis(QA_QC_main):
     def test_physical_correctness(self, get_report=True) -> dict:
         """
         Метод для оценки физичности значений кривых ГИС
+        Внимание! Тест не работает с неопознанными ГИС (self.unidentified_gis)
 
         Required data:
             self.las_df (Pandas.DataFrame): датафрейм содержащий кривые ГИС скважины
@@ -187,8 +194,134 @@ class QA_QC_gis(QA_QC_main):
                 all_results_dict[gis] = results_dict
                 timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 self.report_text += f"{timestamp:10} / test_physical_correctness:\n{report_text}\n\n"
-                if get_report: print('\n'+report_text)
+                if get_report: print('\n'+report_text+self.delimeter)
         
         return all_results_dict | {"file_name" : self.file_name, "date" : timestamp}
+
+
+    def test_missing_intervals(self, get_report=True) -> dict:
+        """
+        Метод оценивает наличие пропусков в кривых ГИС
+
+        Required data:
+            self.las_df (Pandas.DataFrame): датафрейм содержащий кривые ГИС скважины
+
+        Args:
+            get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+
+        Returns:
+            dict: Словарь с ключевыми данными о прохождении теста
+        """        
+
+        all_results_dict = {}
+        for gis_name in self.las_df.columns:
+            results_dict = {}
+            gis_data = self.las_df[gis_name].to_numpy()
+            missing_intervals_ind = find_missing_intervals(gis_data)
+            if missing_intervals_ind:
+                result = False
+                missing_intervals_dept = [(self.las_df.index[m_i_i[0]], self.las_df.index[m_i_i[1]]) for m_i_i in missing_intervals_ind]
+                text = f'"{gis_name}": выявлены пропуски на следующих интервалах глубин:{missing_intervals_dept}'
+                report_text = f"{self.ident}Тест не пройден. \n{self.ident}{text} "
+            else:
+                result = True
+                text = f'"{gis_name}": пропуски в данных отсутствуют'
+                report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}{text} "
             
+            results_dict['result'] = result
+            results_dict['report_text'] = report_text
+            all_results_dict[gis_name] = results_dict
+
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.report_text += f"{timestamp:10} / test_missing_intervals:\n{report_text}\n\n"
+            if get_report: print('\n'+report_text+self.delimeter)
             
+        return all_results_dict | {"file_name" : self.file_name, "date" : timestamp}
+
+
+    def test_repeat(self, get_report=True) -> dict:
+        """
+        Метод оценивает перекрытие интервалов записи для основной и повторной записи ГИС
+        Внимание! Тест не работает с неопознанными ГИС (self.unidentified_gis)
+
+        Required data:
+            self.las_df (Pandas.DataFrame): датафрейм содержащий кривые ГИС скважины
+
+        Args:
+            get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+
+        Returns:
+            dict: Словарь с ключевыми данными о прохождении теста
+        """        
+        all_results_dict, count_names_dict = {}, {}
+        unic_gis_names = [self.find_mnemonic(gis_name) for gis_name in self.las_df.columns if gis_name not in self.unidentified_gis]
+        gis_names = [gis_name for gis_name in self.las_df.columns if gis_name not in self.unidentified_gis]
+
+        for unic_gis_name, gis_name in zip(unic_gis_names, gis_names):
+            count_names_dict[unic_gis_name] = count_names_dict.get(unic_gis_name, []) + [gis_name]   
+
+        duplicates = [key for key, value in count_names_dict.items() if len(value) > 1]
+        if duplicates:
+            all_results_dict['result'] = False
+
+            for key in duplicates: 
+                logs_to_check = count_names_dict[key]
+                intervals = find_depths_with_multiple_logs(self.las_df, logs_to_check)
+                all_results_dict[key] = intervals
+                if get_report: plot_all_logs_with_overlap(self.las_df, intervals, logs_to_check)
+
+            all_results_dict['duplicates'] = duplicates
+            text = f"Найдены дубликаты следующих ГИС: {', '.join(duplicates)}"
+            report_text = f"{self.ident}Тест не пройден. \n{self.ident}{text} "
+        else:
+            text = 'Дубликатов ГИС в данных не найдено'
+            report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}{text} "
+            if get_report: print('\n'+report_text+self.delimeter)
+
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.report_text += f"{timestamp:10} / test_repeat:\n{report_text}\n\n"
+        
+        return all_results_dict | {"file_name" : self.file_name, "date" : timestamp}
+
+
+    def test_surface_bounds_incoming(self, get_report=True) -> dict:
+        """
+        Метод оценивает вхождение интервалов отбивок пластов в интервалы снятия ГИС
+        Внимание! Тест не работает с неопознанными ГИС (self.unidentified_gis)
+
+        Required data:
+            self.las_df (Pandas.DataFrame): датафрейм содержащий кривые ГИС скважины
+            self.well_tops_df (Pandas.DataFrame): датафрейм содержащий отбивки пластов скважины
+
+        Args:
+            get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+
+        Returns:
+            dict: Словарь с ключевыми данными о прохождении теста
+        """        
+        all_results_dict = {}
+        if hasattr(self, 'well_tops_df'):
+            gis_min, gis_max = self.las_df.index.min(), self.las_df.index.max()
+            well_min, well_max = self.well_tops_df.MD.min(), self.well_tops_df.MD.max()
+            
+            result = gis_min < well_min and gis_max > well_max
+            all_results_dict['result'] = str(result)
+
+            if result:
+                text = 'Отметки пластопересечений входят в интервал проведения ГИС'
+                report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}{text} " 
+
+            else:
+                text = f"Отметки пластопересечений не входят в интервал проведения ГИС"
+                report_text = f"{self.ident}Тест не пройден. \n{self.ident}{text} "
+
+        else:
+            all_results_dict['result'] = 'Fail'
+            text = f"Файл с отметки пластопересечений отсутствует"
+            report_text = f"{self.ident}Отсутствуют данные для проведения теста. \n{self.ident}{text}"
+
+        if get_report: print('\n'+report_text+self.delimeter)
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.report_text += f"{timestamp:10} / test_physical_correctness:\n{report_text}\n\n"
+        
+        return all_results_dict | {"file_name" : self.file_name, "date" : timestamp}
