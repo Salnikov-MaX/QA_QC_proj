@@ -322,6 +322,6 @@ class QA_QC_gis(QA_QC_main):
 
         if get_report: print('\n'+report_text+self.delimeter)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_physical_correctness:\n{report_text}\n\n"
+        self.report_text += f"{timestamp:10} / test_surface_bounds_incoming:\n{report_text}\n\n"
         
         return all_results_dict | {"file_name" : self.file_name, "date" : timestamp}
