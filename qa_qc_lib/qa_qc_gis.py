@@ -1,7 +1,6 @@
 import lasio
 import pandas as pd
 import numpy as np
-import datetime
 import re
 from .qa_qc_main import QA_QC_main
 from .qa_qc_tools.gis_tools import *
@@ -196,11 +195,10 @@ class QA_QC_gis(QA_QC_main):
 
                 # Формируем отчет
                 all_results_dict[gis] = results_dict
-                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_physical_correctness:\n{report_text}\n\n"
+                self.update_report(report_text)
                 if get_report: print('\n'+report_text+self.delimeter)
         
-        return all_results_dict | {"file_name" : self.file_name, "date" : timestamp}
+        return all_results_dict | {"file_name" : self.file_name}
 
 
     def test_missing_intervals(self, get_report=True) -> dict:
@@ -236,12 +234,10 @@ class QA_QC_gis(QA_QC_main):
             results_dict['result'] = result
             results_dict['report_text'] = report_text
             all_results_dict[gis_name] = results_dict
-
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_missing_intervals:\n{report_text}\n\n"
+            self.update_report(report_text)
             if get_report: print('\n'+report_text+self.delimeter)
             
-        return all_results_dict | {"file_name" : self.file_name, "date" : timestamp}
+        return all_results_dict | {"file_name" : self.file_name}
 
 
     def test_repeat(self, get_report=True) -> dict:
@@ -283,10 +279,9 @@ class QA_QC_gis(QA_QC_main):
             report_text = self.generate_report_text(text, 1)
             if get_report: print('\n'+report_text+self.delimeter)
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_repeat:\n{report_text}\n\n"
+        self.update_report(report_text)
         
-        return all_results_dict | {"file_name" : self.file_name, "date" : timestamp}
+        return all_results_dict | {"file_name" : self.file_name}
 
 
     def test_surface_bounds_incoming(self, get_report=True) -> dict:
@@ -327,7 +322,6 @@ class QA_QC_gis(QA_QC_main):
             report_text = self. generate_report_text(text, 2)
 
         if get_report: print('\n'+report_text+self.delimeter)
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_surface_bounds_incoming:\n{report_text}\n\n"
+        self.update_report(report_text)
         
-        return all_results_dict | {"file_name" : self.file_name, "date" : timestamp}
+        return all_results_dict | {"file_name" : self.file_name}

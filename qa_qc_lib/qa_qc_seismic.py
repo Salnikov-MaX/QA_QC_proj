@@ -1,7 +1,6 @@
 import segyio
 import numpy as np
 from shapely.geometry import Polygon, Point
-import datetime
 from .qa_qc_main import QA_QC_main
 from .qa_qc_tools.seismic_tools import *
 from .qa_qc_tools.math_tools import compute_variance
@@ -162,9 +161,8 @@ class QA_QC_seismic(QA_QC_main):
                 visualize_intersection(self.cube_poly, polygon2, intersection_area, report_text)
                 print(self.delimeter) 
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_coordinate_validation:\n{report_text}\n\n"
-        return all_results_dict | {"file_name": self.file_name, "date": timestamp}
+        self.update_report(report_text)
+        return all_results_dict | {"file_name": self.file_name}
 
 
     def test_monotony(self, get_report=True) -> dict:
@@ -190,11 +188,10 @@ class QA_QC_seismic(QA_QC_main):
             text = 'Отметки оси глубин/времени не возрастают монотонно'
             report_text = self.generate_report_text(text, 0)
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_monotony:\n{report_text}\n\n"
+        self.update_report(report_text)
         if get_report: print('\n'+report_text+self.delimeter)
 
-        return {"result": result, "wrong_values": ~result_mask, "file_name": self.file_name, "date": timestamp}
+        return {"result": result, "wrong_values": ~result_mask, "file_name": self.file_name}
 
 
     def test_miss_traces(self, get_report=True) -> dict:
@@ -221,15 +218,14 @@ class QA_QC_seismic(QA_QC_main):
         text = f'Сейсмические трассы присутствуют в {percent_false}% случаев, отсутствуют в {percent_true}%'
         report_text = self.generate_report_text(text, test_result)
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_miss_traces:\n{report_text}\n\n"
+        self.update_report(report_text)
 
         mask_2d = mask.reshape((self.seismic_cube.shape[0], self.seismic_cube.shape[1]))
         if get_report: 
             visualize_miss_traces(mask_2d, percent_false)
             print(self.delimeter)
 
-        return {"result": result, "wrong_values": mask_2d, "file_name": self.file_name, "date": timestamp}
+        return {"result": result, "wrong_values": mask_2d, "file_name": self.file_name}
 
 
     def test_surfaces_location_validation(self, get_report=True) -> dict:
@@ -254,8 +250,7 @@ class QA_QC_seismic(QA_QC_main):
         # Проверка наличия данных для проведения теста
         if not self.surfaces_path_list:
             report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о поверхностях не были переданы'
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
+            self.update_report(report_text)
             if get_report: print('\n'+report_text+self.delimeter)
             all_results_dict['data availability'] = False 
         
@@ -285,19 +280,17 @@ class QA_QC_seismic(QA_QC_main):
                     report_text = self.generate_report_text(text, 1 if test_result else 0)
                     if not test_result: report_text = report_text + f' (совпадение по X,Y:{x_y_coords_validation}, по вертикальной шкале:{z_coords_validation})'
 
-                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
+                    self.update_report(report_text)
                     if get_report: print('\n'+report_text+self.delimeter)
 
                 except FileNotFoundError: 
                     results_dict['x_y_coords_validation'], results_dict['z_coords_validation'] = 'Fail', 'Fail'
                     report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{path}"'
-                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
+                    self.update_report(report_text)
                     if get_report: print('\n'+report_text+self.delimeter)
 
                 all_results_dict[name] = results_dict
-        return all_results_dict | {"date" : timestamp}
+        return all_results_dict 
 
 
     def test_faults_location_validation(self, get_report=True) -> dict:
@@ -322,8 +315,7 @@ class QA_QC_seismic(QA_QC_main):
             text = f'Данные о разломах не были переданы'
             report_text = self.generate_report_text(text, 2)
 
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
+            self.update_report(report_text)
             if get_report: print('\n'+report_text+self.delimeter) 
             all_results_dict['data availability'] = False
         
@@ -357,20 +349,17 @@ class QA_QC_seismic(QA_QC_main):
                     report_text = self.generate_report_text(text, 1 if test_result else 0)
 
 
-                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
+                    self.update_report(report_text)
                     if get_report: print('\n'+report_text+self.delimeter)
 
             except FileNotFoundError:
                 all_results_dict['data availability'] = False 
                 text = f'Некорректный путь к файлу:"{self.faults_file_path}"'
                 report_text = self.generate_report_text(text, 2)
-
-                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
+                self.update_report(report_text)
                 if get_report: print('\n'+report_text+self.delimeter)
         
-        return all_results_dict | {"date" : timestamp}
+        return all_results_dict 
 
 
     def test_edge_zone_evaluation(self, get_report=True) -> dict:
@@ -416,9 +405,8 @@ class QA_QC_seismic(QA_QC_main):
         text = f'Ширина краевой зоны оценена в {split_point+1} дискретов сейсмического куба'
         report_text = self.generate_report_text(text, 1)
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_edge_zone_evaluation:\n{report_text}\n\n"
-        return {'variance_list': variance_list, 'split_point': split_point, 'edge_zone_mask': edge_zone_mask, "file_name": self.file_name, "date": timestamp}
+        self.update_report(report_text)
+        return {'variance_list': variance_list, 'split_point': split_point, 'edge_zone_mask': edge_zone_mask, "file_name": self.file_name}
 
 
     def test_surfaces_values_validation(self, get_report=True) -> dict: 
@@ -445,8 +433,7 @@ class QA_QC_seismic(QA_QC_main):
             text = f'Данные о поверхностях не были переданы'
             report_text = self.generate_report_text(text, 2)
 
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{report_text}\n\n"
+            self.update_report(report_text)
             if get_report: print('\n'+report_text+self.delimeter)
             all_results_dict['data availability'] = False 
         
@@ -493,13 +480,11 @@ class QA_QC_seismic(QA_QC_main):
                         if get_report: 
                             visualize_seismic_slice(map_df, name)
                             print(self.delimeter)
-
              
                     text = f'Путь к файлу:"{path}";' + result_text
                     report_text = self.generate_report_text(text, 1 if test_result else 0)
 
-                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{report_text}\n\n"
+                    self.update_report(report_text)
                     if get_report and empty_df: print('\n'+report_text+self.delimeter)
                     
                     results_dict['result'] = test_result
@@ -510,12 +495,11 @@ class QA_QC_seismic(QA_QC_main):
                     text = f'Некорректный путь к файлу:"{path}"'
                     report_text = self.generate_report_text(text, 2)
 
-                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{report_text}\n\n"
+                    self.update_report(report_text)
                     if get_report: print('\n'+report_text+self.delimeter)
 
                 all_results_dict[name] = results_dict
-        return all_results_dict | {"date" : timestamp}
+        return all_results_dict
 
 
     def test_surfaces_dept_validation(self, get_report=True) -> dict: 
@@ -539,8 +523,7 @@ class QA_QC_seismic(QA_QC_main):
             text = f'Данные о поверхностях не были переданы'
             report_text = self.generate_report_text(text, 2)
 
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_surfaces_dept_validation:\n{report_text}\n\n"
+            self.update_report(report_text)
             if get_report: print('\n'+report_text+self.delimeter)
             all_results_dict['data availability'] = False 
         
@@ -578,11 +561,10 @@ class QA_QC_seismic(QA_QC_main):
                 
                 all_results_dict[names[i-1]] = results_dict
                 
-                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_surfaces_dept_validation:\n{report_text}\n\n"
+                self.update_report(report_text)
                 if get_report: print('\n'+report_text+self.delimeter)
 
             if err_files: print(f'Не удалось найти следующие файлы: {err_files}') 
             all_results_dict['files not found'] = err_files
 
-        return all_results_dict | {"date" : timestamp}
+        return all_results_dict 

@@ -71,9 +71,9 @@ class QA_QC_main():
 
 
     def update_report(self, report_text):
-        caller_method_name = inspect.stack()[1][3] # получаем имя метода из которого вызван текущий
+        caller_method_name = inspect.stack()[1][3] # получаем имя метода из которого вызван текущий (название теста)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / {caller_method_name}:\n{self.ident}{report_text}\n\n"
+        self.report_text += f"{timestamp:10} / {caller_method_name}:\n{report_text}\n\n"
 
 
     def generate_report_text(self, text, status):
