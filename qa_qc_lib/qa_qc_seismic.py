@@ -138,7 +138,8 @@ class QA_QC_seismic(QA_QC_main):
         if self.coordinate_x is None or self.coordinate_y is None or self.license_area_poly is None:
             coordinate_existence = self.coordinate_x is not None or self.coordinate_y is not None
             license_area_poly_existence = self.license_area_poly is not None
-            report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Наличие координат:{coordinate_existence}, Наличие границ лицензионного участка:{license_area_poly_existence}'
+            text = f'Наличие координат:{coordinate_existence}, Наличие границ лицензионного участка:{license_area_poly_existence}'
+            report_text = self.generate_report_text(text, 2)
             if get_report: print('\n'+report_text+self.delimeter) 
             all_results_dict["result"] = 'Fail'
         # Непосредственно проведение теста
@@ -147,12 +148,14 @@ class QA_QC_seismic(QA_QC_main):
             if self.cube_poly.intersects(polygon2):
                 intersection_area = self.cube_poly.intersection(polygon2)
                 percentage_inside = (intersection_area.area / self.cube_poly.area) * 100
-                report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}Процент вхождения сейсмического куба в границы лицензионного участка {round(percentage_inside, 2)}%"
+                text = f'Процент вхождения сейсмического куба в границы лицензионного участка {round(percentage_inside, 2)}%'
+                report_text = self.generate_report_text(text, 1)
                 all_results_dict["result"] = 'True'
 
             else:
                 intersection_area, percentage_inside = None, None
-                report_text = f"{self.ident}Тест не пройден. \n{self.ident}Сейсмический куб не входит в границы лицензионного участка"
+                text = f'Сейсмический куб не входит в границы лицензионного участка'
+                report_text = self.generate_report_text(text, 0)
                 all_results_dict["result"] = 'False'
             
             if get_report: 
@@ -181,9 +184,11 @@ class QA_QC_seismic(QA_QC_main):
         result_mask = np.insert(result_mask, 0, False)
         result = sum(result_mask) == 0
         if result:
-            report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}Отметки оси глубин/времени монотонно возрастают"
+            text = 'Отметки оси глубин/времени монотонно возрастают'
+            report_text = self.generate_report_text(text, 1)
         else:
-            report_text = f"{self.ident}Тест не пройден. \n{self.ident}Отметки оси глубин/времени не возрастают монотонно"
+            text = 'Отметки оси глубин/времени не возрастают монотонно'
+            report_text = self.generate_report_text(text, 0)
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_monotony:\n{report_text}\n\n"
@@ -212,8 +217,10 @@ class QA_QC_seismic(QA_QC_main):
         percent_false = 100 - percent_true
         result = percent_false == 100
 
-        test_result = 'Тест пройден успешно.' if result else 'Тест не пройден.'
-        report_text = f'{self.ident}{test_result}\n{self.ident}Сейсмические трассы присутствуют в {percent_false}% случаев, отсутствуют в {percent_true}%'
+        test_result = 1 if result else 0
+        text = f'Сейсмические трассы присутствуют в {percent_false}% случаев, отсутствуют в {percent_true}%'
+        report_text = self.generate_report_text(text, test_result)
+
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_miss_traces:\n{report_text}\n\n"
 
@@ -273,10 +280,11 @@ class QA_QC_seismic(QA_QC_main):
 
                     # формируем отчет о прохождении теста
                     test_result = x_y_coords_validation and z_coords_validation
-                    text = 'Тест пройден успешно.' if test_result else 'Тест не пройден.'
-                    text_2 = '' if test_result else 'не '
-                    report_text = f'{self.ident}{text}\n{self.ident}Путь к файлу:"{path}"; отражающий горизонт {text_2}попадает в границы сейсмического куба'
+                    res_text = '' if test_result else 'не '
+                    text = f'Путь к файлу:"{path}"; отражающий горизонт {res_text}попадает в границы сейсмического куба'
+                    report_text = self.generate_report_text(text, 1 if test_result else 0)
                     if not test_result: report_text = report_text + f' (совпадение по X,Y:{x_y_coords_validation}, по вертикальной шкале:{z_coords_validation})'
+
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     self.report_text += f"{timestamp:10} / test_surfaces_location_validation:\n{report_text}\n\n"
                     if get_report: print('\n'+report_text+self.delimeter)
@@ -311,7 +319,9 @@ class QA_QC_seismic(QA_QC_main):
         all_results_dict = {}
         # Проверка наличия данных для проведения теста
         if not self.faults_file_path:
-            report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о разломах не были переданы'
+            text = f'Данные о разломах не были переданы'
+            report_text = self.generate_report_text(text, 2)
+
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
             if get_report: print('\n'+report_text+self.delimeter) 
@@ -337,22 +347,25 @@ class QA_QC_seismic(QA_QC_main):
                     income_points_percent = round((sum(res) * 100 / len(res)), 2)
                     test_result = income_points_percent != 0
 
-                    # results_dict['x_y_coords_validation'] = str(x_y_coords_validation)
-                    # results_dict['z_coords_validation'] = str(z_coords_validation)
                     results_dict['income_points_percent'] = income_points_percent
                     all_results_dict[key] = results_dict
 
                     # формируем отчет о прохождении теста
                     test_result = x_y_coords_validation and z_coords_validation
-                    text = 'Тест пройден успешно.' if test_result else 'Тест не пройден.'
-                    report_text = f'{self.ident}{text}\n{self.ident}Разлом:"{key}"; {income_points_percent}% точек разлома из {len(points)} входит в границы сейсмического куба'
+                    
+                    text = f'Разлом:"{key}"; {income_points_percent}% точек разлома из {len(points)} входит в границы сейсмического куба'
+                    report_text = self.generate_report_text(text, 1 if test_result else 0)
+
+
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
                     if get_report: print('\n'+report_text+self.delimeter)
 
             except FileNotFoundError:
                 all_results_dict['data availability'] = False 
-                report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{self.faults_file_path}"'
+                text = f'Некорректный путь к файлу:"{self.faults_file_path}"'
+                report_text = self.generate_report_text(text, 2)
+
                 timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 self.report_text += f"{timestamp:10} / test_faults_location_validation:\n{report_text}\n\n"
                 if get_report: print('\n'+report_text+self.delimeter)
@@ -400,7 +413,9 @@ class QA_QC_seismic(QA_QC_main):
             visualize_edge_zone_evaluation(edge_zone_mask, variance_list, split_point)
             print(self.delimeter)
         # Логирование результата
-        report_text = f'{self.ident}Тест пройден успешно.\n{self.ident}Ширина краевой зоны оценена в {split_point+1} дискретов сейсмического куба'
+        text = f'Ширина краевой зоны оценена в {split_point+1} дискретов сейсмического куба'
+        report_text = self.generate_report_text(text, 1)
+
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.report_text += f"{timestamp:10} / test_edge_zone_evaluation:\n{report_text}\n\n"
         return {'variance_list': variance_list, 'split_point': split_point, 'edge_zone_mask': edge_zone_mask, "file_name": self.file_name, "date": timestamp}
@@ -427,7 +442,9 @@ class QA_QC_seismic(QA_QC_main):
         all_results_dict = {}
         # Проверка наличия данных для проведения теста
         if not self.surfaces_path_list:
-            report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о поверхностях не были переданы'
+            text = f'Данные о поверхностях не были переданы'
+            report_text = self.generate_report_text(text, 2)
+
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{report_text}\n\n"
             if get_report: print('\n'+report_text+self.delimeter)
@@ -477,8 +494,10 @@ class QA_QC_seismic(QA_QC_main):
                             visualize_seismic_slice(map_df, name)
                             print(self.delimeter)
 
-                    text = 'Тест пройден успешно.' if test_result else 'Тест не пройден.'
-                    report_text = f'{self.ident}{text}\n{self.ident}Путь к файлу:"{path}";' + result_text
+             
+                    text = f'Путь к файлу:"{path}";' + result_text
+                    report_text = self.generate_report_text(text, 1 if test_result else 0)
+
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{report_text}\n\n"
                     if get_report and empty_df: print('\n'+report_text+self.delimeter)
@@ -488,7 +507,9 @@ class QA_QC_seismic(QA_QC_main):
     
                 except FileNotFoundError: 
                     results_dict['x_y_coords_validation'], results_dict['z_coords_validation'] = 'Fail', 'Fail'
-                    report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Некорректный путь к файлу:"{path}"'
+                    text = f'Некорректный путь к файлу:"{path}"'
+                    report_text = self.generate_report_text(text, 2)
+
                     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     self.report_text += f"{timestamp:10} / test_surfaces_values_validation:\n{report_text}\n\n"
                     if get_report: print('\n'+report_text+self.delimeter)
@@ -515,7 +536,9 @@ class QA_QC_seismic(QA_QC_main):
         all_results_dict = {}
         # Проверка наличия данных для проведения теста
         if not self.surfaces_path_list:
-            report_text = f'{self.ident}Отсутствуют данные для проведения теста.\n{self.ident}Данные о поверхностях не были переданы'
+            text = f'Данные о поверхностях не были переданы'
+            report_text = self.generate_report_text(text, 2)
+
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.report_text += f"{timestamp:10} / test_surfaces_dept_validation:\n{report_text}\n\n"
             if get_report: print('\n'+report_text+self.delimeter)
@@ -544,12 +567,12 @@ class QA_QC_seismic(QA_QC_main):
                 if not non_conformity.empty:
                     percent_mismatch = (non_conformity.shape[0] / merged.shape[0]) * 100
                     text = f'Нижележащая структурная карта "{names[i]}" оказалась выше вышележащей структурной карты "{names[i-1]}" (несоответствие на {percent_mismatch:.2f}% площади)'
-                    report_text = f"{self.ident}Тест не пройден. \n{self.ident}{text}"
+                    report_text = self.generate_report_text(text, 0)
                     results_dict['result'] = False
                     results_dict['result report'] = text
                 else:
                     text = f'Нижележащая структурная карта "{names[i]}" оказалась ниже вышележащей структурной карты "{names[i-1]}"'
-                    report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}{text}"
+                    report_text = self.generate_report_text(text, 1)
                     results_dict['result'] = True
                     results_dict['result report'] = text
                 

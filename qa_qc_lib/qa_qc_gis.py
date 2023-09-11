@@ -179,9 +179,11 @@ class QA_QC_gis(QA_QC_main):
                     result = test_result_mask.all()
                     results_dict['result'] = str(result)
                     if result:
-                        report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}Значения коротажа {gis} физически корректны"
+                        text = f'Значения коротажа {gis} физически корректны'
+                        report_text = self.generate_report_text(text, 1)
                     else:
-                        report_text = f"{self.ident}Тест не пройден. \n{self.ident}Значения коротажа {gis} физически не корректны"
+                        text = f'Значения коротажа {gis} физически не корректны'
+                        report_text = self.generate_report_text(text, 0)
                     
                     # Добавим предупреждение о том, что данные проверялись только на условие "> 0", что может оказаться не всегда корректно
                     if mult_dict == 'another gis':
@@ -189,7 +191,9 @@ class QA_QC_gis(QA_QC_main):
                 
                 except KeyError:
                     results_dict['result'] = 'Fail'
-                    report_text = f"{self.ident}Тест не пройден. \n{self.ident}Неизвестная размерность данных {self.units_dict[gis]} для {gis}"
+                    text = f'Неизвестная размерность данных {self.units_dict[gis]} для {gis}'
+                    report_text = self.generate_report_text(text, 2)
+
                 # Формируем отчет
                 all_results_dict[gis] = results_dict
                 timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -222,11 +226,12 @@ class QA_QC_gis(QA_QC_main):
                 result = False
                 missing_intervals_dept = [(self.las_df.index[m_i_i[0]], self.las_df.index[m_i_i[1]]) for m_i_i in missing_intervals_ind]
                 text = f'"{gis_name}": выявлены пропуски на следующих интервалах глубин:{missing_intervals_dept}'
-                report_text = f"{self.ident}Тест не пройден. \n{self.ident}{text} "
+                report_text = self.generate_report_text(text, 0)
+    
             else:
                 result = True
                 text = f'"{gis_name}": пропуски в данных отсутствуют'
-                report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}{text} "
+                report_text = self.generate_report_text(text, 1)
             
             results_dict['result'] = result
             results_dict['report_text'] = report_text
@@ -272,10 +277,10 @@ class QA_QC_gis(QA_QC_main):
 
             all_results_dict['duplicates'] = duplicates
             text = f"Найдены дубликаты следующих ГИС: {', '.join(duplicates)}"
-            report_text = f"{self.ident}Тест не пройден. \n{self.ident}{text} "
+            report_text = self.generate_report_text(text, 0)
         else:
             text = 'Дубликатов ГИС в данных не найдено'
-            report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}{text} "
+            report_text = self.generate_report_text(text, 1)
             if get_report: print('\n'+report_text+self.delimeter)
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -309,16 +314,17 @@ class QA_QC_gis(QA_QC_main):
 
             if result:
                 text = 'Отметки пластопересечений входят в интервал проведения ГИС'
-                report_text = f"{self.ident}Тест пройден успешно. \n{self.ident}{text} " 
+                report_text = self. generate_report_text(text, 1)
 
             else:
                 text = f"Отметки пластопересечений не входят в интервал проведения ГИС"
+                report_text = self. generate_report_text(text, 0)
                 report_text = f"{self.ident}Тест не пройден. \n{self.ident}{text} "
 
         else:
             all_results_dict['result'] = 'Fail'
             text = f"Файл с отметки пластопересечений отсутствует"
-            report_text = f"{self.ident}Отсутствуют данные для проведения теста. \n{self.ident}{text}"
+            report_text = self. generate_report_text(text, 2)
 
         if get_report: print('\n'+report_text+self.delimeter)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

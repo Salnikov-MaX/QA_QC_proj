@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def find_missing_intervals(arr:np.array) -> list:
     """
@@ -16,7 +17,7 @@ def find_missing_intervals(arr:np.array) -> list:
     # Формируем список кортежей с началом и концом каждого участка с пропущенными значениями
     missing_ranges = [(split_indices[i], split_indices[i + 1]-1) for i in range(0, len(split_indices) - 1, 2)]
     return missing_ranges
-    
+
 
 def find_depths_with_multiple_logs(df, logs):
     """
