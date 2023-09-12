@@ -107,7 +107,7 @@ class QA_QC_cubes(QA_QC_main):
         self.generate_test_report(file_name=self.__class__.__name__, file_path="../../report", data_name=file_path)
 
 
-    def test_integer_data(self, file_path: str):
+    def test_range_integer_data(self, file_path: str):
         data, key_petrel, err = QA_QC_grdecl_parser(self.grid_file, file_path=file_path).Get_Model()
         if err is not None:
             self.update_report(self.generate_report_text(err.message, Type_Status.NotRunning))
@@ -121,8 +121,26 @@ class QA_QC_cubes(QA_QC_main):
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
             self.update_report(self.generate_report_text(
+                f"Данные \n {self.__pars_wrong_values(wrong_data)}  не равняются 0 или 1",
+                Type_Status.NotPassed))
+
+    def test_integer_data(self, file_path: str):
+        data, key_petrel, err = QA_QC_grdecl_parser(self.grid_file, file_path=file_path).Get_Model()
+        if err is not None:
+            self.update_report(self.generate_report_text(err.message, Type_Status.NotRunning))
+            return
+
+        flag, wrong_data = self.__test_range_data(
+            data.GRDECL_Data.SpatialDatas[SupportTypePetrelDict[key_petrel]],
+            [lambda x: x % 1 != 0])
+
+        if flag:
+            self.update_report(self.generate_report_text("", Type_Status.Passed.value))
+        else:
+            self.update_report(self.generate_report_text(
                 f"Данные \n {self.__pars_wrong_values(wrong_data)}  не целочисленные",
                 Type_Status.NotPassed))
 
         self.generate_test_report(file_name=self.__class__.__name__, file_path="../../report", data_name=file_path)
+
 QA_QC_cubes("../../data/grdecl_data/GRID.GRDECL").test_open_porosity("../../data/grdecl_data/input/Poro.GRDECL.grdecl")
