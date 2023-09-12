@@ -35,14 +35,14 @@ class QA_QC_cubes(QA_QC_main):
             result += f"value:{wrong_list[0][i]} " + f"index: {wrong_list[1][i]}\n"
         return result
 
-    def __test_range_data(self, array: np.array, lambda_list: list[any]) -> tuple[
+    def __test_porosity(self, array: np.array) -> tuple[
         bool,
         list[
             list[int or float],
             list[int]
         ] or None]:
 
-        mask_array = (sum(func(array) for func in lambda_list)).astype(dtype=bool)
+        mask_array = (array < 0) + (array > 0.476)
 
         if not any(mask_array):
             return True, None
@@ -115,7 +115,7 @@ class QA_QC_cubes(QA_QC_main):
 
         flag, wrong_data = self.__test_range_data(
             data.GRDECL_Data.SpatialDatas[SupportTypePetrelDict[key_petrel]],
-            [lambda x: x == 0, lambda x: x == 1])
+            [lambda x: x == 0])
 
         if flag:
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
