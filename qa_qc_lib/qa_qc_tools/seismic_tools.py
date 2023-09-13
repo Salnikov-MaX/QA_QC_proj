@@ -112,6 +112,20 @@ def find_closest_indices_z(z_coords, target_z_array):
     return indices
 
 
+def read_faults(path):
+    data = []
+    with open(path, 'r') as fault:
+        for line in fault:
+            words = line.strip().split()
+            data.append(words)
+
+    df = pd.DataFrame(data)
+    for column in [3,4,5,7]:
+        df[column] = df[column].astype(float)
+        
+    return df
+
+
 #########################################################################################################
 ######################################| ФУНКЦИИ ДЛЯ ВИЗУАЛИЗАЦИИ |#######################################
 #########################################################################################################

@@ -348,7 +348,6 @@ class QA_QC_seismic(QA_QC_main):
                     text = f'Разлом:"{key}"; {income_points_percent}% точек разлома из {len(points)} входит в границы сейсмического куба'
                     report_text = self.generate_report_text(text, 1 if test_result else 0)
 
-
                     self.update_report(report_text)
                     if get_report: print('\n'+report_text+self.delimeter)
 
@@ -364,7 +363,7 @@ class QA_QC_seismic(QA_QC_main):
 
     def test_edge_zone_evaluation(self, get_report=True) -> dict:
         """
-        Метод для оценку ширины краевой зоны сейсмического куба
+        Метод для оценки ширины краевой зоны сейсмического куба
 
         Required data:
             self.seismic_cube (np.ndarray): сейсмический куб
@@ -566,5 +565,50 @@ class QA_QC_seismic(QA_QC_main):
 
             if err_files: print(f'Не удалось найти следующие файлы: {err_files}') 
             all_results_dict['files not found'] = err_files
+
+        return all_results_dict 
+
+
+    def test_pillar_quantity(self, get_report=True) -> dict: 
+        """
+        Метод оценивает пилары на условие того, что они состоят более чем из одной точки
+
+        Required data:
+            self.faults_file_path (str): путь к файлу с координатами разломов
+            
+        Args:
+            get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+
+        Returns:
+            dict: Словарь с ключевыми данными о прохождении теста
+        """        
+        all_results_dict = {}
+        if not self.faults_file_path:
+            text = f'Данные о разломах не были переданы'
+            report_text = self.generate_report_text(text, 2)
+            all_results_dict['data availability'] = False
+
+        else:
+            df, err_faults = read_faults(self.faults_file_path), [] 
+
+            for fault_name in df[6].unique():
+                # Проверка наличия пилара с одной точкой
+                current_fault_df = df[df[6] == fault_name]
+                value_counts = current_fault_df[7].value_counts()
+                if (value_counts < 2).any(): err_faults.append(fault_name)
+
+            if err_faults:
+                result = False
+                text = f'В следующих разломах найдены пилары с 1 точкой: {", ".join(err_faults)}'
+            else:
+                result = True
+                text = 'Все пиллары в разломах содержат более чем 1 точку'
+
+            report_text = self.generate_report_text(text, 1 if result else 0)
+            all_results_dict['result'] = result
+            all_results_dict['error faults'] = err_faults
+
+        if get_report: print('\n'+report_text+self.delimeter)
+        self.update_report(report_text)
 
         return all_results_dict 

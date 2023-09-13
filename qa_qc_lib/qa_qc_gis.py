@@ -20,7 +20,8 @@ class QA_QC_gis(QA_QC_main):
             income_list = [name in self.well_tops_df.columns for name in ["Surface", "X", "Y", "Z", "MD"]]
             assert all(income_list), 'В файле отсутствуют ожидаемые колонки ("Surface", "X", "Y", "Z", "MD" ), убедитесь в корректности файла'
 
-        self.__mnemonics = {'SP'   : ['SP', 'PS', 'ПС', 'СП', 'PS_1', 'PS_2'],
+        self.__mnemonics = {
+                            'SP'   : ['SP', 'PS', 'ПС', 'СП', 'PS_1', 'PS_2'],
                             'GR'   : ['GR', 'GK', 'ГК', 'ECGR', 'GK_1', 'GK_2'],
                             'DS'   : ['DS', 'CALI', 'HCAL', 'CALIP', 'DCAV', 'DSN', 'DS_1', 'DS2'],
                             'MDS'  : ['MCAL', 'MDS'],
@@ -186,7 +187,7 @@ class QA_QC_gis(QA_QC_main):
                     
                     # Добавим предупреждение о том, что данные проверялись только на условие "> 0", что может оказаться не всегда корректно
                     if mult_dict == 'another gis':
-                        report_text += ' (Внимание, для этого ГИС проводилась проверка только на положительность значений)'
+                        report_text += ' (Внимание, кривая ГИС проверялась только на наличие положительных значений)'
                 
                 except KeyError:
                     results_dict['result'] = 'Fail'
