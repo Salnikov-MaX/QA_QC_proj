@@ -10,18 +10,25 @@ class DataPreprocessing:
         self.failed_tests = {}
         self.headers = [
             "Лабораторный номер", "Кровля интервала отбора", "Подошва интервала отбора",
-            "Эффективная проницаемость", "Параметр насыщения",
+            "Эффективная проницаемость",
             "Место отбора (ниже кровли), м", "Глубина отбора, м",
-            "Вынос керна, м", "Вынос керна, %", "Ск %", "Открытая пористость по жидкости",
+            "Вынос керна", "Вынос керна, %", "Карбонатность", "Кп откр",
             "Открытая пористость по газу",
-            "Открытая пористость в пластовых условиях", "Открытая пористость по керосину", "Кпр_газ(гелий)",
-            "Параметр пористости", "So",
-            "Кво", "Плотность абсолютно сухого образца", "Рн",
-            "Sw", "Газопроницаемость, mkm2 (parallel)", "Газопроницаемость по Кликенбергу",
-            "Объемная плотность", "Минералогическая плотность", "Ск", "Газопроницаемость по воде",
-            "Плотность максимально увлажненного образца","Эффективная пористость",
-            "Упругие свойства","Критическая нефтенасыщенность","Sgl","Sogcr "
-            "Примечание", "Направление"
+            "Кп_откр_TBU", "Открытая пористость по керосину", "Кпр_газ(гелий)",
+            "Параметр пористости(F)", "So",
+            "Кво", "Плотность абсолютно сухого образца", "Параметр насыщенности(RI)",
+            "Sw", "Кпр абс", "Газопроницаемость по Кликенбергу",
+            "Объемная плотность", "Минералогическая плотность", "Газопроницаемость по воде",
+            "Плотность максимально увлажненного образца",
+            "Скорость продольной волны(Vp)", "Кно(Sowcr)", "Sgl", "Sogcr ",
+            "Примечание(в керне)", "Направление измерений(// ⊥)",
+            "Описание керна",
+            "Кпр абс Z", "Кпр абс Y", "Sg", "Данные фракционного потока", "Сопротивление пластовой воды(Rw)",
+            "Ro_matrix", "Константы уравнения Арчи", "Константы уравнения Humble",
+            "Химический состав природных вод и температура пласта",
+            "Cut-off водонасыщенность", "Cut-off проницаемость", "Cut-off пористость",
+            "Cut-off глинистость", "Смачиваемость,угол смачиваемости",
+            "Кпр фазовая", "Кпр отн", "Водородосодержание глин", "Капиллярометрия", "Литотип", "Фации",
         ]
         self.parallel_density = []
         self.parallel_porosity = []
@@ -53,9 +60,9 @@ class DataPreprocessing:
         :return: array[string] - список возможных тестов
         '''
         self.df_result = pd.DataFrame(columns=self.headers)
-        #получаем название столбца и путь, откуда его брать
+        # получаем название столбца и путь, откуда его брать
         for col_name, file_col_list in columns_mapping.items():
-            #делим путь до файла и название колонки в файлах пользователя
+            # делим путь до файла и название колонки в файлах пользователя
             for file_col in file_col_list:
                 file_path, col_name_in_file = file_col.split("->")
                 if not os.path.exists(file_path):
@@ -71,9 +78,10 @@ class DataPreprocessing:
                     continue
 
                 self.df_result.loc[:, col_name] = data[col_name_in_file]
-        #сортируем df так, чтобы все пустые колонки были справа
+        # сортируем df так, чтобы все пустые колонки были справа
         column_order = np.concatenate(
-            [self.df_result.columns[~self.df_result.isna().all(axis=0)], self.df_result.columns[self.df_result.isna().all(axis=0)]])
+            [self.df_result.columns[~self.df_result.isna().all(axis=0)],
+             self.df_result.columns[self.df_result.isna().all(axis=0)]])
         self.df_result = self.df_result[column_order]
         columns_with_data = []
 
@@ -94,22 +102,23 @@ class DataPreprocessing:
             for test in tests.items():
                 for t in test[-1]:
                     test_array.add(t)
-        #в случае, если необходимы тесты связанные с напрвалением
-        if self.df_result["Направление"].notna().any() and\
-                self.df_result["Ск"].notna().any() and\
-                self.df_result["Лабораторный номер"].notna().any() and\
-                self.df_result["Открытая пористость по жидкости"].notna().any() and\
+        # в случае, если необходимы тесты связанные с напрвалением
+        if self.df_result["Направление измерений(// ⊥)"].notna().any() and \
+                self.df_result["Карбонатность"].notna().any() and \
+                self.df_result["Лабораторный номер"].notna().any() and \
+                self.df_result["Кп откр"].notna().any() and \
                 self.df_result["Плотность абсолютно сухого образца"].notna().any():
             self.parallel_data_parsing()
-        if self.df_result["Кровля интервала отбора"].notna().any() and self.df_result["Подошва интервала отбора"].notna().any():
+        if self.df_result["Кровля интервала отбора"].notna().any() and self.df_result[
+            "Подошва интервала отбора"].notna().any():
             self.interval_data_parsing()
         test_system = QA_QC_kern(pas=np.array(self.df_result["Плотность абсолютно сухого образца"]),
-                                 note=np.array(self.df_result["Примечание"]),
+                                 note=np.array(self.df_result["Примечание(в керне)"]),
                                  kno=np.array(self.df_result["So"]),
                                  kp_plast=np.array(self.df_result["Открытая пористость в пластовых условиях"]),
                                  density=np.array(self.df_result["Плотность абсолютно сухого образца"]),
                                  water_permeability=np.array(self.df_result["Газопроницаемость по воде"]),
-                                 kp_pov=np.array(self.df_result["Открытая пористость по жидкости"]),
+                                 kp_pov=np.array(self.df_result["Кп откр"]),
                                  perpendicular=np.array(self.perpendicular_number),
                                  perpendicular_porosity=np.array(self.perpendicular_porosity),
                                  perpendicular_density=np.array(self.perpendicular_density),
@@ -118,30 +127,58 @@ class DataPreprocessing:
                                  parallel_porosity=np.array(self.parallel_porosity),
                                  parallel_density=np.array(self.parallel_density),
                                  parallel_carbonate=np.array(self.parallel_carbonate),
-                                 kp=np.array(self.df_result["Открытая пористость по жидкости"]),
                                  top=np.array(self.df_result["Кровля интервала отбора"]),
                                  core_removal_in_meters=np.array(self.df_result["Вынос керна, м"]),
                                  intervals=self.interval,
                                  bottom=np.array(self.df_result["Подошва интервала отбора"]),
                                  percent_core_removal=np.array(self.df_result["Вынос керна, %"]),
-                                 outreach_in_meters=np.array(self.df_result["Вынос керна, м"]),
+                                 outreach_in_meters=np.array(self.df_result["Вынос керна"]),
                                  sw_residual=np.array(self.df_result["Кво"]),
                                  core_sampling=np.array(self.df_result["Глубина отбора, м"]),
                                  kpr=np.array(self.df_result["Кпр_газ(гелий)"]),
-                                 rp=np.array(self.df_result["Параметр пористости"]),
+                                 rp=np.array(self.df_result["Параметр пористости(F)"]),
                                  pmu=np.array(self.df_result["Плотность максимально увлажненного образца"]),
-                                 rn=np.array(self.df_result["Параметр насыщения"]),
+                                 rn=np.array(self.df_result["Параметр насыщенности(RI)"]),
                                  obplnas=np.array(self.df_result["Плотность абсолютно сухого образца"]),
                                  poroTBU=np.array(self.df_result["Открытая пористость в пластовых условиях"]),
                                  poroHe=np.array(self.df_result["Открытая пористость по газу"]),
-                                 porosity_open=np.array(self.df_result["Открытая пористость по жидкости"]),
+                                 porosity_open=np.array(self.df_result["Кп откр"]),
                                  porosity_kerosine=np.array(self.df_result["Открытая пористость по керосину"]),
-                                 porosity_effective=np.array(self.df_result["Эффективная пористость"]),
                                  sw=np.array(self.df_result["Sw"]),
-                                 parallel_permeability=np.array(self.df_result["Газопроницаемость, mkm2 (parallel)"]),
+                                 parallel_permeability=np.array(self.df_result["Кпр абс"]),
                                  klickenberg_permeability=np.array(self.df_result["Газопроницаемость по Кликенбергу"]),
                                  effective_permeability=np.array(self.df_result["Эффективная проницаемость"]),
-                                 md=np.array(self.df_result["Место отбора (ниже кровли), м"]), show=False)
+                                 md=np.array(self.df_result["Место отбора (ниже кровли), м"]),
+                                 knmng=np.array(self.df_result["Кно(Sowcr)"]),
+                                 description_kern=np.array(self.df_result["Описание керна"]),
+                                 kpr_abs_Z=np.array(self.df_result["Кпр абс Z"]),
+                                 kpr_abs_Y=np.array(self.df_result["Кпр абс Y"]),
+                                 sg=np.array(self.df_result["Sg"]),
+                                 fractional_flow_data=np.array(self.df_result["Данные фракционного потока"]),
+                                 resistance_of_plastic_water=np.array(
+                                     self.df_result["Сопротивление пластовой воды(Rw)"]),
+                                 ro_matrix=np.array(self.df_result["Ro_matrix"]),
+                                 constants_of_the_Archie_equation=np.array(self.df_result["Константы уравнения Арчи"]),
+                                 constants_equations_Humble=np.array(self.df_result["Константы уравнения Арчи"]),
+                                 chemical_composition_of_natural_water_and_reservoir_temperature=np.array(
+                                     self.df_result["Химический состав природных вод и температура пласта"]),
+                                 cut_off_water_saturation=np.array(self.df_result["Cut-off водонасыщенность"]),
+                                 cut_off_permeability=np.array(self.df_result["Cut-off проницаемость"]),
+                                 cut_off_porosity=np.array(self.df_result["Cut-off пористость"]),
+                                 cut_off_clay_content=np.array(self.df_result["Cut-off глинистость"]),
+                                 wettability_wettability_angle=np.array(
+                                     self.df_result["Смачиваемость,угол смачиваемости"]),
+                                 kpc_phase=np.array(self.df_result["Кпр фазовая"]),
+                                 kpc_r=np.array(self.df_result["Кпр отн"]),
+                                 clay_hydrogen_content=np.array(self.df_result["Водородосодержание глин"]),
+                                 transverse_wave_velocity=np.array(self.df_result["Скорость поперечной волны"]),
+                                 poissons_coefficient=np.array(self.df_result["Коэффициент Пуассона"]),
+                                 DT_matrix=np.array(self.df_result["DT_matrix"]),
+                                 capillarometry=np.array(self.df_result["Фации"]),
+                                 lithotype=np.array(self.df_result["Литотип"]),
+                                 facies=np.array(self.df_result["Капиллярометрия"]),
+
+                                 show=False)
 
         self.failed_tests = test_system.start_tests(test_array)["wrong_parameters"]
         test_system.generate_test_report()
@@ -153,18 +190,18 @@ class DataPreprocessing:
         Делит данные на параллельные и перпендикулярные
         :return:
         '''
-        direction_array = self.df_result["Направление"]
+        direction_array = self.df_result["Направление измерений(// ⊥)"]
         for idx, is_parallel in enumerate(direction_array):
             if is_parallel == 1:
                 self.parallel_density.append([self.df_result["Плотность абсолютно сухого образца"][idx], idx])
-                self.parallel_porosity.append([self.df_result["Открытая пористость по жидкости"][idx], idx])
+                self.parallel_porosity.append([self.df_result["Кп откр"][idx], idx])
                 self.parallel_number.append([self.df_result["Лабораторный номер"][idx], idx])
-                self.parallel_carbonate.append([self.df_result["Ск"][idx], idx])
+                self.parallel_carbonate.append([self.df_result["Карбонатность"][idx], idx])
             else:
                 self.perpendicular_density.append([self.df_result["Плотность абсолютно сухого образца"][idx], idx])
-                self.perpendicular_porosity.append([self.df_result["Открытая пористость по жидкости"][idx], idx])
+                self.perpendicular_porosity.append([self.df_result["Кп откр"][idx], idx])
                 self.perpendicular_number.append([self.df_result["Лабораторный номер"][idx], idx])
-                self.perpendicular_carbonate.append([self.df_result["Ск"][idx], idx])
+                self.perpendicular_carbonate.append([self.df_result["Карбонатность"][idx], idx])
 
     def interval_data_parsing(self):
         '''
@@ -193,7 +230,7 @@ class DataPreprocessing:
                         if col in self.newdic:
                             self.newdic[col].extend(indices)
                         else:
-                            self.newdic[col]=indices
+                            self.newdic[col] = indices
                         # Закрасьте ячейки в красный цвет, если индекс находится в массиве indices
                         for index in indices:
                             self.df_result.at[index, test_name] = failed_columns[-1]
