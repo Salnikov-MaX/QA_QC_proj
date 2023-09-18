@@ -2,14 +2,13 @@
 import os
 import sys
 
-from qa_qc_lib.cubes.GRDCL_parser.GRDECL_Parser import GRDECL_Parser
-from qa_qc_lib.cubes.GRDCL_parser.GRDECL2VTK import GeologyModel
+import numpy as np
+import xtgeo
 import fileinput
 
 
 class QA_QC_grdecl_parser(object):
     def __init__(self, directory_path: str, grid_name: str):
-        model = GeologyModel(filename=directory_path + "/" + grid_name + ".GRDECL")
         file_name = ["", "_ACTNUM", "_COORD", "_ZCORN"]
         with open(directory_path + "/" + "temporary.GRDECL", 'w') as outfile:
             for fname in file_name:
@@ -18,15 +17,19 @@ class QA_QC_grdecl_parser(object):
                     infile.close()
             outfile.close()
 
-        model.GRDECL_Data = GRDECL_Parser(directory_path + "/" + "temporary.GRDECL",
-                                          model.GRDECL_Data.NX,
-                                          model.GRDECL_Data.NY,
-                                          model.GRDECL_Data.NZ,
-                                          model.GRDECL_Data.GRID_type,
-                                          False)
+        self.grid = xtgeo.grid_from_file(directory_path + "/" + "temporary.GRDECL", fformat="grdecl")
         os.remove(directory_path + "/" + "temporary.GRDECL")
 
-        self.model = model
+    def add_prop(self, file_path: str, prop_name: str):
+        self.grid.append_prop(xtgeo.gridproperty_from_file(
+            file_path,
+            name=prop_name,
+            grid=self.grid,
+        ))
 
-    def Get_Model(self) -> [GeologyModel]:
-        return self.model
+    def get_prop_value(self, prop: xtgeo.GridProperty) -> np.array:
+        data = prop.get_npvalues3d()
+        data[np.isnan(data)] = 0
+        return data
+    def get_grid(self) -> xtgeo.Grid:
+        return self.grid
