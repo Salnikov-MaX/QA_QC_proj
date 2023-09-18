@@ -13,7 +13,6 @@
 
 import os
 import numpy as np
-from qa_qc_lib.error import Error, Type_Error
 
 SupportKeyWords = [
     'SPECGRID',  # Dimenion of the corner point grid
@@ -167,21 +166,13 @@ class GRDECL_Parser:
                 # print(Keyword,DataArray)
                 DataArray = parseDataArray(DataArray)
 
-            if (Keyword in SupportKeyWords):
-                if len(DataArray) != self.N:
-                    self.error = Error(type_error=Type_Error.pars_error, message=f"[Error] Incompatible {Keyword} data size! {len(DataArray)}-{self.N}")
-                    return
             # Read Grid spatial information, x,y,z ordering
             # Corner point cell
             if (Keyword == 'COORD'):  # Pillar coords
-                if len(DataArray) != 6 * (self.NX + 1) * (self.NY + 1):
-                    self.error = Error(type_error=Type_Error.pars_error, message='[Error] Incompatible COORD data size!')
-                    return
+                assert len(DataArray) == 6 * (self.NX + 1) * (self.NY + 1),'[Error] Incompatible COORD data size!'
                 self.COORD = np.array(DataArray, dtype=float)
             elif (Keyword == 'ZCORN'):  # Depth coords
-                if len(DataArray) != 8 * self.N:
-                    self.error = Error(type_error=Type_Error.pars_error, message='[Error] Incompatible ZCORN data size!')
-                    return
+                assert len(DataArray) == 8 * self.N,'[Error] Incompatible ZCORN data size!'
                 self.ZCORN = np.array(DataArray, dtype=float)
 
             # Cartesian cell
@@ -201,9 +192,8 @@ class GRDECL_Parser:
                 self.LoadVar(Keyword, DataArray, DataSize=self.N)
 
         f.close()
-        if GoodFlag != 1:
-            self.error = Error(type_error=Type_Error.pars_error,
-                               message='Can not find grid dimension info, [SPECGRID] or [DIMENS]!')
+        assert GoodFlag == 1,"Can not find grid dimension info, [SPECGRID] or [DIMENS]!'"
+
 
         print('.....Done!')
 
@@ -261,7 +251,9 @@ class GRDECL_Parser:
         Author:Bin Wang(binwang.0213@gmail.com)
         Date: Sep. 2018
         """
-        if (Keyword in SupportKeyWords):  # KeyWords Check
+        if (Keyword in SupportKeyWords):
+            assert len(DataArray) == self.N, f"[Error] Incompatible {Keyword} data size! {len(DataArray)}-{self.N}"
+            # KeyWords Check
             KeywordID = SupportKeyWords.index(Keyword)
             print('     [%s] ' % (Keyword), end='')
             self.SpatialDatas[Keyword] = np.array(DataArray, dtype=KeyWordsDatatypes[KeywordID])

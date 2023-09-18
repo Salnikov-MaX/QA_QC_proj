@@ -19,7 +19,6 @@ SupportTypePetrelDict = {
     "GOC_NP4": "ABOVECONTACT",
 }
 
-
 class QA_QC_cubes(QA_QC_main):
 
     def __init__(self, grid_path: str, logging_setting_path="../../report", logging_setting_file_name=None):
