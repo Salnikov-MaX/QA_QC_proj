@@ -35,6 +35,7 @@ def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, te
     plt.savefig(f"report\\{test_name}")
     if get_report:
         plt.show()
+    plt.close()
     return wrong_values1, wrong_values2
 
 
@@ -66,6 +67,7 @@ def expon_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, tes
     plt.savefig(f"report\\{test_name}")
     if get_report:
         plt.show()
+    plt.close()
     return wrong_values1, wrong_values2
 
 
@@ -98,6 +100,7 @@ def logarithmic_function_visualization(x, y, a, b, r2, get_report, x_name, y_nam
     plt.savefig(f"report\\{test_name}")
     if get_report:
         plt.show()
+    plt.close()
     return wrong_values1, wrong_values2
 
 

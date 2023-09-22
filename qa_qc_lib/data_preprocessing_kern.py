@@ -14,7 +14,7 @@ class DataPreprocessing:
             "Место отбора (ниже кровли), м", "Глубина отбора, м",
             "Вынос керна", "Вынос керна, %", "Карбонатность", "Кп откр",
             "Открытая пористость по газу",
-            "Кп_откр_TBU", "Открытая пористость по керосину", "Кпр_газ(гелий)",
+            "Кп откр TBU", "Открытая пористость по керосину", "Кпр_газ(гелий)",
             "Параметр пористости(F)", "So",
             "Кво", "Плотность абсолютно сухого образца", "Параметр насыщенности(RI)",
             "Sw", "Кпр абс", "Газопроницаемость по Кликенбергу",
@@ -28,7 +28,8 @@ class DataPreprocessing:
             "Химический состав природных вод и температура пласта",
             "Cut-off водонасыщенность", "Cut-off проницаемость", "Cut-off пористость",
             "Cut-off глинистость", "Смачиваемость,угол смачиваемости",
-            "Кпр фазовая", "Кпр отн", "Водородосодержание глин", "Капиллярометрия", "Литотип", "Фации",
+            "Кпр фазовая", "Кпр отн", "Водородосодержание глин", "Капиллярометрия", "Литотип", "Фации","Скорость поперечной волны (Vs)","DT_matrix",
+            "Коэффициент Пуассона"
         ]
         self.parallel_density = []
         self.parallel_porosity = []
@@ -40,6 +41,8 @@ class DataPreprocessing:
         self.interval = []
         self.perpendicular_carbonate = []
         self.df_result = []
+        self.pororsity_changed = False
+        self.kpr_changed = False
         self.newdic = {}
 
     def get_possible_tests(self, columns_with_data):
@@ -53,12 +56,12 @@ class DataPreprocessing:
         return test
 
     def process_data(self, columns_mapping):
-        '''
+        """
         Проходится по файлам и из каждого файла берет нужный столбец. Собирает единую таблицу.
 
         :param columns_mapping:- {string:string} -словарь с расшифровками колонок
         :return: array[string] - список возможных тестов
-        '''
+        """
         self.df_result = pd.DataFrame(columns=self.headers)
         # получаем название столбца и путь, откуда его брать
         for col_name, file_col_list in columns_mapping.items():
@@ -92,11 +95,11 @@ class DataPreprocessing:
         return self.get_possible_tests(columns_with_data)
 
     def start_tests(self, tests=None):
-        '''
+        """
         Запускает выбранные тесты через QA_QC_kern
         :param tests: {string:[string]}
         :return: {string:{string:[int]}}
-        '''
+        """
         test_array = set()
         if tests is not None:
             for test in tests.items():
@@ -112,13 +115,16 @@ class DataPreprocessing:
         if self.df_result["Кровля интервала отбора"].notna().any() and self.df_result[
             "Подошва интервала отбора"].notna().any():
             self.interval_data_parsing()
+        if self.pororsity_changed:
+            self.df_result["Кп откр"] = np.array([None])
+        if self.kpr_changed:
+            self.df_result["Кпр абс"] = np.array([None])
         test_system = QA_QC_kern(pas=np.array(self.df_result["Плотность абсолютно сухого образца"]),
+                                 vp = np.array(self.df_result["Скорость продольной волны(Vp)"]),
                                  note=np.array(self.df_result["Примечание(в керне)"]),
                                  kno=np.array(self.df_result["So"]),
-                                 kp_plast=np.array(self.df_result["Открытая пористость в пластовых условиях"]),
                                  density=np.array(self.df_result["Плотность абсолютно сухого образца"]),
                                  water_permeability=np.array(self.df_result["Газопроницаемость по воде"]),
-                                 kp_pov=np.array(self.df_result["Кп откр"]),
                                  perpendicular=np.array(self.perpendicular_number),
                                  perpendicular_porosity=np.array(self.perpendicular_porosity),
                                  perpendicular_density=np.array(self.perpendicular_density),
@@ -128,7 +134,7 @@ class DataPreprocessing:
                                  parallel_density=np.array(self.parallel_density),
                                  parallel_carbonate=np.array(self.parallel_carbonate),
                                  top=np.array(self.df_result["Кровля интервала отбора"]),
-                                 core_removal_in_meters=np.array(self.df_result["Вынос керна, м"]),
+                                 core_removal_in_meters=np.array(self.df_result["Вынос керна"]),
                                  intervals=self.interval,
                                  bottom=np.array(self.df_result["Подошва интервала отбора"]),
                                  percent_core_removal=np.array(self.df_result["Вынос керна, %"]),
@@ -140,7 +146,7 @@ class DataPreprocessing:
                                  pmu=np.array(self.df_result["Плотность максимально увлажненного образца"]),
                                  rn=np.array(self.df_result["Параметр насыщенности(RI)"]),
                                  obplnas=np.array(self.df_result["Плотность абсолютно сухого образца"]),
-                                 poroTBU=np.array(self.df_result["Открытая пористость в пластовых условиях"]),
+                                 poroTBU=np.array(self.df_result["Кп откр TBU"]),
                                  poroHe=np.array(self.df_result["Открытая пористость по газу"]),
                                  porosity_open=np.array(self.df_result["Кп откр"]),
                                  porosity_kerosine=np.array(self.df_result["Открытая пористость по керосину"]),
@@ -171,13 +177,13 @@ class DataPreprocessing:
                                  kpc_phase=np.array(self.df_result["Кпр фазовая"]),
                                  kpc_r=np.array(self.df_result["Кпр отн"]),
                                  clay_hydrogen_content=np.array(self.df_result["Водородосодержание глин"]),
-                                 transverse_wave_velocity=np.array(self.df_result["Скорость поперечной волны"]),
+                                 vs=np.array(self.df_result["Скорость поперечной волны (Vs)"]),
                                  poissons_coefficient=np.array(self.df_result["Коэффициент Пуассона"]),
                                  DT_matrix=np.array(self.df_result["DT_matrix"]),
                                  capillarometry=np.array(self.df_result["Фации"]),
                                  lithotype=np.array(self.df_result["Литотип"]),
                                  facies=np.array(self.df_result["Капиллярометрия"]),
-
+                                 sk=np.array(self.df_result["Карбонатность"]),
                                  show=False)
 
         self.failed_tests = test_system.start_tests(test_array)["wrong_parameters"]
@@ -185,11 +191,31 @@ class DataPreprocessing:
         self.error_flagging()
         return self.failed_tests
 
+    def porosity_parsing(self):
+        if self.df_result["Кп откр"].isna().all() and (not self.df_result[
+            "Открытая пористость по керосину"].isna().all() or not self.df_result[
+            "Открытая пористость по газу"].isna().all()):
+            value_to_assign = self.df_result["Открытая пористость по керосину"].fillna(
+                self.df_result["Открытая пористость по газу"])
+
+            self.df_result["Кп откр"] = value_to_assign
+            self.pororsity_changed = True
+
+    def kpr_parsing(self):
+        if self.df_result["Кпр абс"].isna().all() and (not self.df_result[
+            "Газопроницаемость по Кликенбергу"].isna().all() or not self.df_result[
+            "Кпр_газ(гелий)"].isna().all() or not self.df_result["Газопроницаемость по воде"].isna().all()):
+            value_to_assign = self.df_result["Открытая пористость по керосину"].fillna(
+                self.df_result["Открытая пористость по газу"])
+
+            self.df_result["Кпр абс"] = value_to_assign
+            self.kpr_changed = True
+
     def parallel_data_parsing(self):
-        '''
+        """
         Делит данные на параллельные и перпендикулярные
         :return:
-        '''
+        """
         direction_array = self.df_result["Направление измерений(// ⊥)"]
         for idx, is_parallel in enumerate(direction_array):
             if is_parallel == 1:
@@ -214,10 +240,10 @@ class DataPreprocessing:
             self.interval.append([top[i], bottom[i]])
 
     def error_flagging(self):
-        '''
+        """
         Красит в красный ячейки с ошибками
         :return:
-        '''
+        """
         empty_series = pd.Series([])  # Создаем пустую Series
         self.df_result[""] = empty_series
         for test_name, failed_columns in self.failed_tests.items():
@@ -227,10 +253,7 @@ class DataPreprocessing:
                 for col, indices in column_data.items():
                     # Найдите соответствующий столбец в df_result
                     if col in self.df_result.columns:
-                        if col in self.newdic:
-                            self.newdic[col].extend(indices)
-                        else:
-                            self.newdic[col] = indices
+                        self.newdic[col] = indices
                         # Закрасьте ячейки в красный цвет, если индекс находится в массиве indices
                         for index in indices:
                             self.df_result.at[index, test_name] = failed_columns[-1]
