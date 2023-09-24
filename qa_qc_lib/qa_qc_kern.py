@@ -181,7 +181,7 @@ class QA_QC_kern(QA_QC_main):
     def poro_preproccess(self):
         if not np.array_equal(self.porosity_open, np.array([None])):
             try:
-                if self.porosity_open[0]!=np.nan:
+                if self.porosity_open[0] != np.nan:
                     self.porosity_array["self.porosity_open"] = self.porosity_open
             except:
                 ...
@@ -203,28 +203,28 @@ class QA_QC_kern(QA_QC_main):
     def kpr_preproccess(self):
         if not np.array_equal(self.klickenberg_permeability, np.array([None])):
             try:
-                if self.kpr_array[0]!=np.nan:
+                if self.kpr_array[0] != np.nan:
                     self.kpr_array["self.klickenberg_permeability"] = self.klickenberg_permeability
             except:
                 ...
 
         if not np.array_equal(self.kpr, np.array([None])):
             try:
-                if self.kpr_array[0]!=np.nan:
+                if self.kpr_array[0] != np.nan:
                     self.kpr_array["self.kpr"] = self.kpr
             except:
                 ...
 
         if not np.array_equal(self.parallel_permeability, np.array([None])):
             try:
-                if self.kpr_array[0]!=np.nan:
+                if self.kpr_array[0] != np.nan:
                     self.kpr_array["self.parallel_permeability"] = self.parallel_permeability
             except:
                 ...
 
         if not np.array_equal(self.water_permeability, np.array([None])):
             try:
-                if self.kpr_array[0]!=np.nan:
+                if self.kpr_array[0] != np.nan:
                     self.kpr_array["self.water_permeability"] = self.water_permeability
             except:
                 ...
@@ -274,8 +274,8 @@ class QA_QC_kern(QA_QC_main):
                     self.kp_ef.append(self.porosity_open[i] * (1 - self.sw_residual[i]))
                 self.kp_ef = np.array(self.kp_ef)
         except:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10}:\nНе удалось вычислить значение Кп эфф\n\n"
+            report_text = self.generate_report_text("Не удалось вычислить кп эф", 2)
+            self.update_report(report_text)
             self.kp_ef = np.array([])
         try:
             if self.porosity_open is not None and self.sw_residual is not None and self.kno is not None:
@@ -283,8 +283,8 @@ class QA_QC_kern(QA_QC_main):
                     self.kp_din.append(self.porosity_open[i] * (1 - self.sw_residual[i] - self.kno[i]))
                 self.kp_din = np.array(self.kp_din)
         except:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10}:\nНе удалось вычислить значение Динамическая пористость\n\n"
+            report_text = self.generate_report_text("Не удалось вычислить кп дин", 2)
+            self.update_report(report_text)
             self.kp_din = np.array([])
         try:
             if self.pmu is None:
@@ -294,8 +294,8 @@ class QA_QC_kern(QA_QC_main):
                         self.pmu.append(self.pas[i] + (self.porosity_open[i] * 1))
                     self.pmu = np.array(self.pmu)
         except:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10}:\nНе удалось вычислить значение Объемная плотность\n\n"
+            report_text = self.generate_report_text("Не удалось вычислить pmu", 2)
+            self.update_report(report_text)
             self.pmu = np.array([])
 
     """
@@ -848,12 +848,20 @@ class QA_QC_kern(QA_QC_main):
                 self.dict_of_wrong_values[f"test_quo_{poro_name}_dependence"] = [{"Кво": wrong_values1,
                                                                                   f"{poro_name}": wrong_values2
                                                                                   }, "выпадает из линии тренда"]
-                report_text = f"{result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_quo_{poro_name}_dependence:\n{report_text}\n\n"
                 result_array.append(result)
 
-        return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
+
+        return {"result": result_array, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_density_dependence(self, get_report=True):
         """
@@ -891,8 +899,6 @@ class QA_QC_kern(QA_QC_main):
                     result = False
 
                 report_text = f"{result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_{poro_name}_density_dependence:\n{report_text}\n\n"
                 wrong_values1, wrong_values2 = linear_function_visualization(self.porosity_open, self.density, a, b, r2,
                                                                              get_report,
                                                                              f"{poro_name}", "Плотности",
@@ -902,8 +908,18 @@ class QA_QC_kern(QA_QC_main):
                      "Плотность абсолютно сухого образца": wrong_values2,
                      }, "выпадает из линии тренда"]
                 result_array.append(result)
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
 
-        return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
+
+        return {"result": result_array, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_kgo_dependence(self, get_report=True):
         """
@@ -947,16 +963,23 @@ class QA_QC_kern(QA_QC_main):
                                                                              f"{poro_name}",
                                                                              "Cвязанная газонасыщенность",
                                                                              f"test_{poro_name}_kgo_dependence")
-                report_text = f"Test '{poro_name}_kgo_dependence': {result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_{poro_name}_kgo_dependence:\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
                 self.dict_of_wrong_values[f"test_{poro_name}_kgo_dependence"] = [
                     {f"{poro_name}": wrong_values1,
                      "Cвязанная газонасыщенность": wrong_values2,
                      }, "выпадает из линии тренда"]
                 result_array.append(result)
 
-            return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
+            return {"result": result_array, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_knmng_dependence(self, get_report=True):
         """
@@ -994,20 +1017,28 @@ class QA_QC_kern(QA_QC_main):
                 if a >= 0 or r2 < 0.7:
                     result = False
 
-                report_text = f"{result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_{poro_name}_knmng_dependence:\n{report_text}\n\n"
                 wrong_values1, wrong_values2 = linear_function_visualization(self.porosity_open, self.knmng, a, b, r2,
                                                                              get_report,
                                                                              f"{poro_name}",
                                                                              "Cвязанная газонасыщенность",
                                                                              f"test_{poro_name}_knmng_dependence")
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
+
                 self.dict_of_wrong_values[f"test_{poro_name}_knmng_dependence"] = [
                     {f"{poro_name}": wrong_values1,
                      "Критическая нефтенасыщенность": wrong_values2,
                      }, "выпадает из линии тренда"]
 
-            return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
+            return {"result": result_array, "file_name": self.file_name, "date": self.dt_now}
 
     def test_kp_kno_dependence(self, get_report=True):
         """
@@ -1053,16 +1084,23 @@ class QA_QC_kern(QA_QC_main):
                                                                              "Коэффициент остаточной нефтенасыщенности",
                                                                              f"test_{poro_name}_kno_dependence")
 
-                report_text = f"{result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_{poro_name}_kno_dependence:\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
                 self.dict_of_wrong_values[f"test_{poro_name}_kno_dependence"] = [
                     {f"{poro_name}": wrong_values1,
                      "Коэффициент остаточной нефтенасыщенности": wrong_values2,
                      }, "выпадает из линии тренда"]
                 result_array.append(result)
 
-            return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
+            return {"result": result_array, "file_name": self.file_name, "date": self.dt_now}
 
     def test_sw_residual_kp_din_dependence(self, get_report=True):
         """
@@ -1100,9 +1138,16 @@ class QA_QC_kern(QA_QC_main):
                                                                          "Коэффициент динамической пористости",
                                                                          "test_sw_residual_kp_din_dependence")
 
-            report_text = {result}
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_sw_residual_kp_din_dependence:\n{report_text}\n\n"
+            if result:
+                report_text = self.generate_report_text(
+                    f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+            else:
+                report_text = self.generate_report_text(
+                    f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+            self.update_report(report_text)
+            if get_report:
+                print(report_text)
             self.dict_of_wrong_values["test_sw_residual_kp_din_dependence"] = [{"Кво": wrong_values1},
                                                                                "выпадает из линии тренда"]
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
@@ -1167,10 +1212,14 @@ class QA_QC_kern(QA_QC_main):
                      f"{poro_name}": wrong_values2},
                     "выпадает из линии тренда"]
 
-                report_text = f" {result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_obblnas_{poro_name}_dependence:\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
 
+                self.update_report(report_text)
                 y_pred = a2 * self.porosity_open + b2
 
                 # Окрашиваем точки, которые не соответствуют линии тренда, в красный
@@ -1194,6 +1243,7 @@ class QA_QC_kern(QA_QC_main):
                 plt.savefig(f"report\\test_obblnas_{poro_name}_dependence.png")
                 if get_report:
                     plt.show()
+                    print(report_text)
 
             return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
 
@@ -1256,9 +1306,14 @@ class QA_QC_kern(QA_QC_main):
                     {"Минералогическая плотность": wrong_values1,
                      f"{poro_name}": wrong_values2},
                     "выпадает из линии тренда"]
-                report_text = f"Test 'dependence pmu {poro_name}': {result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_pmu_{poro_name}_dependence:\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
                 plt.title(f"test pmu {poro_name} dependence")
                 plt.scatter(self.obplnas, self.porosity_open, color='red', label='Обплнас-Кп')
                 plt.scatter(self.pmu, self.porosity_open, color='blue', label='Минпл-Кп')
@@ -1283,6 +1338,7 @@ class QA_QC_kern(QA_QC_main):
 
                 if get_report:
                     plt.show()
+                    print(report_text)
                 result_array.append(result)
 
         return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
@@ -1320,9 +1376,16 @@ class QA_QC_kern(QA_QC_main):
                                                                          "Коэффициент эффективной пористости",
                                                                          "Динамическая пористость",
                                                                          "test_kp_ef_kp_din_dependence")
-            report_text = result
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_kp_ef_kpdin_dependence:\n{report_text}\n\n"
+            if result:
+                report_text = self.generate_report_text(
+                    f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+            else:
+                report_text = self.generate_report_text(
+                    f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+            self.update_report(report_text)
+            if get_report:
+                print(report_text)
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
@@ -1368,9 +1431,16 @@ class QA_QC_kern(QA_QC_main):
                 self.dict_of_wrong_values["test_kp_ef_kp_dependence"] = [{
                     "Кп откр": wrong_values2
                 }, "выпадает из линии тренда"]
-                report_text = {result}
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_kp_ef_kp_dependence:\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
                 result_array.append(result)
 
             return {"result": result_array, "file_name": self.file_name, "date": self.dt_now}
@@ -1416,9 +1486,16 @@ class QA_QC_kern(QA_QC_main):
                                                                              f"test_{poro_name}_kp_din_dependence")
                 self.dict_of_wrong_values[f"test_{poro_name}c_kp_din_dependence"] = [{f"{poro_name}": wrong_values1,
                                                                                       }, "выпадает из линии тренда"]
-                report_text = f"{result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_{poro_name}_kp_din_dependence:\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
                 result_array.append(result)
 
             return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
@@ -1474,9 +1551,16 @@ class QA_QC_kern(QA_QC_main):
                         {f"{kpr_name}": wrong_values1,
                          f"{poro_name}": wrong_values2},
                         "выпадает из линии тренда"]
-                    report_text = {result}
-                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    self.report_text += f"{timestamp:10} / test_dependence_{kpr_name}_{poro_name}:\n{report_text}\n\n"
+                    if result:
+                        report_text = self.generate_report_text(
+                            f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                    else:
+                        report_text = self.generate_report_text(
+                            f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                    self.update_report(report_text)
+                    if get_report:
+                        print(report_text)
                     result_array.append(result)
         return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
 
@@ -1522,9 +1606,16 @@ class QA_QC_kern(QA_QC_main):
 
                 self.dict_of_wrong_values[f"test_dependence_{kpr_name}_kp_din"] = [{f"{kpr_name}": wrong_values1,
                                                                                     }, "выпадает из линии тренда"]
-                report_text = {result}
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} :\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
 
         return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
 
@@ -1559,15 +1650,23 @@ class QA_QC_kern(QA_QC_main):
                 coefficients = np.polyfit(self.kpr, np.exp(self.sw_residual), 1)
                 a, b = coefficients[0], coefficients[1]
                 result = True
-                if a <= 0 or r2 < 0.7:
-                    result = False
-                report_text = f"{result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_dependence_sw_residual_{kpr_name}:\n{report_text}\n\n"
                 wrong_values1, wrong_values2 = logarithmic_function_visualization(self.kpr, self.sw_residual, a, b, r2,
                                                                                   get_report, f"{kpr_name}",
                                                                                   "Коэффициент остаточной водонасыщенности",
                                                                                   f"test_dependence_sw_residual_{kpr_name}")
+                if a <= 0 or r2 < 0.7:
+                    result = False
+
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
 
                 self.dict_of_wrong_values[f"test_dependence_sw_residual_{kpr_name}"] = [{"Кво": wrong_values1,
                                                                                          f"{kpr_name}": wrong_values2},
@@ -1613,9 +1712,14 @@ class QA_QC_kern(QA_QC_main):
             self.dict_of_wrong_values["test_rn_sw_residual_dependence"] = [{"Параметр насыщенности(RI)": wrong_values1,
                                                                             "Sw": wrong_values2
                                                                             }, "выпадает из линии тренда"]
-            report_text = f"{result}."
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_rn_sw_residual_dependence:\n{report_text}\n\n"
+            if result:
+                report_text = self.generate_report_text(
+                    f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+            else:
+                report_text = self.generate_report_text(
+                    f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+            self.update_report(report_text)
             plt.title("test rn sw_residual dependencies")
             y_pred = b / (self.sw_residual ** n)
 
@@ -1634,6 +1738,7 @@ class QA_QC_kern(QA_QC_main):
             plt.savefig("report\\test_rn_sw_residual_dependence.png")
             if get_report:
                 plt.show()
+                print(report_text)
 
             return {"result": result, "file_name": self.file_name, "date": self.dt_now}
 
@@ -1679,9 +1784,14 @@ class QA_QC_kern(QA_QC_main):
                     if self.rp[i] > a / (self.porosity_open[i] ** m):
                         wrong_values1.append(self.rp[i])
                         wrong_values2.append(self.porosity_open[i])
-                report_text = f"{result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_rp_{poro_name}_dependencies:\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
                 self.dict_of_wrong_values["test_rp_kp_dependencies"] = [{"Параметр пористости(F)": wrong_values1,
                                                                          f"{poro_name}": wrong_values2
                                                                          }, "выпадает из линии тренда"]
@@ -1703,11 +1813,13 @@ class QA_QC_kern(QA_QC_main):
                 plt.savefig(f"report\\test_rp_{poro_name}_dependencies.png")
                 if get_report:
                     plt.show()
+                    print(report_text)
                 result_array.append(result)
 
         return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
 
-    def test_general_dependency_checking(self, x, y, test_name="не указано", x_name="не указано", y_name="не указано"):
+    def test_general_dependency_checking(self, x, y, test_name="не указано", x_name="не указано", y_name="не указано",
+                                         get_report=True):
         """
         Тест предназначен для оценки дисперсии входных данных.
         Он проводится по следующему алгоритму: изначально,
@@ -1776,15 +1888,22 @@ class QA_QC_kern(QA_QC_main):
             # Проверка пройденного теста
             if r2 >= 0.7:
                 result = True
-                report_text = f"{result}. Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n"
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_general_dependency_checking:\n{report_text}\n\n"
+                report_text = self.generate_report_text(
+                    f"{result}. Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n",
+                    1)
+                self.update_report(report_text)
                 return {"result": result, "r2": r2, "file_name": self.file_name, "date": self.dt_now}
             else:
                 result = False
-        report_text = f"{result}. Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n"
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_general_dependency_checking:\n{report_text}\n\n"
+
+        report_text = self.generate_report_text(
+            f"{result}. Выполнен для теста {test_name}.Тест проводился для {x_name} {y_name}. Коэффициент r2 - {r2}\n",
+            1)
+        self.update_report(report_text)
+
+        if get_report:
+            print(report_text)
+
         return {"result": result, "r2": r2, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_first(self, get_report=True):
@@ -1813,12 +1932,15 @@ class QA_QC_kern(QA_QC_main):
                                                                       "Подошва интервала отбора": wrong_values, },
                                                                      "подошва вышележащего интервала долбления ниже кровли нижележащего"]
             if result:
-                report_text = f"{result}."
-
+                report_text = self.generate_report_text(
+                    f"Все данные монотонны", 1)
             else:
-                report_text = f"{result}.Индексы элементов с ошибкой {wrong_values}."
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_coring_depths_first:\n{report_text}\n\n"
+                report_text = self.generate_report_text(
+                    f"ЗИндексы выпадающие из монотонности {wrong_values}", 0)
+
+            self.update_report(report_text)
+            if get_report:
+                print(report_text)
 
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
@@ -1852,11 +1974,15 @@ class QA_QC_kern(QA_QC_main):
                                                                        },
                                                                       "разница между подошвой и кровлей меньше выноса в м"]
             if result:
-                report_text = f" {result}."
+                report_text = self.generate_report_text(
+                    f"Все данные корректны", 1)
             else:
-                report_text = f"{result}.Индексы элементов с ошибкой {wrong_values}."
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_coring_depths_second:\n{report_text}\n\n"
+                report_text = self.generate_report_text(
+                    f"Индексы выпадающих значений{wrong_values}", 0)
+
+            self.update_report(report_text)
+            if get_report:
+                print(report_text)
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_third(self, get_report=True):
@@ -1890,11 +2016,15 @@ class QA_QC_kern(QA_QC_main):
                                                                      "вынос керна в процентах и метрах не совпадает"]
 
             if result:
-                report_text = f" {result}."
+                report_text = self.generate_report_text(
+                    f"Все данные корректны", 1)
             else:
-                report_text = f"{result}.Индексы элементов с ошибкой {wrong_values}."
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_coring_depths_third:\n{report_text}\n\n"
+                report_text = self.generate_report_text(
+                    f"Индексы выпадающих значений{wrong_values}", 0)
+
+            self.update_report(report_text)
+            if get_report:
+                print(report_text)
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_coring_depths_four(self, get_report=True):
@@ -1926,12 +2056,15 @@ class QA_QC_kern(QA_QC_main):
                                                                      "Подошва интервала отбора": wrong_values,
                                                                      }, "глубина отбора ниже фактического выноса керна"]
             if result:
-                report_text = result
+                report_text = self.generate_report_text(
+                    f"Все данные корректны", 1)
             else:
-                report_text = f"{result}.Индексы элементов с ошибкой {wrong_values}."
+                report_text = self.generate_report_text(
+                    f"Индексы выпадающих значений{wrong_values}", 0)
 
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_coring_depths_four:\n{report_text}\n\n"
+            self.update_report(report_text)
+            if get_report:
+                print(report_text)
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_data_tampering(self, get_report=True):
@@ -2092,11 +2225,15 @@ class QA_QC_kern(QA_QC_main):
                                                              "Плотность абсолютно сухого образца": wrong_values_density},
                                                             "схожие значения"]
         if result:
-            report_text = result
+            report_text = self.generate_report_text(
+                f"Все данные корректны", 1)
         else:
-            report_text = f" {result}.Индексы элементов с ошибкой {wrong_values}."
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_data_tampering:\n{report_text}\n\n"
+            report_text = self.generate_report_text(
+                f"Индексы выпадающих значений{wrong_values}", 0)
+
+        self.update_report(report_text)
+        if get_report:
+            print(report_text)
         return {"result": result, "wrong_values": wrong_values, "report_text": self.report_text, "date": self.dt_now}
 
     def test_kp_in_surface_and_reservoir_conditions(self, get_report=True):
@@ -2137,12 +2274,18 @@ class QA_QC_kern(QA_QC_main):
                     {f"{poro_name}": wrong_values,
                      }, f"{poro_name} больше или равно Кп откр TBU"]
 
-                report_text=""
-                if not result:
-                    report_text = f"Индексы элементов с ошибкой {wrong_values}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test {poro_name} and Кп откр TBU:\n{report_text}\n\n"
-        return {"result": result_array, "wrong_values": wrong_values, "report_text": self.report_text, "date": self.dt_now}
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Все данные корректны", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Индексы выпадающих значений{wrong_values}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
+        return {"result": result_array, "wrong_values": wrong_values, "report_text": self.report_text,
+                "date": self.dt_now}
 
     def test_table_notes(self, get_report=True):
         """
@@ -2165,11 +2308,14 @@ class QA_QC_kern(QA_QC_main):
 
             # Получаем индексы, где есть строки
             indexes = np.where(mask)[0]
-            report_text = f"Test 'table notes': {indexes}\n"
             self.dict_of_wrong_values["test_table_notes"] = [{"Примечание(в керне)": indexes},
                                                              "присутствует неисправность"]
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+
+            report_text = self.generate_report_text(f"Индексы выпадающих значений{indexes}", 0)
+
+            self.update_report(report_text)
+            if get_report:
+                print(report_text)
             return indexes
         except:
             self.dict_of_wrong_values["test_table_notes"] = [{"Примечание(в керне)": [0]}, "пустой"]
@@ -2214,11 +2360,15 @@ class QA_QC_kern(QA_QC_main):
                                                               "So": wrong_values},
                                                              "суммарное насыщение превышает 1 или 100%"]
             if result:
-                report_text = f"Test 'coring depths second': {result}."
+                report_text = self.generate_report_text(
+                    f"Все данные корректны", 1)
             else:
-                report_text = f"Test 'coring depths second': {result}.Индексы элементов с ошибкой {wrong_values}."
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+                report_text = self.generate_report_text(
+                    f"Индексы выпадающих значений{wrong_values}", 0)
+
+            self.update_report(report_text)
+            if get_report:
+                print(report_text)
             return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_correctness_of_p_sk_kp(self, get_report=True):
@@ -2292,11 +2442,15 @@ class QA_QC_kern(QA_QC_main):
         }, "расхождение параметров выше 5%"]
 
         if result:
-            report_text = f"Test 'test_correctness_of_p_sk_kp': {result}."
+            report_text = self.generate_report_text(
+                f"Все данные корректны", 1)
         else:
-            report_text = f"Test 'test_correctness_of_p_sk_kp': {result}.Индексы элементов с ошибкой {wrong_values}."
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.report_text += f"{timestamp:10} / test_open_porosity:\n{report_text}\n\n"
+            report_text = self.generate_report_text(
+                f"Индексы выпадающих значений{wrong_values}", 0)
+
+        self.update_report(report_text)
+        if get_report:
+            print(report_text)
         return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
 
     def test_dependence_kno_kpr(self, get_report=True):
@@ -2338,9 +2492,16 @@ class QA_QC_kern(QA_QC_main):
                                                                                   f"{kpr_name}",
                                                                                   f"test_dependence_kno_{kpr_name}")
 
-                report_text = f"{result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_dependence_kno_{kpr_name}:\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
                 self.dict_of_wrong_values[f"test_dependence_kno_{kpr_name}"] = [{"Кно": wrong_values1,
                                                                                  f"{kpr_name}": wrong_values2},
                                                                                 "выпадает из линии тренда"]
@@ -2387,9 +2548,16 @@ class QA_QC_kern(QA_QC_main):
                                                                                   f"{kpr_name}",
                                                                                   f"test_dependence_kno_{kpr_name}")
 
-                report_text = f"{result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_dependence_kno_{kpr_name}:\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
                 self.dict_of_wrong_values[f"test_dependence_kno_{kpr_name}"] = [{"Sgl": wrong_values1,
                                                                                  f"{kpr_name}": wrong_values2},
                                                                                 "выпадает из линии тренда"]
@@ -2436,9 +2604,16 @@ class QA_QC_kern(QA_QC_main):
                                                                                   f"{kpr_name}",
                                                                                   f"test_dependence_{kpr_name}_knmng")
 
-                report_text = f"{result}."
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / test_dependence_kno_{kpr_name}:\n{report_text}\n\n"
+                if result:
+                    report_text = self.generate_report_text(
+                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                else:
+                    report_text = self.generate_report_text(
+                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+
+                self.update_report(report_text)
+                if get_report:
+                    print(report_text)
                 self.dict_of_wrong_values[f"test_dependence_kno_{kpr_name}"] = [{"Кно(Sowcr)": wrong_values1,
                                                                                  f"{kpr_name}": wrong_values2},
                                                                                 "выпадает из линии тренда"]
