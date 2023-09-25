@@ -23,4 +23,31 @@ def main():
 
     print(test.actnum_array)
 
-main()
+#main()
+
+def RemoveCommentLines(data, commenter='--'):
+    # Remove comment and empty lines
+    data_lines = data.strip().split('\n')
+    newdata = []
+    for line in data_lines:
+        if not line.strip():
+            continue
+        elif line.find(commenter) != -1:
+            newline = line[0:line.find(commenter)].strip()
+            if len(newline) == 0:
+                continue
+            newdata.append(newline)
+        else:
+            newdata.append(line)
+    return '\n'.join(newdata)
+
+with open("../../data/grdecl_data/input/Sgu.GRDECL.grdecl","r") as f:
+    contents = f.read()
+    contents = RemoveCommentLines(contents, commenter='--')
+    contents_in_block = contents.strip().split('/')
+    contents_in_block = [x for x in contents_in_block if x]
+    NumKeywords = len(contents_in_block)
+    if NumKeywords > 2 or NumKeywords == 0:
+        print(False)
+    else:
+        print(contents_in_block[NumKeywords-1].split()[0])

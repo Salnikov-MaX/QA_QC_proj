@@ -67,7 +67,7 @@ class QA_QC_main():
         """
         data_name = self.file_name if not data_name else data_name
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-        report = f"Отчет о тестировании от {timestamp}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
+        report = f"Отчет о тестировании от {timestamp}{self.ident}Используеммый класс: {self.__class__.__name__}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
         with open(f"{file_path}/{file_name}.txt", "w") as file:
             file.write(report)
 

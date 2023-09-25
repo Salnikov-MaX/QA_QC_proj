@@ -27,8 +27,12 @@ class QA_QC_grdecl_parser(object):
             grid=self.grid,
         ))
 
-    def get_prop_value(self, prop: xtgeo.GridProperty) -> np.array:
-        data = prop.get_npvalues3d()
+    def get_prop_value(self, prop: xtgeo.GridProperty, flag_d3: bool = True) -> np.array:
+        if flag_d3:
+            data = prop.get_npvalues3d()
+        else:
+            data = prop.get_npvalues1d()
+
         data[np.isnan(data)] = 0
         return data
     def get_grid(self) -> xtgeo.Grid:
