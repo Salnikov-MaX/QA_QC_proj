@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import xtgeo
 import fileinput
+from qa_qc_lib.qa_qc_tools.cubes_tools import CubesTools
 
 
 class QA_QC_grdecl_parser(object):
@@ -37,3 +38,13 @@ class QA_QC_grdecl_parser(object):
         return data
     def get_grid(self) -> xtgeo.Grid:
         return self.grid
+
+def test():
+    test = QA_QC_grdecl_parser("../data/grdecl_data","GRID")
+    poro_file = "../data/grdecl_data/input/Poro.GRDECL.grdecl"
+    flag, key = CubesTools().find_key(poro_file)
+    test.add_prop(poro_file, key)
+
+
+
+

@@ -61,11 +61,7 @@ class CubesTools:
             f.write(result_data)
             f.close()
 
-    def get_cluster_dates(self, file_path_1, file_path_2, lit_file_path):
-        data1 = self.__get_value_grid_prop(file_path_1, flag_d3=False)
-        data2 = self.__get_value_grid_prop(file_path_2, flag_d3=False)
-        lit_data = self.__get_value_grid_prop(lit_file_path, flag_d3=False)
-
+    def get_cluster_dates(self, data1, data2, lit_data):
         litatype_unique_data = np.unique(lit_data)
         return {value: data1[np.where(lit_data == value)] for value in litatype_unique_data}, {
             value: data2[np.where(lit_data == value)] for value in litatype_unique_data}

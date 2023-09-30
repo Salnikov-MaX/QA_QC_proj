@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from qa_qc_lib.qa_qc_tools.cubes_tools import CubesTools
 
+
 def linear_regressor(data_array_1: np.array, data_array_2: np.array):
     linear_regressor = LinearRegression().fit(data_array_1.reshape(-1, 1),
                                               data_array_2.reshape(-1, 1))  # perform linear regression
@@ -58,7 +59,8 @@ def is_point_line(point1, point2, test_point, _lambda) -> bool:
     expected_y = m * x3 + b
     return _lambda(y3, expected_y)
 
-def check_data_point(data_x_1,data_y_1,data_x_2,data_y_2):
+
+def check_data_point(data_x_1, data_y_1, data_x_2, data_y_2):
     _, hallway_kern_down, hallway_kern_up = borders_initializer(data_x_1, data_y_1)
     flat_array, _, _ = borders_initializer(data_x_2, data_y_2)
 
@@ -82,20 +84,185 @@ def check_data_point(data_x_1,data_y_1,data_x_2,data_y_2):
         return True, None
     else:
         return False, result == False
+
+
 class Connector_kern_cubes:
 
     def __init__(
             self,
-            qa_qc_kern = None,
-            qa_qc_cubes = None):
-        assert not qa_qc_cubes or not qa_qc_kern, "[Connector_kern_cubes] Connector defined incorrectly"
+            qa_qc_kern=None,
+            qa_qc_cubes=None):
+        assert qa_qc_cubes is not None and qa_qc_kern is not None, "[Connector_kern_cubes] Connector defined incorrectly"
         self.QA_QC_kern = qa_qc_kern
         self.QA_QC_cubes = qa_qc_cubes
 
-    def kern_test_dependence_kpr_kp(self, poro_group_data: np.array, permX_group_data: np.array, cluster_key) -> (bool, np.array or None):
-        kp = self.QA_QC_kern.porosity_open
-        kpr = self.QA_QC_kern.kpr
+    def __kern_test_dependence(self,
+                               cube_group_data_1: np.array,
+                               cube_group_data_2: np.array,
+                               kern_group_data_1: np.array,
+                               kern_group_data_2: np.array,
+                               cluster_key: str) -> (bool, np.array or None):
         lithotype = self.QA_QC_kern.lithotype
-        kp_clusters, kpr_cluster = CubesTools.get_cluster_dates(kp,kpr,lithotype)
+        cluster1, cluster2 = CubesTools().get_cluster_dates(kern_group_data_1, kern_group_data_2, lithotype)
 
-        return check_data_point(kp_clusters[cluster_key], kpr_cluster[cluster_key], poro_group_data, permX_group_data)
+        return check_data_point(
+            cluster1[cluster_key],
+            cluster2[cluster_key],
+            cube_group_data_1,
+            cube_group_data_2)
+    def kern_test_dependence_kpr_kp(
+            self,
+            poro_group_data: np.array,
+            permX_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poro_group_data,
+            permX_group_data,
+            self.QA_QC_kern.porosity_open,
+            self.QA_QC_kern.kpr,
+            cluster_key)
+
+    def kern_test_dependence_kp_kgo(
+            self,
+            poro_group_data: np.array,
+            sgl_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poro_group_data,
+            sgl_group_data,
+            self.QA_QC_kern.porosity_open,
+            self.QA_QC_kern.kgo,
+            cluster_key)
+
+    def kern_test_dependence_kp_knmng(
+            self,
+            poro_group_data: np.array,
+            sogcr_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poro_group_data,
+            sogcr_group_data,
+            self.QA_QC_kern.porosity_open,
+            self.QA_QC_kern.knmng,
+            cluster_key)
+
+    def kern_test_dependence_kp_kno(
+            self,
+            poro_group_data: np.array,
+            sowcr_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poro_group_data,
+            sowcr_group_data,
+            self.QA_QC_kern.porosity_open,
+            self.QA_QC_kern.kno,
+            cluster_key)
+
+    def kern_test_dependence_quo_kp(
+            self,
+            poro_group_data: np.array,
+            swl_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poro_group_data,
+            swl_group_data,
+            self.QA_QC_kern.porosity_open,
+            self.QA_QC_kern.sw_residual,
+            cluster_key)
+
+    def kern_test_dependence_kpr_kgo(
+            self,
+            poroX_group_data: np.array,
+            sgl_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poroX_group_data,
+            sgl_group_data,
+            self.QA_QC_kern.kpr,
+            self.QA_QC_kern.kgo,
+            cluster_key)
+
+    def kern_test_dependence_kpr_knmng(
+            self,
+            poroX_group_data: np.array,
+            sogcr_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poroX_group_data,
+            sogcr_group_data,
+            self.QA_QC_kern.kgo,
+            self.QA_QC_kern.kpr,
+            cluster_key)
+
+    def kern_test_dependence_kno_kpr(
+            self,
+            poroX_group_data: np.array,
+            sowcr_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poroX_group_data,
+            sowcr_group_data,
+            self.QA_QC_kern.kgo,
+            self.QA_QC_kern.kno,
+            cluster_key)
+
+    def kern_test_dependence_kvo_kpr(
+            self,
+            poroX_group_data: np.array,
+            swl_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poroX_group_data,
+            swl_group_data,
+            self.QA_QC_kern.kgo,
+            self.QA_QC_kern.sw_residual,
+            cluster_key)
+
+    def kern_test_dependence_kp_knmng(
+            self,
+            poro_group_data: np.array,
+            sogcr_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poro_group_data,
+            sogcr_group_data,
+            self.QA_QC_kern.knmng,
+            self.QA_QC_kern.porosity_open,
+            cluster_key)
+
+    def kern_test_dependence_kno_kp(
+            self,
+            poroX_group_data: np.array,
+            sogcr_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poroX_group_data,
+            sogcr_group_data,
+            self.QA_QC_kern.kno,
+            self.QA_QC_kern.kp,
+            cluster_key)
+
+    def kern_test_dependence_kno_kpr(
+            self,
+            poroX_group_data: np.array,
+            sogcr_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poroX_group_data,
+            sogcr_group_data,
+            self.QA_QC_kern.kno,
+            self.QA_QC_kern.kpr,
+            cluster_key)
+
+    def kern_test_dependence_quo_kp_2(
+            self,
+            poroX_group_data: np.array,
+            sogcr_group_data: np.array,
+            cluster_key) -> (bool, np.array or None):
+        return self.__kern_test_dependence(
+            poroX_group_data,
+            sogcr_group_data,
+            self.QA_QC_kern.sw_residual,
+            self.QA_QC_kern.porosity_open,
+            cluster_key)
+
