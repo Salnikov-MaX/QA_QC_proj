@@ -28,7 +28,8 @@ class DataPreprocessing:
             "Химический состав природных вод и температура пласта",
             "Cut-off водонасыщенность", "Cut-off проницаемость", "Cut-off пористость",
             "Cut-off глинистость", "Смачиваемость,угол смачиваемости",
-            "Кпр фазовая", "Кпр отн", "Водородосодержание глин", "Капиллярометрия", "Литотип", "Фации","Скорость поперечной волны (Vs)","DT_matrix",
+            "Кпр фазовая", "Кпр отн", "Водородосодержание глин", "Капиллярометрия", "Литотип", "Фации",
+            "Скорость поперечной волны (Vs)", "DT_matrix",
             "Коэффициент Пуассона"
         ]
         self.parallel_density = []
@@ -120,7 +121,7 @@ class DataPreprocessing:
         if self.kpr_changed:
             self.df_result["Кпр абс"] = np.array([None])
         test_system = QA_QC_kern(pas=np.array(self.df_result["Плотность абсолютно сухого образца"]),
-                                 vp = np.array(self.df_result["Скорость продольной волны(Vp)"]),
+                                 vp=np.array(self.df_result["Скорость продольной волны(Vp)"]),
                                  note=np.array(self.df_result["Примечание(в керне)"]),
                                  kno=np.array(self.df_result["So"]),
                                  density=np.array(self.df_result["Плотность абсолютно сухого образца"]),
@@ -253,10 +254,10 @@ class DataPreprocessing:
                 for col, indices in column_data.items():
                     # Найдите соответствующий столбец в df_result
                     if col in self.df_result.columns:
-                        self.newdic[col] = indices
                         # Закрасьте ячейки в красный цвет, если индекс находится в массиве indices
                         for index in indices:
                             self.df_result.at[index, test_name] = failed_columns[-1]
+        self.combining_values()
 
     def color_cells(self, df, col_index_dict, color='red'):
         style = pd.DataFrame('', index=df.index, columns=df.columns)
@@ -265,6 +266,16 @@ class DataPreprocessing:
                 style.loc[row, col] = f'background-color: {color}'
         return style
 
+    def combining_values(self):
+        for test_name, params_data in self.failed_tests.items():
+            params_values = params_data[0]  # Первый элемент в значении словаря - данные параметров
+            for param, values in params_values.items():
+                if param not in self.newdic:
+                    self.newdic[param] = values
+                else:
+                    self.newdic[param].extend(values)
+
     def save_to_excel(self):
         styled_df = self.df_result.style.apply(self.color_cells, axis=None, col_index_dict=self.newdic, color='red')
-        styled_df.to_excel("report\\post_test_table.xlsx", sheet_name='Sheet1', index=False)
+        styled_df.to_excel("report\\post_test_table.xlsx",
+                           sheet_name='Sheet1', index=False)

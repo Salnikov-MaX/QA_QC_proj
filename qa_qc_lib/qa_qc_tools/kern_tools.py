@@ -13,8 +13,7 @@ def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, te
     wrong_values2 = []
     y_pred = a * x + b
     for i in range(len(y)):
-        if y[i] < a * x[i] + b:
-            wrong_values1.append(i)
+        if y[i] + (a * x[i] + b)*0.1< a * x[i] + b:
             wrong_values2.append(i)
 
     x_trend = np.linspace(np.min(x), np.max(x), 100)
@@ -102,6 +101,25 @@ def logarithmic_function_visualization(x, y, a, b, r2, get_report, x_name, y_nam
         plt.show()
     plt.close()
     return wrong_values1, wrong_values2
+
+
+def remove_nan_pairs(array1, array2):
+    new_array1 = []
+    new_array2 = []
+    index_mapping = {}
+
+    for i in range(len(array1)):
+        if not (np.isnan(array1[i]) or np.isnan(array2[i])):
+            new_array1.append(array1[i])
+            new_array2.append(array2[i])
+            index_mapping[len(new_array1) - 1] = i
+
+    return np.array(new_array1), np.array(new_array2), index_mapping
+
+
+def remap_wrong_values(wrong_values, index_mapping):
+    remapped_values = [index_mapping.get(value, value) for value in wrong_values]
+    return remapped_values
 
 
 def find_test_methods_with_params(params, modul):

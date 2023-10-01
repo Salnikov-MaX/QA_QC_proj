@@ -52,7 +52,7 @@ class QA_QC_main():
         return results
 
     def generate_test_report(self, file_name='test_report',
-                             file_path='report', data_name=None):
+                             file_path='C:\\Users\\nikit\\PycharmProjects\\QA_QC_proj\\report', data_name=None):
         """
         Метод для генерации отчета в виде текстового файла
 
