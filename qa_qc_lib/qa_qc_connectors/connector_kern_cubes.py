@@ -102,6 +102,10 @@ class Connector_kern_cubes:
                                kern_group_data_1: np.array,
                                kern_group_data_2: np.array,
                                cluster_key: str) -> (bool, np.array or None):
+
+        if len(kern_group_data_1 == np.nan) != 0 or len(kern_group_data_2 == np.nan) != 0:
+            return False, None
+
         lithotype = self.QA_QC_kern.lithotype
         cluster1, cluster2 = CubesTools().get_cluster_dates(kern_group_data_1, kern_group_data_2, lithotype)
 

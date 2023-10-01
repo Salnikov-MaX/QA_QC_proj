@@ -32,7 +32,7 @@ class CubesTools:
             else:
                 return True, contents_in_block[NumKeywords - 1].split()[0]
 
-    def generate_wrong_actnum(self,wrong_list: np.array, save_path: str = '.'):
+    def generate_wrong_actnum(self,wrong_list: np.array, save_path: str = '.', func_name:str = "QA/QC"):
         wrong_data = wrong_list.astype(dtype=int)
         result_data = "-- Generated QA/QC\nACTNUM\n"
         counter = 0
@@ -56,17 +56,25 @@ class CubesTools:
                 s += f"{counter + 1}*{wrong_data[len(wrong_data) - 2]}"
             result_data += f"{s} {wrong_data[len(wrong_data) - 1]} \\"
 
-
-        with open(f"{save_path}/{inspect.stack()[1][3]}_WRONG_ACTNUM.GRDECL", 'w') as f:
+        with open(f"{save_path}/{func_name}_WRONG_ACTNUM.GRDECL", 'w') as f:
             f.write(result_data)
             f.close()
+
+        print(f"Файл WRONG_ACTNUM сохранён по пути: {save_path}")
 
     def get_cluster_dates(self, data1, data2, lit_data):
         litatype_unique_data = np.unique(lit_data)
         return {value: data1[np.where(lit_data == value)] for value in litatype_unique_data}, {
             value: data2[np.where(lit_data == value)] for value in litatype_unique_data}
 
+    def conver_n3d_to_n1d(self, cube):
+        return np.ravel(cube, order='F').reshape((1, -1))[0]
 
+    def conver_n1d_to_n3d(self, grid, vector):
+        i_max = grid.ncol
+        j_max = grid.nrow
+        k_max = grid.nlay
+        return np.reshape(vector, (i_max, j_max, k_max), order='F')
 
 
 

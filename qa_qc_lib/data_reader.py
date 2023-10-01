@@ -30,11 +30,10 @@ class QA_QC_grdecl_parser(object):
 
     def get_prop_value(self, prop: xtgeo.GridProperty, flag_d3: bool = True) -> np.array:
         if flag_d3:
-            data = prop.get_npvalues3d()
+            data = prop.get_npvalues3d(fill_value=-1.0)
         else:
-            data = prop.get_npvalues1d()
+            data = prop.get_npvalues1d(fill_value=-1.0)
 
-        data[np.isnan(data)] = 0
         return data
     def get_grid(self) -> xtgeo.Grid:
         return self.grid
@@ -44,7 +43,6 @@ def test():
     poro_file = "../data/grdecl_data/input/Poro.GRDECL.grdecl"
     flag, key = CubesTools().find_key(poro_file)
     test.add_prop(poro_file, key)
-
-
-
+    prop_value = test.get_prop_value(test.get_grid().get_prop_by_name(key),False)
+    print(prop_value)
 

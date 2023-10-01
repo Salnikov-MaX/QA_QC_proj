@@ -9,7 +9,6 @@ import datetime
 
 
 class QA_QC_cubes(QA_QC_main):
-
     def __init__(self,
                  directory_path: str,
                  grid_name: str,
@@ -39,7 +38,6 @@ class QA_QC_cubes(QA_QC_main):
         self.open_porosity_file_path = open_porosity_file_path
         self.open_perm_x_file_path = open_perm_x_file_path
         self.open_perm_y_file_path = open_perm_y_file_path
-        self.actnum_file_path = actnum_file_path
         self.open_perm_z_file_path = open_perm_z_file_path
         self.litatype_file_path = litatype_file_path
         self.sgcr_file_path = sgcr_file_path
@@ -56,7 +54,8 @@ class QA_QC_cubes(QA_QC_main):
         self.sg_file_path = sg_file_path
         self.save_wrong_data_path = save_wrong_data_path
 
-        self.connector_kern = Connector_kern_cubes(qa_qc_kern, self)
+        if qa_qc_kern is not None:
+            self.connector_kern = Connector_kern_cubes(qa_qc_kern, self)
         self.help_dict_type_data = {
             'Porosity': self.open_porosity_file_path,
             'PermX': self.open_perm_x_file_path,
@@ -83,6 +82,7 @@ class QA_QC_cubes(QA_QC_main):
             if 'file' in key and attributes[key] is not None:
                 flag, prop_name = CubesTools().find_key(attributes[key])
                 if flag:
+                    print(attributes[key], "->", prop_name)
                     self.grid_model.add_prop(attributes[key], prop_name)
 
     def generate_report_text(self, text, status):
@@ -96,7 +96,7 @@ class QA_QC_cubes(QA_QC_main):
         return report_text
 
     def muc_np_arrays(self, np_array_list):
-        result = np.ones(len(np_array_list[0]), 'bool')
+        result = np.ones_like(len(np_array_list[0]), 'bool')
         for n in np_array_list:
             result = n * result
 
@@ -109,7 +109,7 @@ class QA_QC_cubes(QA_QC_main):
         value[np.isnan(value)] = 0
         return value
 
-    def __test_range_data(array, lambda_list: list[any], f) -> tuple[
+    def __test_range_data(self, _array, lambda_list: list[any], f) -> tuple[
         bool,
         np.array or None]:
         """
@@ -123,12 +123,16 @@ class QA_QC_cubes(QA_QC_main):
                 bool: результат тестирования
                 np.array or None: массив со значениями для wrong actnum
         """
-        mask_array = (f([func(array) for func in lambda_list])).astype(dtype=bool)
 
-        if all(mask_array):
+        mask_array = (f([func(_array) for func in lambda_list])).astype(dtype=bool)
+        mask_array = mask_array + (_array == -1)
+        if np.all(mask_array):
             return True, None
         else:
-            return False, mask_array == False
+            if mask_array.ndim == 1:
+                return False, mask_array == False
+            else:
+                return False, CubesTools().conver_n3d_to_n1d(mask_array == False)
 
     def __test_value_conditions(self, prop_name: str, lambda_list: list[any], f) -> tuple[
         bool
@@ -137,7 +141,6 @@ class QA_QC_cubes(QA_QC_main):
         Функция для парса данных и отправки их на проверку
 
             Args:
-                file_path: str: путь к файлу
                 prop_name: str: ключ
                 lambda_list: list[any]: список с вырожениями для проверки
 
@@ -147,14 +150,17 @@ class QA_QC_cubes(QA_QC_main):
         """
 
         flag, wrong_data = self.__test_range_data(
-            self.grid_model.get_prop_value(self.grid_model.get_grid().get_prop_by_name(prop_name)),
-            lambda_list,
-            f)
+            self.grid_model.get_prop_value(
+                self.grid_model.get_grid().get_prop_by_name(prop_name),
+                False
+            ),
+            lambda_list=lambda_list,
+            f=f)
 
         if flag:
             return True
         else:
-            CubesTools.generate_wrong_actnum(wrong_data, self.save_wrong_data_path)
+            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, inspect.stack()[1][3])
             return False
 
     """
@@ -171,17 +177,21 @@ class QA_QC_cubes(QA_QC_main):
                 file_path: str: путь к файлу
                 prop_name: str: ключ
         """
+        _, key = CubesTools().find_key(self.open_porosity_file_path)
         flag = self.__test_value_conditions(
-            CubesTools.find_key(self.open_porosity_file_path),
-            [lambda x: x > 0, lambda x: x <= 0.476],
-            self.muc_np_arrays
+            prop_name=key,
+            lambda_list=[lambda x: x >= 0, lambda x: x <= 0.476],
+            f=self.muc_np_arrays
         )
 
         if flag:
-            self.generate_report_text("", Type_Status.Passed.value)
+            print("Тест пройден")
+            self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
-            self.generate_report_text(f"Данные лежат не в интервале от 0 до 47,6",
-                                      Type_Status.NotPassed)
+            r_text = f"Данные лежат не в интервале от 0 до 47,6"
+            print(f"Тест не пройден {r_text}")
+            self.update_report(self.generate_report_text(f"Данные лежат не в интервале от 0 до 47,6",
+                                                         Type_Status.NotPassed.value))
 
     def test_permeability(self, name_type_data: str):
         """
@@ -196,24 +206,27 @@ class QA_QC_cubes(QA_QC_main):
                 file_path: str: путь к файлу
                 prop_name: str: ключ
         """
-        if name_type_data in self.help_dict_type_data:
+        if not (name_type_data in self.help_dict_type_data):
+            print("Названия типа данных не существует")
             self.update_report(
                 self.generate_report_text("Названия типа данных не существует", Type_Status.NotRunning.value))
             return
-        _, key = CubesTools.find_key(self.help_dict_type_data[name_type_data])
+        _, key = CubesTools().find_key(self.help_dict_type_data[name_type_data])
         flag = self.__test_value_conditions(
-            self.help_dict_type_data[name_type_data],
             key,
             [lambda x: x >= 0],
             sum
         )
 
         if flag:
+            print("Тест пройден")
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
+            r_text = f"Данные < 0"
+            print(f"Тест не пройден {r_text}")
             self.update_report(self.generate_report_text(
-                f"Данные < 0",
-                Type_Status.NotPassed))
+                r_text,
+                Type_Status.NotPassed.value))
 
     def test_range_data(self, name_type_data: str):
         """
@@ -237,12 +250,13 @@ class QA_QC_cubes(QA_QC_main):
                 file_path: str: путь к файлу
                 prop_name: str: ключ
         """
-        if name_type_data in self.help_dict_type_data:
+        if not (name_type_data in self.help_dict_type_data):
+            print("Названия типа данных не существует")
             self.update_report(
                 self.generate_report_text("Названия типа данных не существует", Type_Status.NotRunning.value))
             return
 
-        _, key = CubesTools.find_key(self.help_dict_type_data[name_type_data])
+        _, key = CubesTools().find_key(self.help_dict_type_data[name_type_data])
 
         flag = self.__test_value_conditions(
             key,
@@ -251,11 +265,14 @@ class QA_QC_cubes(QA_QC_main):
         )
 
         if flag:
+            print("Тест пройден")
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
+            r_text = f"Данные лежат не в интервале от 0 до 1"
+            print(f"Тест не пройден {r_text}")
             self.update_report(self.generate_report_text(
-                f"Данные лежат не в интервале от 0 до 1 ",
-                Type_Status.NotPassed))
+                r_text,
+                Type_Status.NotPassed.value))
 
     def test_range_integer_data(self):
         """
@@ -268,19 +285,23 @@ class QA_QC_cubes(QA_QC_main):
                 file_path: str: путь к файлу
                 prop_name: str: ключ
         """
-        _, key = CubesTools.find_key(self.actnum_file_path)
-        flag = self.__test_value_conditions(
-            key,
+        actnum_array = self.grid_model.get_grid().actnum_array
+        flag, wrong_data = self.__test_range_data(
+            actnum_array,
             [lambda x: x == 0, lambda x: x == 1],
             sum
         )
 
         if flag:
+            print("Тест пройден")
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
+            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, "test_range_integer_data")
+            r_text = f"Данные не равняются 0 или 1"
+            print(f"Тест не пройден {r_text}")
             self.update_report(self.generate_report_text(
                 f"Данные не равняются 0 или 1",
-                Type_Status.NotPassed))
+                Type_Status.NotPassed.value))
 
     def test_integer_data(self):
         """
@@ -295,23 +316,26 @@ class QA_QC_cubes(QA_QC_main):
         """
         _, key = CubesTools().find_key(self.litatype_file_path)
         flag = self.__test_value_conditions(
-            key
+            key,
             [lambda x: x % 1 == 0],
             sum
         )
 
         if flag:
+            print("Тест пройден")
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
+            r_text = f"Данные не целочисленные"
+            print(f"Тест не пройден {r_text}")
             self.update_report(self.generate_report_text(
-                f"Данные не целочисленные",
-                Type_Status.NotPassed))
+                r_text,
+                Type_Status.NotPassed.value))
 
     def test_bulk(self):
         """
         Функция для проверки данных геометрического объема grid-a, должен быть не отрицательным
         """
-        data = self.grid_model.get_grid().get_bulk_volume(asmasked=False)
+        data = self.grid_model.get_grid().get_bulk_volume(asmasked=False).get_npvalues3d()
         data[np.isnan(data)] = 0
 
         flag, wrong_data = self.__test_range_data(
@@ -321,12 +345,15 @@ class QA_QC_cubes(QA_QC_main):
         )
 
         if flag:
+            print("Тест пройден")
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
-            CubesTools.generate_wrong_actnum(wrong_data, self.save_wrong_data_path)
+            r_text = f"Данные имеют отрицательный объем"
+            print(f"Тест не пройден {r_text}")
+            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, "test_bulk")
             self.update_report(self.generate_report_text(
-                f"Данные имеют отрицательный объем",
-                Type_Status.NotPassed))
+                r_text,
+                Type_Status.NotPassed.value))
 
     """
     Тесты второго порядка
@@ -346,8 +373,8 @@ class QA_QC_cubes(QA_QC_main):
         """
         data_mas = []
         for name_type_file in list_name_type_file:
-            _, prop_name = CubesTools.find_key(
-                            self.help_dict_type_data[name_type_file])
+            _, prop_name = CubesTools().find_key(
+                self.help_dict_type_data[name_type_file])
             data_mas.append(
                 self.grid_model.get_prop_value(
                     self.grid_model.get_grid().get_prop_by_name(
@@ -358,19 +385,22 @@ class QA_QC_cubes(QA_QC_main):
 
         flag, wrong_data = self.__test_range_data(
             data_mas,
-            [lambda x: sum(x) == 1],
+            [lambda x: sum(x) == 1, lambda x: sum(x) == 0],
             sum
         )
 
         if flag:
+            print("Тест пройден")
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
-            CubesTools.generate_wrong_actnum(wrong_data, self.save_wrong_data_path)
+            r_text = f"Cумма кубов != 1"
+            print(f"Тест не пройден {r_text}")
+            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, "test_sum_cubes")
             self.update_report(self.generate_report_text(
-                f"Cумма кубов != 1",
-                Type_Status.NotPassed))
+                r_text,
+                Type_Status.NotPassed.value))
 
-    def test_affiliation_sqcr(self, sgcr_path: str, sgl_path: str):
+    def test_affiliation_sqcr(self):
         """
         Функция для проверки того что SGCR Є [SGL:1]
 
@@ -393,13 +423,17 @@ class QA_QC_cubes(QA_QC_main):
         )
 
         if flag:
+            print("Тест пройден")
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
+            r_text = f"Данные  ∉ [SGL:1] "
+            print(f"Тест не пройден {r_text}")
+            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, "test_affiliation_sqcr")
             self.update_report(self.generate_report_text(
-                f"Данные \n {wrong_data}  ∉ [SGL:1] ",
-                Type_Status.NotPassed))
+                r_text,
+                Type_Status.NotPassed.value))
 
-    def test_affiliation_swcr(self, swcr_path: str, swl_path: str):
+    def test_affiliation_swcr(self):
         """
         Функция для проверки того что SWCR ≥ SWL
 
@@ -413,7 +447,7 @@ class QA_QC_cubes(QA_QC_main):
         """
         swcr_value = self.__get_value_grid_prop(self.swcr_file_path)
 
-        swl_value = self.__get_value_grid_prop(self.swl_path)
+        swl_value = self.__get_value_grid_prop(self.swl_file_path)
 
         flag, wrong_data = self.__test_range_data(
             swcr_value,
@@ -422,11 +456,15 @@ class QA_QC_cubes(QA_QC_main):
         )
 
         if flag:
+            print("Тест пройден")
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
+            r_text = f"Данные < SWL "
+            print(f"Тест не пройден {r_text}")
+            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, "test_affiliation_swcr")
             self.update_report(self.generate_report_text(
-                f"Данные \n {wrong_data}  < SWL ",
-                Type_Status.NotPassed))
+                r_text,
+                Type_Status.NotPassed.value))
 
     def test_porosity_value(self, porosity_path: str, cut_off_porosity: float):
         """
@@ -455,22 +493,29 @@ class QA_QC_cubes(QA_QC_main):
         else:
             self.update_report(self.generate_report_text(
                 f"Данные \n {wrong_data}  значение porosity < cut-off porosity, но ACTNUM == 1 ",
-                Type_Status.NotPassed))
+                Type_Status.NotPassed.value))
+
     def test_swl_sw(self):
 
-        swl_value = self.__get_value_grid_prop(self.swl_file_path)
+        swl_value = self.__get_value_grid_prop(self.swl_file_path, False)
+        _, key = CubesTools().find_key(self.sw_file_path)
         flag = self.__test_value_conditions(
-            self.sw_file_path,
-            CubesTools.find_key(self.sw_file_path),
+            key,
             [lambda x: x >= swl_value],
-            self.muc_np_arrays
+            sum
         )
 
         if flag:
-            self.generate_report_text("", Type_Status.Passed.value)
+            print("Тест пройден")
+            self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
-            self.generate_report_text(f"Данные лежат не в интервале от 0 до 47,6",
-                                      Type_Status.NotPassed)
+            r_text = f"Данные <= SWL "
+            print(f"Тест не пройден {r_text}")
+            self.update_report(
+                self.generate_report_text(
+                    r_text,
+                    Type_Status.NotPassed.value))
+
     def __test_kern_data_dependence(
             self,
             data1,
@@ -497,8 +542,11 @@ class QA_QC_cubes(QA_QC_main):
                     self.generate_report_text(f"Скважина {cluster_key} прошла тест", Type_Status.Passed.value))
                 print(f"Скважина {cluster_key} прошла тест")
             else:
+                r_text = ""
+                if wrong_data is None:
+                    r_text += "Данные имеют None значение. "
                 self.update_report(
-                    self.generate_report_text(f"Скважина {cluster_key} не прошла тест", Type_Status.Passed.value))
+                    self.generate_report_text(f"{r_text} Скважина {cluster_key} не прошла тест", Type_Status.Passed.value))
                 print(f"Скважина {cluster_key} не прошла тест")
 
         if all(mas_flag):
@@ -690,11 +738,6 @@ class QA_QC_cubes(QA_QC_main):
             ),
             kern_func=self.connector_kern.kern_test_dependence_quo_kp_2
         )
-
-
-
-
-
 
 # self.generate_test_report(file_name=self.__class__.__name__, file_path="../../report", data_name=file_path)
 
