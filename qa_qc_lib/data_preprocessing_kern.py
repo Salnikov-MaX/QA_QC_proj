@@ -188,6 +188,7 @@ class DataPreprocessing:
                                  show=False)
 
         self.failed_tests = test_system.start_tests(test_array)["wrong_parameters"]
+        print(self.failed_tests)
         test_system.generate_test_report()
         self.error_flagging()
         return self.failed_tests

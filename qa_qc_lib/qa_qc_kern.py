@@ -141,10 +141,13 @@ class QA_QC_kern(QA_QC_main):
                 bool: результат выполнения теста
         """
         if not isinstance(array, np.ndarray):
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / {test_name}:\n Не запускался. Причина {param_name}" \
+            text= f"Не запускался. Причина {param_name}" \
                                 f" не является массивом. Входной файл {self.file_name}\n\n"
             self.dict_of_wrong_values[test_name] = [{param_name: [0]}, "не является массивом"]
+            report_text = self.generate_report_text(text, 2)
+            self.update_report(report_text)
+            if self.get_report:
+                print('\n' + report_text + self.delimeter)
             return False
 
         try:
@@ -152,28 +155,39 @@ class QA_QC_kern(QA_QC_main):
             elem = array[0]
         except:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / {test_name}:\n Не запускался. Причина {param_name}" \
+            text = f"{timestamp:10} / {test_name}:\n Не запускался. Причина {param_name}" \
                                 f" пустой. Входной файл {self.file_name}\n\n"
             self.dict_of_wrong_values[test_name] = [{param_name: [0]}, "пустой"]
+            report_text = self.generate_report_text(text, 2)
+            self.update_report(report_text)
+            if self.get_report:
+                print('\n' + report_text + self.delimeter)
             return False
         string_indices = np.where(np.array(list(map(lambda x: isinstance(x, str), array))))
         if string_indices[0].size != 0:
             self.dict_of_wrong_values[test_name] = [{
                 param_name: string_indices[0]}, "содержит не числовое значение"]
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.report_text += f"{timestamp:10} / {test_name}:\n Не запускался. Причина {param_name}" \
-                                f"содержит не числовое значение. Входной файл {self.file_name}\n\n"
+            text=f"Не запускался. Причина {param_name}" \
+                    f"содержит не числовое значение. Входной файл {self.file_name}\n\n"
+            report_text = self.generate_report_text(text, 3)
+            self.update_report(report_text)
+            if self.get_report:
+                print('\n' + report_text + self.delimeter)
+
             return False
         for i in range(array.size):
             if array[i] == np.nan or str(array[i]) == 'nan':
+                print(array, i)
                 self.dict_of_wrong_values[test_name] = [{
                     param_name: [i]}, "содержит nan"]
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.report_text += f"{timestamp:10} / {test_name}:\n Не запускался. Причина {param_name}" \
+                text = f"Не запускался. Причина {param_name}" \
                                     f" содержит nan. Входной файл {self.file_name}\n\n"
+                report_text = self.generate_report_text(text, 2)
+                self.update_report(report_text)
+                if self.get_report:
+                    print('\n' + report_text + self.delimeter)
 
                 return False
-
         return True
 
     def poro_preproccess(self):
@@ -1960,7 +1974,7 @@ class QA_QC_kern(QA_QC_main):
                     f"Все данные монотонны", 1)
             else:
                 report_text = self.generate_report_text(
-                    f"ЗИндексы выпадающие из монотонности {wrong_values}", 0)
+                    f"Индексы выпадающие из монотонности {wrong_values}", 0)
 
             self.update_report(report_text)
             if get_report:

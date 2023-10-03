@@ -5,16 +5,17 @@ import inspect
 import re
 
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 
 
 def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, test_name):
-    wrong_values1 = []
-    wrong_values2 = []
     y_pred = a * x + b
-    for i in range(len(y)):
-        if y[i] + (a * x[i] + b) * 0.1 < a * x[i] + b:
-            wrong_values2.append(i)
+    data = pd.DataFrame({'x': x, 'y': y})
+    data['pred_val'] = a * data['x'] + b
+
+    wrong_values1 = data.index[(data['x'] + data['pred_val'] * 0.03) < data['pred_val']].tolist()
+    wrong_values2 = data.index[(data['y'] + data['pred_val'] * 0.03) < data['pred_val']].tolist()
 
     x_trend = np.linspace(np.min(x), np.max(x), 100)
     y_trend = a * x_trend + b
@@ -27,9 +28,9 @@ def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, te
     plt.ylabel(y_name)
     plt.legend()
     equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
-    for x, y, pred_val in zip(x, y, y_pred):
-        if y + (pred_val * 0.1) < pred_val:
-            plt.scatter(x, y, color='r')
+    for x_val, y_val, pred_val in zip(x, y, y_pred):
+        if y_val + (pred_val * 0.03) < pred_val or x_val + (pred_val * 0.03) < pred_val:
+            plt.scatter(x_val, y_val, color='r')
     plt.text(np.min(x), np.mean(y), equation)
     plt.savefig(f"report\\{test_name}")
     if get_report:
@@ -39,11 +40,16 @@ def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, te
 
 
 def expon_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, test_name):
-    wrong_values1 = []
-    wrong_values2 = []
-    for i in range(len(x)):
-        if y[i]+ (a * np.exp(b * x[i]))*0.1> a * np.exp(b * x[i]):
-            wrong_values2.append(i)
+    data = pd.DataFrame({'x': x, 'y': y})
+
+    data['pred_val'] = a * np.exp(b * data['x'])
+
+    condition = (data['y'] + data['pred_val'] * 0.03) < data['pred_val']
+
+    filtered_data = data[condition]
+
+    wrong_values1 = filtered_data.index.tolist()
+    wrong_values2 = filtered_data.index.tolist()
 
     x_trend = np.linspace(np.min(x), np.max(x), 100)
     y_trend = a * x_trend + b
@@ -58,7 +64,7 @@ def expon_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, tes
     plt.ylabel(y_name)
     plt.legend()
     for x, y, pred_val in zip(x, y, y_pred):
-        if y + (pred_val * 0.1) < pred_val:
+        if y + (pred_val * 0.03) < pred_val or x + (pred_val * 0.03) < pred_val:
             plt.scatter(x, y, color='r')
     equation = f'y = {a:.2f}*exp({b:.2f}*x), r2={r2:.2f}'
     plt.text(np.mean(x), np.min(y), equation, ha='center', va='bottom')
@@ -70,11 +76,16 @@ def expon_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, tes
 
 
 def logarithmic_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, test_name):
-    wrong_values1 = []
-    wrong_values2 = []
-    for i in range(len(x)):
-        if y[i] + (a * np.log(x[i]) + b) * 0.1 > a * np.log(x[i]) + b:
-            wrong_values2.append(i)
+    data = pd.DataFrame({'x': x, 'y': y})
+
+    data['pred_val'] = a * np.log(data['x']) + b
+
+    condition = (data['y'] + data['pred_val'] * 0.03) < data['pred_val']
+
+    filtered_data = data[condition]
+
+    wrong_values1 = filtered_data.index.tolist()
+    wrong_values2 = filtered_data.index.tolist()
 
     x_trend = np.linspace(np.min(x), np.max(x), 100)
     y_trend = a * x_trend + b
@@ -90,7 +101,7 @@ def logarithmic_function_visualization(x, y, a, b, r2, get_report, x_name, y_nam
     plt.legend()
     # Окрашиваем точки, которые не соответствуют линии тренда, в красный
     for x, y, pred_val in zip(x, y, y_pred):
-        if y + (pred_val * 0.1) < pred_val:
+        if y + (pred_val * 0.03) < pred_val or x + (pred_val * 0.03) < pred_val:
             plt.scatter(x, y, color='r')
     equation = f'y = {a:.2f}*ln(x)+{b:.2f}, r2={r2:.2f}'
     plt.text(np.mean(x), np.min(y), equation, ha='center', va='bottom')
@@ -105,16 +116,15 @@ def remove_nan_pairs(array1, array2):
     new_array1 = []
     new_array2 = []
     index_mapping = {}
-    try:
-        if array1 is not None and array2 is not None:
-            for i in range(len(array1)):
+    if array1 is not None and array2 is not None:
+        try:
+            for i in range(array1.size):
                 if not (np.isnan(array1[i]) or np.isnan(array2[i])):
                     new_array1.append(array1[i])
                     new_array2.append(array2[i])
                     index_mapping[len(new_array1) - 1] = i
-    except:
-        ...
-
+        except:
+            ...
     return np.array(new_array1), np.array(new_array2), index_mapping
 
 
