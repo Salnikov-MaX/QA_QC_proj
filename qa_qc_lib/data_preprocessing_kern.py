@@ -47,12 +47,12 @@ class DataPreprocessing:
         self.newdic = {}
 
     def get_possible_tests(self, columns_with_data):
-        '''
+        """
         Опрделяет список тестов, которые возможно провести с текущеми данными
 
         :param columns_with_data: array[string]  массив с названиями не пустых колонок
         :return: array[string] - массив возможных тестов
-        '''
+        """
         test = find_test_methods_with_params(columns_with_data, QA_QC_kern())
         return test
 
