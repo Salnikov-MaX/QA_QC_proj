@@ -1,11 +1,12 @@
 import datetime
-import enum
 import inspect
+import enum
 
 class Type_Status(enum.Enum):
     NotPassed = 0
     Passed = 1
     NotRunning = 2
+
 class QA_QC_main():
     def __init__(self):
         self.report_text = ""
@@ -55,7 +56,8 @@ class QA_QC_main():
             results[method_name] = method(get_report=get_report)
         return results
 
-    def generate_test_report(self, file_name='test_report', file_path='report', data_name=None):
+    def generate_test_report(self, file_name='test_report',
+                             file_path='./report', data_name=None):
         """
         Метод для генерации отчета в виде текстового файла
 
@@ -67,7 +69,7 @@ class QA_QC_main():
         """
         data_name = self.file_name if not data_name else data_name
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-        report = f"Отчет о тестировании от {timestamp}{self.ident}Используеммый класс: {self.__class__.__name__}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
+        report = f"Отчет о тестировании от {timestamp}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
         with open(f"{file_path}/{file_name}.txt", "w") as file:
             file.write(report)
 

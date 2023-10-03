@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from qa_qc_lib.qa_qc_tools.math_tools import linear_dependence_function
 from qa_qc_lib.qa_qc_tools.math_tools import exponential_function
 from qa_qc_lib.qa_qc_tools.kern_tools import linear_function_visualization, expon_function_visualization, \
-    logarithmic_function_visualization
+    logarithmic_function_visualization, remap_wrong_values, remove_nan_pairs
 
 
 class QA_QC_kern(QA_QC_main):
@@ -96,7 +96,6 @@ class QA_QC_kern(QA_QC_main):
         self.outreach_in_meters = outreach_in_meters
         self.percent_core_removal = percent_core_removal
         self.bottom = bottom
-        self.klic = "Газопроницаемость по Кликенбергу"
         self.intervals = intervals
         self.poro_tbu = np.array(poroTBU)
         self.perpendicular_porosity = perpendicular_porosity
@@ -111,7 +110,6 @@ class QA_QC_kern(QA_QC_main):
         self.file_name = file_name
         self.r2 = r2
         self.dt_now = datetime.now()
-        #self.file = open(f"{file_path}/{file_report_name}.txt", "w")
         self.dict_of_wrong_values = {}
         self.get_report = show
         self.lithology = lithology
@@ -167,7 +165,7 @@ class QA_QC_kern(QA_QC_main):
                                 f"содержит не числовое значение. Входной файл {self.file_name}\n\n"
             return False
         for i in range(array.size):
-            if array[i] == np.nan:
+            if array[i] == np.nan or str(array[i]) == 'nan':
                 self.dict_of_wrong_values[test_name] = [{
                     param_name: [i]}, "содержит nan"]
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -180,54 +178,26 @@ class QA_QC_kern(QA_QC_main):
 
     def poro_preproccess(self):
         if not np.array_equal(self.porosity_open, np.array([None])):
-            try:
-                if self.porosity_open[0] != np.nan:
-                    self.porosity_array["self.porosity_open"] = self.porosity_open
-            except:
-                ...
+                self.porosity_array["self.porosity_open"] = self.porosity_open
 
         if not np.array_equal(self.poroHe, np.array([None])):
-            try:
-                if self.poroHe.item() != 0:
-                    self.porosity_array["self.poroHe"] = self.poroHe
-            except:
-                ...
+                self.porosity_array["self.poroHe"] = self.poroHe
 
         if not np.array_equal(self.porosity_kerosine, np.array([None])):
-            try:
-                if self.porosity_kerosine.item() != 0:
-                    self.porosity_array["self.porosity_kerosine"] = self.porosity_kerosine
-            except:
-                ...
+                self.porosity_array["self.porosity_kerosine"] = self.porosity_kerosine
 
     def kpr_preproccess(self):
         if not np.array_equal(self.klickenberg_permeability, np.array([None])):
-            try:
-                if self.kpr_array[0] != np.nan:
-                    self.kpr_array["self.klickenberg_permeability"] = self.klickenberg_permeability
-            except:
-                ...
+                self.kpr_array["self.klickenberg_permeability"] = self.klickenberg_permeability
 
         if not np.array_equal(self.kpr, np.array([None])):
-            try:
-                if self.kpr_array[0] != np.nan:
-                    self.kpr_array["self.kpr"] = self.kpr
-            except:
-                ...
+                self.kpr_array["self.kpr"] = self.kpr
 
         if not np.array_equal(self.parallel_permeability, np.array([None])):
-            try:
-                if self.kpr_array[0] != np.nan:
-                    self.kpr_array["self.parallel_permeability"] = self.parallel_permeability
-            except:
-                ...
+                self.kpr_array["self.parallel_permeability"] = self.parallel_permeability
 
         if not np.array_equal(self.water_permeability, np.array([None])):
-            try:
-                if self.kpr_array[0] != np.nan:
                     self.kpr_array["self.water_permeability"] = self.water_permeability
-            except:
-                ...
 
     def __water_saturation(self, array):
         wrong_values = []
@@ -248,14 +218,17 @@ class QA_QC_kern(QA_QC_main):
         return result, wrong_values
 
     def __test_porosity(self, array):
-        lower_bound_1, upper_bound_1 = 0, 0.476
-        lower_bound_2, upper_bound_2 = 0, 47.6
-        wrong_indices_1 = np.where((array < lower_bound_1) | (array > upper_bound_1))[0]
-        wrong_indices_2 = np.where((array < lower_bound_2) | (array > upper_bound_2))[0]
-
-        if len(wrong_indices_1) <= len(wrong_indices_2):
+        parts_bound_1, parts_bound_2 = 0, 1
+        percentages_bound = 1
+        parts = np.where((array > parts_bound_1) & (array < parts_bound_2))[0]
+        percentages = np.where((array > percentages_bound))[0]
+        if len(parts) >= len(percentages):
+            lower_bound_1, upper_bound_1 = 0, 0.476
+            wrong_indices_1 = np.where((array < lower_bound_1) | (array > upper_bound_1))[0]
             return len(wrong_indices_1) == 0, wrong_indices_1.tolist()
         else:
+            lower_bound_2, upper_bound_2 = 0, 47.6
+            wrong_indices_2 = np.where((array < lower_bound_2) | (array > upper_bound_2))[0]
             return len(wrong_indices_2) == 0, wrong_indices_2.tolist()
 
     def __permeability(self, array):
@@ -400,8 +373,10 @@ class QA_QC_kern(QA_QC_main):
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 47,6]
+
         Required data:
             Открытая пористость по газу
+
         Args:
             self.poroHe (array[int/float]): массив с открытой пористостью по гелию для проверки
 
@@ -431,6 +406,7 @@ class QA_QC_kern(QA_QC_main):
 
         Required data:
             Кп откр TBU
+
         Args:
             self.poro_tbu (array[int/float]): массив с открытой пористостью в пластовых условиях для проверки
 
@@ -459,14 +435,15 @@ class QA_QC_kern(QA_QC_main):
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 47,6]
 
-            Required data:
-                Открытая пористость по керосину
-            Args:
-                self.porosity_kerosine (array[int/float]): массив с открытой пористостью по керосину для проверки
+        Required data:
+            Открытая пористость по керосину
 
-            Returns:
-                bool: результат выполнения теста
-                file: запись результата теста для сохранения состояния
+        Args:
+            self.porosity_kerosine (array[int/float]): массив с открытой пористостью по керосину для проверки
+
+        Returns:
+            bool: результат выполнения теста
+            file: запись результата теста для сохранения состояния
         """
         if self.__check_data(self.porosity_kerosine, "Открытая пористость по керосину", "test porosity kerosine"):
             result, wrong_values = self.__test_porosity(self.porosity_kerosine)
@@ -825,26 +802,29 @@ class QA_QC_kern(QA_QC_main):
         for poro in self.porosity_array:
             self.porosity_open = self.porosity_array[poro]
             poro_name = self.poro_name_dic[poro]
-            if self.__check_data(self.sw_residual, "Кво",
+            parsed_porosity_open, parsed_sw_residual, index_dic = remove_nan_pairs(self.porosity_open, self.sw_residual)
+            if self.__check_data(parsed_sw_residual, "Кво",
                                  f"test quo {poro_name} dependence") and \
-                    self.__check_data(self.porosity_open, f"{poro_name}", f"test quo {poro_name} dependence"):
+                    self.__check_data(parsed_porosity_open, f"{poro_name}", f"test quo {poro_name} dependence"):
 
                 r2 = \
-                    self.test_general_dependency_checking(self.sw_residual, self.porosity_open,
+                    self.test_general_dependency_checking(parsed_sw_residual, parsed_porosity_open,
                                                           f"test quo {poro_name} dependence",
                                                           "Кво",
                                                           f"{poro_name}")["r2"]
                 result = True
-                a, b = linear_dependence_function(self.porosity_open, self.sw_residual)
+                a, b = linear_dependence_function(parsed_porosity_open, parsed_sw_residual)
                 if a >= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = linear_function_visualization(self.porosity_open, self.sw_residual, a, b,
+                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open, parsed_sw_residual,
+                                                                             a, b,
                                                                              r2,
                                                                              get_report, f"{poro_name}",
                                                                              "Кво",
                                                                              f"test_quo_{poro_name}_dependence")
-
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
                 self.dict_of_wrong_values[f"test_quo_{poro_name}_dependence"] = [{"Кво": wrong_values1,
                                                                                   f"{poro_name}": wrong_values2
                                                                                   }, "выпадает из линии тренда"]
@@ -852,10 +832,10 @@ class QA_QC_kern(QA_QC_main):
 
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
@@ -884,25 +864,28 @@ class QA_QC_kern(QA_QC_main):
         for poro in self.porosity_array:
             self.porosity_open = self.porosity_array[poro]
             poro_name = self.poro_name_dic[poro]
-            if self.__check_data(self.porosity_open, f"{poro_name}", f"test {poro_name} density dependence") and \
-                    self.__check_data(self.density, "Плотность абсолютно сухого образца",
+            parsed_porosity_open, parsed_density, index_dic = remove_nan_pairs(self.porosity_open, self.density)
+            if self.__check_data(parsed_porosity_open, f"{poro_name}", f"test {poro_name} density dependence") and \
+                    self.__check_data(parsed_density, "Плотность абсолютно сухого образца",
                                       f"test {poro_name} density dependence"):
 
-                r2 = self.test_general_dependency_checking(self.porosity_open, self.density,
+                r2 = self.test_general_dependency_checking(parsed_porosity_open, parsed_density,
                                                            f"test {poro_name} density dependence",
                                                            f"{poro_name}",
                                                            "Плотности")["r2"]
 
                 result = True
-                a, b = linear_dependence_function(self.porosity_open, self.density)
+                a, b = linear_dependence_function(parsed_porosity_open, parsed_density)
                 if a >= 0 or r2 < 0.7:
                     result = False
 
-                report_text = f"{result}."
-                wrong_values1, wrong_values2 = linear_function_visualization(self.porosity_open, self.density, a, b, r2,
+                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open, parsed_density, a, b,
+                                                                             r2,
                                                                              get_report,
                                                                              f"{poro_name}", "Плотности",
                                                                              f"{poro_name}_density_dependence")
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
                 self.dict_of_wrong_values[f"test {poro_name} density dependence"] = [
                     {f"{poro_name}": wrong_values1,
                      "Плотность абсолютно сухого образца": wrong_values2,
@@ -910,12 +893,13 @@ class QA_QC_kern(QA_QC_main):
                 result_array.append(result)
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
+
                 if get_report:
                     print(report_text)
 
@@ -944,31 +928,35 @@ class QA_QC_kern(QA_QC_main):
         for poro in self.porosity_array:
             self.porosity_open = self.porosity_array[poro]
             poro_name = self.poro_name_dic[poro]
+            parsed_porosity_open, parsed_kgo, index_dic = remove_nan_pairs(self.porosity_open, self.kgo)
             if self.__check_data(self.porosity_open, f"{poro_name}", f"test_{poro_name}_kgo_dependence") and \
-                    self.__check_data(self.kgo, "Cвязанная газонасыщенность", f"test_{poro_name}_kgo_dependence"):
+                    self.__check_data(parsed_kgo, "Cвязанная газонасыщенность", f"test_{poro_name}_kgo_dependence"):
 
                 r2 = \
-                    self.test_general_dependency_checking(self.porosity_open, self.kgo,
+                    self.test_general_dependency_checking(parsed_porosity_open, parsed_kgo,
                                                           f"test_{poro_name}_kgo_dependence",
                                                           f"{poro_name}",
                                                           "Cвязанная газонасыщенность")["r2"]
 
                 result = True
-                a, b = linear_dependence_function(self.porosity_open, self.kgo)
+                a, b = linear_dependence_function(parsed_porosity_open, parsed_kgo)
                 if a >= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = linear_function_visualization(self.porosity_open, self.kgo, a, b, r2,
+                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open, parsed_kgo, a, b, r2,
                                                                              get_report,
                                                                              f"{poro_name}",
                                                                              "Cвязанная газонасыщенность",
                                                                              f"test_{poro_name}_kgo_dependence")
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
+
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
@@ -1003,31 +991,36 @@ class QA_QC_kern(QA_QC_main):
         for poro in self.porosity_array:
             self.porosity_open = self.porosity_array[poro]
             poro_name = self.poro_name_dic[poro]
-            if self.__check_data(self.porosity_open, f"{poro_name}", f"test_{poro_name}_knmng_dependence") and \
-                    self.__check_data(self.knmng, "Критическая нефтенасыщенность",
+            parsed_porosity_open, parsed_knmng, index_dic = remove_nan_pairs(self.porosity_open, self.knmng)
+            if self.__check_data(parsed_porosity_open, f"{poro_name}", f"test_{poro_name}_knmng_dependence") and \
+                    self.__check_data(parsed_knmng, "Критическая нефтенасыщенность",
                                       f"test_{poro_name}_knmng_dependence"):
 
-                r2 = self.test_general_dependency_checking(self.porosity_open, self.knmng,
+                r2 = self.test_general_dependency_checking(parsed_porosity_open, parsed_knmng,
                                                            f"test_{poro_name}_knmng_dependence",
                                                            f"{poro_name}",
                                                            "Критическая нефтенасыщенность")["r2"]
 
                 result = True
-                a, b = linear_dependence_function(self.porosity_open, self.knmng)
+                a, b = linear_dependence_function(parsed_porosity_open, parsed_knmng)
                 if a >= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = linear_function_visualization(self.porosity_open, self.knmng, a, b, r2,
+                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open, parsed_knmng, a, b,
+                                                                             r2,
                                                                              get_report,
                                                                              f"{poro_name}",
                                                                              "Cвязанная газонасыщенность",
                                                                              f"test_{poro_name}_knmng_dependence")
+
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
@@ -1063,33 +1056,36 @@ class QA_QC_kern(QA_QC_main):
         for poro in self.porosity_array:
             self.porosity_open = self.porosity_array[poro]
             poro_name = self.poro_name_dic[poro]
-            if self.__check_data(self.porosity_open, f"{poro_name}", f"test_{poro_name}_kno_dependence") and \
-                    self.__check_data(self.kno, "Коэффициент остаточной нефтенасыщенности",
+            parsed_porosity_open, parsed_kno, index_dic = remove_nan_pairs(self.porosity_open, self.kno)
+            if self.__check_data(parsed_porosity_open, f"{poro_name}", f"test_{poro_name}_kno_dependence") and \
+                    self.__check_data(parsed_kno, "Коэффициент остаточной нефтенасыщенности",
                                       f"test_{poro_name}_kno_dependence"):
 
                 r2 = \
-                    self.test_general_dependency_checking(self.porosity_open, self.kno,
+                    self.test_general_dependency_checking(parsed_porosity_open, parsed_kno,
                                                           f"test_{poro_name}_kno_dependence",
                                                           f"{poro_name}",
                                                           "Коэффициент остаточной нефтенасыщенности")["r2"]
 
                 result = True
-                a, b = linear_dependence_function(self.porosity_open, self.kno)
+                a, b = linear_dependence_function(parsed_porosity_open, parsed_kno)
                 if a >= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = linear_function_visualization(self.porosity_open, self.knmng, a, b, r2,
+                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open, parsed_kno, a, b, r2,
                                                                              get_report,
                                                                              f"{poro_name}",
                                                                              "Коэффициент остаточной нефтенасыщенности",
                                                                              f"test_{poro_name}_kno_dependence")
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
 
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
@@ -1120,30 +1116,33 @@ class QA_QC_kern(QA_QC_main):
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-        if self.__check_data(self.sw_residual, "Кво", "test sw_residual kp din dependence") and \
-                self.__check_data(self.kp_din, "kp din", "test sw_residual kp din dependence"):
+        parsed_sw_residual, parsed_kp_din, index_dic = remove_nan_pairs(self.sw_residual, self.kp_din)
+        if self.__check_data(parsed_sw_residual, "Кво", "test sw_residual kp din dependence") and \
+                self.__check_data(parsed_kp_din, "kp din", "test sw_residual kp din dependence"):
 
-            r2 = self.test_general_dependency_checking(self.sw_residual, self.kp_din,
+            r2 = self.test_general_dependency_checking(parsed_sw_residual, parsed_kp_din,
                                                        "test sw_residual kp din dependence",
                                                        "Коэффициента остаточной водонасыщенности",
                                                        "Коэффициента динамической пористости")["r2"]
             result = True
-            a, b = linear_dependence_function(self.kp_din, self.sw_residual)
+            a, b = linear_dependence_function(parsed_kp_din, parsed_sw_residual)
             if a >= 0 or r2 < 0.7:
                 result = False
 
-            wrong_values1, wrong_values2 = linear_function_visualization(self.sw_residual, self.kp_din, a, b, r2,
+            wrong_values1, wrong_values2 = linear_function_visualization(parsed_sw_residual, parsed_kp_din, a, b, r2,
                                                                          get_report,
                                                                          "Коэффициент остаточной водонасыщенности",
                                                                          "Коэффициент динамической пористости",
                                                                          "test_sw_residual_kp_din_dependence")
+            wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+            wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
 
             if result:
                 report_text = self.generate_report_text(
-                    f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                    f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
             else:
                 report_text = self.generate_report_text(
-                    f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                    f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
             self.update_report(report_text)
             if get_report:
@@ -1214,10 +1213,10 @@ class QA_QC_kern(QA_QC_main):
 
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 y_pred = a2 * self.porosity_open + b2
@@ -1302,16 +1301,18 @@ class QA_QC_kern(QA_QC_main):
                     if self.pmu[i] < a2 * self.porosity_open[i] + b2:
                         wrong_values1.append(self.pmu[i])
                         wrong_values2.append(self.porosity_open[i])
+
+
                 self.dict_of_wrong_values[f"test_pmu_{poro_name}_dependence"] = [
                     {"Минералогическая плотность": wrong_values1,
                      f"{poro_name}": wrong_values2},
                     "выпадает из линии тренда"]
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 plt.title(f"test pmu {poro_name} dependence")
@@ -1360,7 +1361,6 @@ class QA_QC_kern(QA_QC_main):
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-
         if self.__check_data(self.kp_ef, "kp ef", "test kpf kp din dependence") \
                 and self.__check_data(self.kp_din, "kp din", "test kpf kp din dependence"):
 
@@ -1378,10 +1378,10 @@ class QA_QC_kern(QA_QC_main):
                                                                          "test_kp_ef_kp_din_dependence")
             if result:
                 report_text = self.generate_report_text(
-                    f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                    f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
             else:
                 report_text = self.generate_report_text(
-                    f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                    f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
             self.update_report(report_text)
             if get_report:
@@ -1411,32 +1411,35 @@ class QA_QC_kern(QA_QC_main):
         for poro in self.porosity_array:
             self.porosity_open = self.porosity_array[poro]
             poro_name = self.poro_name_dic[poro]
-            if self.__check_data(self.kp_ef, "kp ef", f"test kp ef {poro_name} dependence") \
+            parsed_kp_ef, parsed_porosity_open, index_dic = remove_nan_pairs(self.kp_ef, self.porosity_open)
+            if self.__check_data(parsed_kp_ef, "kp ef", f"test kp ef {poro_name} dependence") \
                     and self.__check_data(self.porosity_open, f"{poro_name}", f"test kp ef {poro_name} dependence"):
 
-                r2 = self.test_general_dependency_checking(self.kp_ef, self.porosity_open,
+                r2 = self.test_general_dependency_checking(parsed_kp_ef, parsed_porosity_open,
                                                            f"test kp ef {poro_name} dependence",
                                                            "Коэффициента эффективной пористости",
                                                            f"{poro_name}")["r2"]
                 result = True
-                a, b = linear_dependence_function(self.porosity_open, self.kp_ef)
+                a, b = linear_dependence_function(parsed_porosity_open, parsed_kp_ef)
                 if a <= 0 or b >= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = linear_function_visualization(self.porosity_open, self.kp_ef, a, b, r2,
+                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open,parsed_kp_ef, a, b, r2,
                                                                              get_report,
                                                                              f"{poro_name}",
                                                                              "Коэффициент эффективной пористости",
                                                                              f"test_kp_ef_{poro_name}_dependence")
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
                 self.dict_of_wrong_values["test_kp_ef_kp_dependence"] = [{
                     "Кп откр": wrong_values2
                 }, "выпадает из линии тренда"]
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
@@ -1468,30 +1471,33 @@ class QA_QC_kern(QA_QC_main):
         for poro in self.porosity_array:
             self.porosity_open = self.porosity_array[poro]
             poro_name = self.poro_name_dic[poro]
-            if self.__check_data(self.porosity_open, f"{poro_name}", f"test {poro_name} kp din dependence") \
-                    and self.__check_data(self.kp_din, "kp din", f"test {poro_name} kp din dependence"):
-                r2 = self.test_general_dependency_checking(self.porosity_open, self.kp_din,
+            parsed_porosity_open, parsed_kp_din, index_dic = remove_nan_pairs(self.porosity_open, self.kp_din)
+            if self.__check_data(parsed_porosity_open, f"{poro_name}", f"test {poro_name} kp din dependence") \
+                    and self.__check_data(parsed_kp_din, "kp din", f"test {poro_name} kp din dependence"):
+                r2 = self.test_general_dependency_checking(parsed_porosity_open, parsed_kp_din,
                                                            f"test {poro_name} kp din dependence",
                                                            f"{poro_name}",
                                                            "Коэффициента динамической пористости")["r2"]
-                a, b = linear_dependence_function(self.porosity_open, self.kp_din)
+                a, b = linear_dependence_function(parsed_porosity_open, parsed_kp_din)
                 result = True
                 if a <= 0 or b >= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = linear_function_visualization(self.porosity_open, self.kp_din, a, b, r2,
+                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open, parsed_kp_din, a, b, r2,
                                                                              get_report,
                                                                              f"{poro_name}",
                                                                              "Коэффициент динамической пористости",
                                                                              f"test_{poro_name}_kp_din_dependence")
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
                 self.dict_of_wrong_values[f"test_{poro_name}c_kp_din_dependence"] = [{f"{poro_name}": wrong_values1,
                                                                                       }, "выпадает из линии тренда"]
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
@@ -1526,26 +1532,29 @@ class QA_QC_kern(QA_QC_main):
             for poro in self.porosity_array:
                 self.porosity_open = self.porosity_array[poro]
                 poro_name = self.poro_name_dic[poro]
-                if self.__check_data(self.kpr, f"{kpr_name}", f"test dependence {kpr_name} {poro_name}") and \
-                        self.__check_data(self.porosity_open, f"{poro_name}",
+                parsed_kpr, parsed_porosity_open, index_dic = remove_nan_pairs(self.kpr, self.porosity_open)
+                if self.__check_data(parsed_kpr, f"{kpr_name}", f"test dependence {kpr_name} {poro_name}") and \
+                        self.__check_data(parsed_porosity_open, f"{poro_name}",
                                           f"test dependence {kpr_name} {poro_name}"):
                     r2 = \
-                        self.test_general_dependency_checking(self.kpr, self.porosity_open,
+                        self.test_general_dependency_checking(parsed_kpr, parsed_porosity_open,
                                                               f"test dependence {kpr_name} {poro_name}",
                                                               f"{kpr_name}",
                                                               f"{poro_name}")["r2"]
 
                     result = True
-                    a, b = exponential_function(self.porosity_open, self.kpr)
+                    a, b = exponential_function(parsed_porosity_open, parsed_kpr)
                     if b <= 0 or r2 < 0.7:
                         result = False
 
-                    wrong_values1, wrong_values2 = expon_function_visualization(self.porosity_open.astype(float),
-                                                                                self.kpr.astype(float), a, b, r2,
+                    wrong_values1, wrong_values2 = expon_function_visualization(parsed_porosity_open.astype(float),
+                                                                                parsed_kpr.astype(float), a, b, r2,
                                                                                 get_report,
                                                                                 f"{poro_name}",
                                                                                 f"{kpr_name}",
                                                                                 f"test_dependence_{kpr_name}_{poro_name}")
+                    wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                    wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
 
                     self.dict_of_wrong_values[f"test_dependence_{kpr_name}_{poro_name}"] = [
                         {f"{kpr_name}": wrong_values1,
@@ -1553,10 +1562,10 @@ class QA_QC_kern(QA_QC_main):
                         "выпадает из линии тренда"]
                     if result:
                         report_text = self.generate_report_text(
-                            f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                            f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                     else:
                         report_text = self.generate_report_text(
-                            f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                            f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                     self.update_report(report_text)
                     if get_report:
@@ -1586,32 +1595,35 @@ class QA_QC_kern(QA_QC_main):
         for kpr in self.kpr_array:
             self.kpr = self.kpr_array[kpr]
             kpr_name = self.kpr_name_dic[kpr]
-            if self.__check_data(self.kpr, f"{kpr_name}", f"test dependence {kpr_name} kp din") and \
-                    self.__check_data(self.kp_din, "Kp_din", f"test dependence {kpr_name} kp din"):
+            parsed_kpr, parsed_kp_din, index_dic = remove_nan_pairs(self.kpr, self.kp_din)
+            if self.__check_data(parsed_kpr, f"{kpr_name}", f"test dependence {kpr_name} kp din") and \
+                    self.__check_data(parsed_kp_din, "Kp_din", f"test dependence {kpr_name} kp din"):
 
                 r2 = self.test_general_dependency_checking(self.kpr, self.kp_din, f"test dependence {kpr_name} kp din",
                                                            f"{kpr_name}",
                                                            "Коэффициента динамической пористости")["r2"]
                 result = True
-                a, b = exponential_function(self.kp_din, self.kpr)
+                a, b = exponential_function(parsed_kp_din, parsed_kpr)
                 if b <= 0 or r2 < 0.7:
                     result = False
 
                 result_array.append(result)
 
-                wrong_values1, wrong_values2 = expon_function_visualization(self.kpr, self.kp_din, a, b, r2, get_report,
+                wrong_values1, wrong_values2 = expon_function_visualization(parsed_kpr, parsed_kp_din, a, b, r2, get_report,
                                                                             f"{kpr_name}",
                                                                             "Коэффициент динамической пористости",
                                                                             f"test_dependence_{kpr_name}_kp_din")
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
 
                 self.dict_of_wrong_values[f"test_dependence_{kpr_name}_kp_din"] = [{f"{kpr_name}": wrong_values1,
                                                                                     }, "выпадает из линии тренда"]
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
@@ -1640,29 +1652,33 @@ class QA_QC_kern(QA_QC_main):
         for kpr in self.kpr_array:
             self.kpr = self.kpr_array[kpr]
             kpr_name = self.kpr_name_dic[kpr]
-            if self.__check_data(self.sw_residual, "Кво", f"test dependence sw_residual {kpr_name}") and \
-                    self.__check_data(self.kpr, f"{kpr_name}", f"test dependence sw_residual {kpr_name}"):
+            parsed_sw_residual, parsed_kpr, index_dic = remove_nan_pairs(self.sw_residual, self.kpr)
+            if self.__check_data(parsed_sw_residual, "Кво", f"test dependence sw_residual {kpr_name}") and \
+                    self.__check_data(parsed_kpr, f"{kpr_name}", f"test dependence sw_residual {kpr_name}"):
 
-                r2 = self.test_general_dependency_checking(self.sw_residual, self.kpr,
+                r2 = self.test_general_dependency_checking(parsed_sw_residual, parsed_kpr,
                                                            f"test dependence sw_residual {kpr_name}",
                                                            "Коэффициента остаточной водонасыщенности",
                                                            f"{kpr_name}")["r2"]
-                coefficients = np.polyfit(self.kpr, np.exp(self.sw_residual), 1)
+                coefficients = np.polyfit(parsed_kpr, np.exp(parsed_sw_residual), 1)
                 a, b = coefficients[0], coefficients[1]
                 result = True
-                wrong_values1, wrong_values2 = logarithmic_function_visualization(self.kpr, self.sw_residual, a, b, r2,
+                wrong_values1, wrong_values2 = logarithmic_function_visualization(parsed_kpr, parsed_sw_residual, a, b, r2,
                                                                                   get_report, f"{kpr_name}",
                                                                                   "Коэффициент остаточной водонасыщенности",
                                                                                   f"test_dependence_sw_residual_{kpr_name}")
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
+
                 if a <= 0 or r2 < 0.7:
                     result = False
 
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
@@ -1690,14 +1706,15 @@ class QA_QC_kern(QA_QC_main):
             dict[str, bool | datetime | str]: словарь с результатом выполнения теста, датой выполнения теста
             file: запись результата теста для сохранения состояния
         """
-        if self.__check_data(self.rn, "Параметр насыщенности(RI)", "test rn sw_residual dependencies") \
-                and self.__check_data(self.sw_residual, "Sw",
+        parsed_rn, parsed_sw_residual, index_dic = remove_nan_pairs(self.rn, self.sw_residual)
+        if self.__check_data(parsed_rn, "Параметр насыщенности(RI)", "test rn sw_residual dependencies") \
+                and self.__check_data(parsed_sw_residual, "Sw",
                                       "test rn sw_residual dependencies"):
-            r2 = self.test_general_dependency_checking(self.rn, self.sw_residual,
+            r2 = self.test_general_dependency_checking(parsed_rn, parsed_sw_residual,
                                                        "test rn sw_residual dependencies",
                                                        "Параметр_насыщенности(RI)",
                                                        "Коэффициента водонасыщенности")["r2"]
-            coefficients = np.polyfit(np.log(self.sw_residual), np.log(self.rn), 1)
+            coefficients = np.polyfit(np.log(parsed_sw_residual), np.log(parsed_rn), 1)
             b, n = np.exp(coefficients[1]), coefficients[0]
             result = True
             if 1.1 >= n or n >= 5 or r2 < 0:
@@ -1705,36 +1722,39 @@ class QA_QC_kern(QA_QC_main):
 
             wrong_values1 = []
             wrong_values2 = []
-            for i in range(len(self.rn)):
-                if self.rn[i] > b / (self.sw_residual[i] ** n):
-                    wrong_values1.append(self.rn[i])
-                    wrong_values2.append(self.sw_residual[i])
+            for i in range(len(parsed_rn)):
+                if parsed_rn[i] +(b / (parsed_sw_residual[i] ** n))*0.1 > b / (parsed_sw_residual[i] ** n):
+                    wrong_values1.append(parsed_rn[i])
+                    wrong_values2.append(parsed_sw_residual[i])
+
+            wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+            wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
             self.dict_of_wrong_values["test_rn_sw_residual_dependence"] = [{"Параметр насыщенности(RI)": wrong_values1,
                                                                             "Sw": wrong_values2
                                                                             }, "выпадает из линии тренда"]
             if result:
                 report_text = self.generate_report_text(
-                    f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                    f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
             else:
                 report_text = self.generate_report_text(
-                    f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                    f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
             self.update_report(report_text)
             plt.title("test rn sw_residual dependencies")
-            y_pred = b / (self.sw_residual ** n)
+            y_pred = b / (parsed_sw_residual ** n)
 
             # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-            for sw_residual_val, rn_val, pred_val in zip(self.sw_residual, self.rn, y_pred):
+            for sw_residual_val, rn_val, pred_val in zip(parsed_sw_residual, parsed_rn, y_pred):
                 if rn_val + (pred_val * 0.1) < pred_val:
                     plt.scatter(sw_residual_val, rn_val, color='r')
 
-            plt.scatter(self.sw_residual, self.rn, color='blue', label='Исходные данные')
-            plt.plot(self.rn, b / (self.sw_residual ** n), color='red', label='Линия тренда')
+            plt.scatter(parsed_sw_residual, parsed_rn, color='blue', label='Исходные данные')
+            plt.plot(parsed_rn, b / (parsed_sw_residual ** n), color='red', label='Линия тренда')
             plt.xlabel('sw_residual')
             plt.ylabel('rn')
             plt.legend()
             equation = f'y = {b:.2f}/(x^{b:.2f}),  r2={r2:.2f}'
-            plt.text(np.mean(self.sw_residual), np.min(self.rn), equation, ha='center', va='bottom')
+            plt.text(np.mean(parsed_sw_residual), np.min(parsed_rn), equation, ha='center', va='bottom')
             plt.savefig("report\\test_rn_sw_residual_dependence.png")
             if get_report:
                 plt.show()
@@ -1765,14 +1785,15 @@ class QA_QC_kern(QA_QC_main):
         for poro in self.porosity_array:
             self.porosity_open = self.porosity_array[poro]
             poro_name = self.poro_name_dic[poro]
-            if self.__check_data(self.rp, "Параметр пористости(F)", f"test rp {poro_name} dependencies") \
-                    and self.__check_data(self.porosity_open, f"{poro_name}", f"test rp {poro_name} dependencies"):
+            parsed_rp, parsed_porosity_open, index_dic = remove_nan_pairs(self.rp, self.porosity_open)
+            if self.__check_data(parsed_rp, "Параметр пористости(F)", f"test rp {poro_name} dependencies") \
+                    and self.__check_data(parsed_porosity_open, f"{poro_name}", f"test rp {poro_name} dependencies"):
                 r2 = \
-                    self.test_general_dependency_checking(self.rp, self.porosity_open,
+                    self.test_general_dependency_checking(parsed_rp, parsed_porosity_open,
                                                           f"test rp {poro_name} dependencies",
                                                           "Параметр пористости(F)",
                                                           f"{poro_name}")["r2"]
-                coefficients = np.polyfit(np.log(self.porosity_open), -np.log(self.rp), 1)
+                coefficients = np.polyfit(np.log(parsed_porosity_open), -np.log(parsed_rp), 1)
                 a, m = np.exp(-coefficients[1]), coefficients[0]
                 result = True
                 if 1.1 >= m or m >= 3.8 or 0 >= a or a >= 2.5 or r2 < 0.7:
@@ -1780,27 +1801,29 @@ class QA_QC_kern(QA_QC_main):
 
                 wrong_values1 = []
                 wrong_values2 = []
-                for i in range(len(self.rp)):
-                    if self.rp[i] > a / (self.porosity_open[i] ** m):
-                        wrong_values1.append(self.rp[i])
-                        wrong_values2.append(self.porosity_open[i])
+                for i in range(len(parsed_rp)):
+                    if parsed_rp[i] + (a/(parsed_porosity_open[i] ** m))*0.1 > a/(parsed_porosity_open[i] ** m):
+                        wrong_values2.append(i)
+
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 self.dict_of_wrong_values["test_rp_kp_dependencies"] = [{"Параметр пористости(F)": wrong_values1,
                                                                          f"{poro_name}": wrong_values2
                                                                          }, "выпадает из линии тренда"]
-                plt.scatter(self.porosity_open, self.rp, color='blue', label='Исходные данные')
-                plt.plot(self.porosity_open, a / (self.porosity_open ** m), color='red', label='Линия тренда')
-                y_pred = a / (self.porosity_open ** m)
+                plt.scatter(parsed_porosity_open, parsed_rp, color='blue', label='Исходные данные')
+                plt.plot(parsed_porosity_open, a / (parsed_porosity_open ** m), color='red', label='Линия тренда')
+                y_pred = a / (parsed_porosity_open ** m)
 
                 # Окрашиваем точки, которые не соответствуют линии тренда, в красный
-                for rp_val, kv_val, pred_val in zip(self.rp, self.porosity_open, y_pred):
+                for rp_val, kv_val, pred_val in zip(parsed_rp, parsed_porosity_open, y_pred):
                     if rp_val + (pred_val * 0.1) < pred_val:
                         plt.scatter(kv_val, rp_val, color='r')
 
@@ -1809,17 +1832,18 @@ class QA_QC_kern(QA_QC_main):
                 plt.ylabel('rp')
                 plt.legend()
                 equation = f'y = {a:.2f}/(x^{m:.2f}), r2={r2:.2f}'
-                plt.text(np.mean(self.rp), np.min(self.porosity_open), equation, ha='center', va='bottom')
-                plt.savefig(f"report\\test_rp_{poro_name}_dependencies.png")
+                plt.text(np.mean(parsed_rp), np.min(parsed_porosity_open), equation, ha='center', va='bottom')
                 if get_report:
                     plt.show()
                     print(report_text)
+                #plt.savefig(f"report\\test_rp_{poro_name}_dependencies.png")
+                plt.close()
                 result_array.append(result)
 
         return {"result": result_array, "report_text": self.report_text, "date": self.dt_now}
 
     def test_general_dependency_checking(self, x, y, test_name="не указано", x_name="не указано", y_name="не указано",
-                                         get_report=True):
+                                         get_report=False):
         """
         Тест предназначен для оценки дисперсии входных данных.
         Он проводится по следующему алгоритму: изначально,
@@ -1989,7 +2013,7 @@ class QA_QC_kern(QA_QC_main):
         """
         Тест оценивает соответствие значений выноса керна в метрах и в процентах
              Required data:
-                Вынос керна; Вынос керна, %
+                Вынос керна; Вынос керна, %; Кровля интервала отбора; Подошва интервала отбора
             Args:
                 self.intervals (array[[int/float]]): массив с массивамими,
                                                     содержашими начало интервала и конец интервала
@@ -2435,9 +2459,10 @@ class QA_QC_kern(QA_QC_main):
         wrong_values.append(wrong_den)
         wrong_values.append(wrong_carb)
         wrong_values.append(wrong_poro)
+
         self.dict_of_wrong_values["test correctness of p sk kp"] = [{
             "Кп откр": wrong_den,
-            "Ск": wrong_carb,
+            "Карбонатность": wrong_carb,
             "Плотность абсолютно сухого образца": wrong_poro
         }, "расхождение параметров выше 5%"]
 
@@ -2473,31 +2498,34 @@ class QA_QC_kern(QA_QC_main):
         for kpr in self.kpr_array:
             self.kpr = self.kpr_array[kpr]
             kpr_name = self.kpr_name_dic[kpr]
-            if self.__check_data(self.kno, "Кно", "test dependence kno kpr") and \
-                    self.__check_data(self.kpr, f"{kpr_name}", "test dependence kno kpr"):
+            parsed_kpr, parsed_kno, index_dic = remove_nan_pairs(self.kpr, self.kno)
+            if self.__check_data(parsed_kno, "Кно", "test dependence kno kpr") and \
+                    self.__check_data(parsed_kpr, f"{kpr_name}", "test dependence kno kpr"):
 
-                r2 = self.test_general_dependency_checking(self.kno, self.kpr, "test dependence kno kpr",
+                r2 = self.test_general_dependency_checking(parsed_kno, parsed_kpr, "test dependence kno kpr",
                                                            "Коэффициент остаточной нефтенасыщенности",
                                                            f"{kpr_name}")["r2"]
 
-                coefficients = np.polyfit(self.kno, np.exp(self.kpr), 1)
+                coefficients = np.polyfit(self.kno, np.exp(parsed_kpr), 1)
                 a, b = coefficients[0], coefficients[1]
                 result = True
                 if a >= 0 or b <= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = logarithmic_function_visualization(self.kno, self.kpr, a, b, r2,
+                wrong_values1, wrong_values2 = logarithmic_function_visualization(parsed_kno, parsed_kpr, a, b, r2,
                                                                                   get_report,
                                                                                   "Коэффициент остаточной нефтенасыщенности",
                                                                                   f"{kpr_name}",
                                                                                   f"test_dependence_kno_{kpr_name}")
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
 
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
@@ -2529,31 +2557,35 @@ class QA_QC_kern(QA_QC_main):
         for kpr in self.kpr_array:
             self.kpr = self.kpr_array[kpr]
             kpr_name = self.kpr_name_dic[kpr]
-            if self.__check_data(self.kgo, "Кго", f"test dependence {kpr_name} kgo") and \
-                    self.__check_data(self.kpr, f"{kpr_name}", f"test dependence {kpr_name} kgo"):
+            parsed_kpr, parsed_kgo, index_dic = remove_nan_pairs(self.kpr, self.kgo)
+            if self.__check_data(parsed_kgo, "Кго", f"test dependence {kpr_name} kgo") and \
+                    self.__check_data(parsed_kpr, f"{kpr_name}", f"test dependence {kpr_name} kgo"):
 
-                r2 = self.test_general_dependency_checking(self.kgo, self.kpr, f"test dependence kno {kpr_name}",
+                r2 = self.test_general_dependency_checking(parsed_kgo, parsed_kpr, f"test dependence kno {kpr_name}",
                                                            "Коэффициент остаточной нефтенасыщенности",
                                                            f"{kpr_name}")["r2"]
 
-                coefficients = np.polyfit(self.kpr, np.exp(self.kgo), 1)
+                coefficients = np.polyfit(parsed_kpr, np.exp(parsed_kgo), 1)
                 a, b = coefficients[0], coefficients[1]
                 result = True
                 if a >= 0 or b <= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = logarithmic_function_visualization(self.kgo, self.kpr, a, b, r2,
+                wrong_values1, wrong_values2 = logarithmic_function_visualization(parsed_kgo, parsed_kpr, a, b, r2,
                                                                                   get_report,
                                                                                   "Cвязанная газонасыщенность",
                                                                                   f"{kpr_name}",
                                                                                   f"test_dependence_kno_{kpr_name}")
 
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
+
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
@@ -2585,31 +2617,35 @@ class QA_QC_kern(QA_QC_main):
         for kpr in self.kpr_array:
             self.kpr = self.kpr_array[kpr]
             kpr_name = self.kpr_name_dic[kpr]
-            if self.__check_data(self.knmng, "Кнмнг", f"test dependence {kpr_name} knmng") and \
-                    self.__check_data(self.kpr, f"{kpr_name}", f"test dependence {kpr_name} knmng"):
+            parsed_knmng, parsed_kpr, index_dic = remove_nan_pairs(self.knmng, self.kpr)
+            if self.__check_data(parsed_knmng, "Кнмнг", f"test dependence {kpr_name} knmng") and \
+                    self.__check_data(parsed_kpr, f"{kpr_name}", f"test dependence {kpr_name} knmng"):
 
-                r2 = self.test_general_dependency_checking(self.knmng, self.kpr, f"test dependence kno {kpr_name}",
+                r2 = self.test_general_dependency_checking(parsed_knmng, parsed_kpr, f"test dependence kno {kpr_name}",
                                                            "Коэффициент остаточной нефтенасыщенности",
                                                            f"{kpr_name}")["r2"]
 
-                coefficients = np.polyfit(self.kpr, np.exp(self.knmng), 1)
+                coefficients = np.polyfit(parsed_kpr, np.exp(parsed_knmng), 1)
                 a, b = coefficients[0], coefficients[1]
                 result = True
                 if a >= 0 or b <= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = logarithmic_function_visualization(self.knmng, self.kpr, a, b, r2,
+                wrong_values1, wrong_values2 = logarithmic_function_visualization(parsed_knmng, parsed_kpr, a, b, r2,
                                                                                   get_report,
                                                                                   "Кно(Sowcr)",
                                                                                   f"{kpr_name}",
                                                                                   f"test_dependence_{kpr_name}_knmng")
 
+                wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
+                wrong_values2 = remap_wrong_values(wrong_values2, index_dic)
+
                 if result:
                     report_text = self.generate_report_text(
-                        f"Зависимость выполняется. Выподающие точки {wrong_values1, wrong_values2}", 1)
+                        f"Зависимость выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 1)
                 else:
                     report_text = self.generate_report_text(
-                        f"Зависимость не выполняется. Выподающие точки {wrong_values1, wrong_values2}", 0)
+                        f"Зависимость не выполняется. Выпадающие точки {wrong_values1, wrong_values2}", 0)
 
                 self.update_report(report_text)
                 if get_report:
