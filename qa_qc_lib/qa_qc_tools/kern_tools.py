@@ -13,8 +13,11 @@ def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, te
     wrong_values2 = []
     y_pred = a * x + b
     for i in range(len(y)):
-        if y[i] + (a * x[i] + b) * 0.1 < a * x[i] + b:
+        if y[i] + (a * x[i] + b) * 0.03 < a * x[i] + b:
             wrong_values2.append(i)
+    for i in range(len(x)):
+        if x[i] + (a * x[i] + b) * 0.03 < a * x[i] + b:
+            wrong_values1.append(i)
 
     x_trend = np.linspace(np.min(x), np.max(x), 100)
     y_trend = a * x_trend + b
