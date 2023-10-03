@@ -105,7 +105,6 @@ def remove_nan_pairs(array1, array2):
     new_array1 = []
     new_array2 = []
     index_mapping = {}
-    print(array1, array2)
     try:
         if array1 is not None and array2 is not None:
             for i in range(len(array1)):
