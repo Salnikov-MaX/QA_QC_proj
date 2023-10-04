@@ -1,3 +1,4 @@
+import copy
 import inspect
 
 from qa_qc_lib.data_reader import QA_QC_grdecl_parser
@@ -5,8 +6,6 @@ from qa_qc_lib.qa_qc_main import QA_QC_main, Type_Status
 from qa_qc_lib.qa_qc_tools.cubes_tools import CubesTools
 from qa_qc_lib.qa_qc_connectors.connector_kern_cubes import Connector_kern_cubes
 import numpy as np
-import datetime
-
 
 class QA_QC_cubes(QA_QC_main):
     def __init__(self,
@@ -77,6 +76,10 @@ class QA_QC_cubes(QA_QC_main):
             'Литотип': self.litatype_file_path,
         }
 
+        self.actnum  = self.grid_model.get_grid().get_actnum().get_npvalues3d()
+
+        self.grid_head = CubesTools().find_head(f"{directory_path}/{grid_name}_ACTNUM.GRDECL")
+
         attributes = locals()
         for key in attributes.keys():
             if 'file' in key and attributes[key] is not None:
@@ -102,11 +105,10 @@ class QA_QC_cubes(QA_QC_main):
 
         return result
 
-    def __get_value_grid_prop(self, file_path: str, flag_d3: bool = True) -> np.array:
+    def __get_value_grid_prop(self, file_path: str) -> np.array:
         _, key = CubesTools().find_key(file_path)
         prop = self.grid_model.get_grid().get_prop_by_name(key)
-        value = self.grid_model.get_prop_value(prop, flag_d3)
-        value[np.isnan(value)] = 0
+        value = self.grid_model.get_prop_value(prop)
         return value
 
     def __test_range_data(self, _array, lambda_list: list[any], f) -> tuple[
@@ -123,16 +125,13 @@ class QA_QC_cubes(QA_QC_main):
                 bool: результат тестирования
                 np.array or None: массив со значениями для wrong actnum
         """
-
-        mask_array = (f([func(_array) for func in lambda_list])).astype(dtype=bool)
-        mask_array = mask_array + (_array == -1)
+        mask_array = (f([func(_array[self.actnum == 1]) for func in lambda_list])).astype(dtype=bool)
         if np.all(mask_array):
             return True, None
         else:
-            if mask_array.ndim == 1:
-                return False, mask_array == False
-            else:
-                return False, CubesTools().conver_n3d_to_n1d(mask_array == False)
+            copy_actnum = copy.deepcopy(self.grid_model.get_grid().get_actnum())
+            copy_actnum.values[np.where(self.actnum == 1)] = (mask_array == False)
+            return False, copy_actnum
 
     def __test_value_conditions(self, prop_name: str, lambda_list: list[any], f) -> tuple[
         bool
@@ -149,10 +148,9 @@ class QA_QC_cubes(QA_QC_main):
                 str or None: страка с результатом
         """
 
-        flag, wrong_data = self.__test_range_data(
+        flag, wrong_actnum = self.__test_range_data(
             self.grid_model.get_prop_value(
-                self.grid_model.get_grid().get_prop_by_name(prop_name),
-                False
+                self.grid_model.get_grid().get_prop_by_name(prop_name)
             ),
             lambda_list=lambda_list,
             f=f)
@@ -160,7 +158,7 @@ class QA_QC_cubes(QA_QC_main):
         if flag:
             return True
         else:
-            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, inspect.stack()[1][3])
+            self.grid_model.generate_wrong_actnum(wrong_actnum, self.grid_head, self.save_wrong_data_path, inspect.stack()[1][3])
             return False
 
     """
@@ -193,7 +191,7 @@ class QA_QC_cubes(QA_QC_main):
             self.update_report(self.generate_report_text(f"Данные лежат не в интервале от 0 до 47,6",
                                                          Type_Status.NotPassed.value))
 
-    def test_permeability(self, name_type_data: str):
+    def __abstract_test_permeability(self, file_path):
         """
         Функция для проверки данных на x >= 0
 
@@ -204,14 +202,8 @@ class QA_QC_cubes(QA_QC_main):
                 J-function;
             Args:
                 file_path: str: путь к файлу
-                prop_name: str: ключ
         """
-        if not (name_type_data in self.help_dict_type_data):
-            print("Названия типа данных не существует")
-            self.update_report(
-                self.generate_report_text("Названия типа данных не существует", Type_Status.NotRunning.value))
-            return
-        _, key = CubesTools().find_key(self.help_dict_type_data[name_type_data])
+        _, key = CubesTools().find_key(file_path)
         flag = self.__test_value_conditions(
             key,
             [lambda x: x >= 0],
@@ -228,7 +220,27 @@ class QA_QC_cubes(QA_QC_main):
                 r_text,
                 Type_Status.NotPassed.value))
 
-    def test_range_data(self, name_type_data: str):
+    def test_permeability_permX(self):
+        """
+                   Required data:
+                       PermX;
+               """
+        self.__abstract_test_permeability(self.open_perm_x_file_path)
+
+    def test_permeability_permY(self):
+        """
+                           Required data:
+                               PermY;
+                       """
+        self.__abstract_test_permeability(self.open_perm_y_file_path)
+
+    def test_permeability_permZ(self):
+        """
+                           Required data:
+                               PermZ;
+                       """
+        self.__abstract_test_permeability(self.open_perm_z_file_path)
+    def __abstract_test_range_data(self, file_path):
         """
         Функция для проверки данных на x Є [0:1]
 
@@ -248,15 +260,8 @@ class QA_QC_cubes(QA_QC_main):
 
             Args:
                 file_path: str: путь к файлу
-                prop_name: str: ключ
         """
-        if not (name_type_data in self.help_dict_type_data):
-            print("Названия типа данных не существует")
-            self.update_report(
-                self.generate_report_text("Названия типа данных не существует", Type_Status.NotRunning.value))
-            return
-
-        _, key = CubesTools().find_key(self.help_dict_type_data[name_type_data])
+        _, key = CubesTools().find_key(file_path)
 
         flag = self.__test_value_conditions(
             key,
@@ -274,7 +279,85 @@ class QA_QC_cubes(QA_QC_main):
                 r_text,
                 Type_Status.NotPassed.value))
 
-    def test_range_integer_data(self):
+    def test_range_data_sgsr(self):
+        """
+                   Required data:
+                       SGCR;
+        """
+        self.__abstract_test_range_data(self.sgcr_file_path)
+
+    def test_range_data_sgl(self):
+        """
+                           Required data:
+                               SGL;
+
+                """
+        self.__abstract_test_range_data(self.sgcr_file_path)
+
+    def test_range_data_swatinit(self):
+        """
+                           Required data:
+                               SWATINIT;
+
+                """
+        self.__abstract_test_range_data(self.sw_file_path)
+
+    def test_range_data_sgu(self):
+        """
+                           Required data:
+                               SGU;
+                """
+        self.__abstract_test_range_data(self.sgu_file_path)
+
+    def test_range_data_swl(self):
+        """
+                           Required data:
+                               SWL;
+                """
+        self.__abstract_test_range_data(self.swl_file_path)
+
+    def test_range_data_swcr(self):
+        """
+                           Required data:
+                               SWCR;
+                """
+        self.__abstract_test_range_data(self.swcr_file_path)
+
+    def test_range_data_swu(self):
+        """
+                           Required data:
+                               SWU;
+                """
+        self.__abstract_test_range_data(self.swu_file_path)
+
+    def test_range_data_ntg(self):
+        """
+                           Required data:
+                               NTG;
+                """
+        self.__abstract_test_range_data(self.ntg_file_path)
+
+    def test_range_data_so(self):
+        """
+                           Required data:
+                               So;
+                """
+        self.__abstract_test_range_data(self.so_file_path)
+
+    def test_range_data_sg(self):
+        """
+                           Required data:
+                               Sg;
+                """
+        self.__abstract_test_range_data(self.sg_file_path)
+
+    def test_range_data_sogcr(self):
+        """
+                           Required data:
+                               SOGCR;
+                """
+        self.__abstract_test_range_data(self.sgl_file_path)
+    def test_right_actnum(self):
         """
         Функция для проверки данных на x == 0 || x == 1
 
@@ -283,10 +366,10 @@ class QA_QC_cubes(QA_QC_main):
 
             Args:
                 file_path: str: путь к файлу
-                prop_name: str: ключ
         """
-        actnum_array = self.grid_model.get_grid().actnum_array
-        flag, wrong_data = self.__test_range_data(
+        actnum_array = self.grid_model.get_grid().get_actnum().values
+
+        flag, wrong_grid = self.__test_range_data(
             actnum_array,
             [lambda x: x == 0, lambda x: x == 1],
             sum
@@ -296,14 +379,14 @@ class QA_QC_cubes(QA_QC_main):
             print("Тест пройден")
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
-            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, "test_range_integer_data")
+            self.grid_model.generate_wrong_actnum(wrong_grid, self.grid_head, self.save_wrong_data_path, "test_right_actnum")
             r_text = f"Данные не равняются 0 или 1"
             print(f"Тест не пройден {r_text}")
             self.update_report(self.generate_report_text(
                 f"Данные не равняются 0 или 1",
                 Type_Status.NotPassed.value))
 
-    def test_integer_data(self):
+    def test_litatype(self):
         """
         Функция для проверки данных на x целое число
 
@@ -312,7 +395,6 @@ class QA_QC_cubes(QA_QC_main):
 
             Args:
                 file_path: str: путь к файлу
-                prop_name: str: ключ
         """
         _, key = CubesTools().find_key(self.litatype_file_path)
         flag = self.__test_value_conditions(
@@ -336,9 +418,8 @@ class QA_QC_cubes(QA_QC_main):
         Функция для проверки данных геометрического объема grid-a, должен быть не отрицательным
         """
         data = self.grid_model.get_grid().get_bulk_volume(asmasked=False).get_npvalues3d()
-        data[np.isnan(data)] = 0
 
-        flag, wrong_data = self.__test_range_data(
+        flag, wrong_grid = self.__test_range_data(
             data,
             [lambda x: x >= 0],
             sum
@@ -350,7 +431,7 @@ class QA_QC_cubes(QA_QC_main):
         else:
             r_text = f"Данные имеют отрицательный объем"
             print(f"Тест не пройден {r_text}")
-            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, "test_bulk")
+            self.grid_model.generate_wrong_actnum(wrong_grid, self.grid_head, self.save_wrong_data_path, "test_bulk")
             self.update_report(self.generate_report_text(
                 r_text,
                 Type_Status.NotPassed.value))
@@ -359,7 +440,7 @@ class QA_QC_cubes(QA_QC_main):
     Тесты второго порядка
     """
 
-    def test_sum_cubes(self, list_name_type_file: list[str]):
+    def test_sum_cubes(self):
         """
         Функция для проверки того что сумма кубов = 1
 
@@ -367,14 +448,15 @@ class QA_QC_cubes(QA_QC_main):
                 SWATINIT;
                 Sg;
                 So;
-
-            Args:
-                list_name_type_file: list[str]: список имет типов файлов
         """
+        mas_file_path = [self.sw_file_path, self.so_file_path]
+        if self.sg_file_path is not None:
+            mas_file_path.append(self.sg_file_path)
+
         data_mas = []
-        for name_type_file in list_name_type_file:
+        for file_path in mas_file_path:
             _, prop_name = CubesTools().find_key(
-                self.help_dict_type_data[name_type_file])
+                file_path)
             data_mas.append(
                 self.grid_model.get_prop_value(
                     self.grid_model.get_grid().get_prop_by_name(
@@ -384,8 +466,8 @@ class QA_QC_cubes(QA_QC_main):
             )
 
         flag, wrong_data = self.__test_range_data(
-            data_mas,
-            [lambda x: sum(x) == 1, lambda x: sum(x) == 0],
+            sum(data_mas),
+            [lambda x: x == 1],
             sum
         )
 
@@ -395,7 +477,7 @@ class QA_QC_cubes(QA_QC_main):
         else:
             r_text = f"Cумма кубов != 1"
             print(f"Тест не пройден {r_text}")
-            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, "test_sum_cubes")
+            self.grid_model.generate_wrong_actnum(wrong_data, self.grid_head, self.save_wrong_data_path, "test_sum_cubes")
             self.update_report(self.generate_report_text(
                 r_text,
                 Type_Status.NotPassed.value))
@@ -418,7 +500,7 @@ class QA_QC_cubes(QA_QC_main):
 
         flag, wrong_data = self.__test_range_data(
             sgcr_value,
-            [lambda x: x >= sgl_value, lambda x: x <= 1],
+            [lambda x: x >= sgl_value[self.actnum == 1], lambda x: x <= 1],
             self.muc_np_arrays
         )
 
@@ -428,7 +510,7 @@ class QA_QC_cubes(QA_QC_main):
         else:
             r_text = f"Данные  ∉ [SGL:1] "
             print(f"Тест не пройден {r_text}")
-            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, "test_affiliation_sqcr")
+            self.grid_model.generate_wrong_actnum(wrong_data, self.grid_head, self.save_wrong_data_path, "test_affiliation_sqcr")
             self.update_report(self.generate_report_text(
                 r_text,
                 Type_Status.NotPassed.value))
@@ -440,10 +522,6 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 SGCR;
                 SGL;
-
-            Args:
-                swcr_path: str: путь к файлу
-                swl_path: str: путь к файлу
         """
         swcr_value = self.__get_value_grid_prop(self.swcr_file_path)
 
@@ -451,7 +529,7 @@ class QA_QC_cubes(QA_QC_main):
 
         flag, wrong_data = self.__test_range_data(
             swcr_value,
-            [lambda x: x >= swl_value],
+            [lambda x: x >= swl_value[self.actnum == 1]],
             sum
         )
 
@@ -461,7 +539,7 @@ class QA_QC_cubes(QA_QC_main):
         else:
             r_text = f"Данные < SWL "
             print(f"Тест не пройден {r_text}")
-            CubesTools().generate_wrong_actnum(wrong_data, self.save_wrong_data_path, "test_affiliation_swcr")
+            self.grid_model.generate_wrong_actnum(wrong_data, self.grid_head, self.save_wrong_data_path, "test_affiliation_swcr")
             self.update_report(self.generate_report_text(
                 r_text,
                 Type_Status.NotPassed.value))
@@ -496,12 +574,22 @@ class QA_QC_cubes(QA_QC_main):
                 Type_Status.NotPassed.value))
 
     def test_swl_sw(self):
+        """
+                Проверка SWATINIT >= SWL
 
-        swl_value = self.__get_value_grid_prop(self.swl_file_path, False)
+                    Required data:
+                        SWATINIT
+                        SWL
+
+                    Args:
+                        porosity_path: str: путь к файлу
+                        cut_off_porosity: float: значение Cut-off_пористость
+                """
+        swl_value = self.__get_value_grid_prop(self.swl_file_path)
         _, key = CubesTools().find_key(self.sw_file_path)
         flag = self.__test_value_conditions(
             key,
-            [lambda x: x >= swl_value],
+            [lambda x: x >= swl_value[self.actnum == 1]],
             sum
         )
 
@@ -521,12 +609,21 @@ class QA_QC_cubes(QA_QC_main):
             data1,
             data2,
             kern_func):
-        lit_data = self.__get_value_grid_prop(
-            self.litatype_file_path,
-            flag_d3=False
-        )
-        group_data_1, group_data_2 = CubesTools().get_cluster_dates(
-            data1, data2, lit_data)
+
+        data1 = data1[self.actnum == 1]
+        data2 = data2[self.actnum == 1]
+        group_data_1 = None
+        group_data_2 = None
+        if self.litatype_file_path is not None:
+            lit_data = CubesTools().conver_n3d_to_n1d(self.__get_value_grid_prop(
+                self.litatype_file_path,
+            ))
+
+            group_data_1, group_data_2 = CubesTools().get_cluster_dates(
+                data1, data2, lit_data)
+        else:
+            group_data_1 = {"lit_none": data1}
+            group_data_2 = {"lit_none": data2}
 
         mas_flag = []
         mas_wrong_data = []
@@ -561,24 +658,20 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kpr_kp(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.open_porosity_file_path,
-                flag_d3=False
+                self.open_porosity_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.open_perm_x_file_path,
-                flag_d3=False),
+                self.open_perm_x_file_path),
             kern_func=self.connector_kern.kern_test_dependence_kpr_kp,
         )
 
     def test_kern_data_dependence_kp_kgo(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.open_porosity_file_path,
-                flag_d3=False
+                self.open_porosity_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.sgl_file_path,
-                flag_d3=False
+                self.sgl_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kp_kgo
         )
@@ -586,12 +679,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kp_knmng(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.open_porosity_file_path,
-                flag_d3=False
+                self.open_porosity_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.sogcr_file_path_file_path_file_path,
-                flag_d3=False
+                self.sogcr_file_path_file_path_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kp_knmng
         )
@@ -599,12 +690,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kp_kno(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.open_porosity_file_path,
-                flag_d3=False
+                self.open_porosity_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.sowcr_file_path_file_path,
-                flag_d3=False
+                self.sowcr_file_path_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kp_kno
         )
@@ -612,12 +701,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_quo_kp(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.open_porosity_file_path,
-                flag_d3=False
+                self.open_porosity_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.swl_file_path,
-                flag_d3=False
+                self.swl_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_quo_kp
         )
@@ -625,12 +712,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kpr_kgo(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.open_perm_x_file_path,
-                flag_d3=False
+                self.open_perm_x_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.sgl_file_path,
-                flag_d3=False
+                self.sgl_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kpr_kgo
         )
@@ -638,12 +723,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kpr_knmng(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.open_perm_x_file_path,
-                flag_d3=False
+                self.open_perm_x_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.sogcr_file_path,
-                flag_d3=False
+                self.sogcr_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kpr_knmng
         )
@@ -651,12 +734,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kno_kpr(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.open_perm_x_file_path,
-                flag_d3=False
+                self.open_perm_x_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.sowcr_file_path,
-                flag_d3=False
+                self.sowcr_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kno_kpr
         )
@@ -664,12 +745,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kvo_kpr(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.open_perm_x_file_path,
-                flag_d3=False
+                self.open_perm_x_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.swl_file_path,
-                flag_d3=False
+                self.swl_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kvo_kpr
         )
@@ -677,12 +756,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kp_knmng(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.sogcr_file_path,
-                flag_d3=False
+                self.sogcr_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.open_porosity_file_path,
-                flag_d3=False
+                self.open_porosity_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kp_knmng
         )
@@ -690,12 +767,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kpr_knmng(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.sogcr_file_path,
-                flag_d3=False
+                self.sogcr_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.open_perm_x_file_path,
-                flag_d3=False
+                self.open_perm_x_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kpr_knmng
         )
@@ -703,12 +778,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kno_kp(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.sowcr_file_path,
-                flag_d3=False
+                self.sowcr_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.open_porosity_file_path,
-                flag_d3=False
+                self.open_porosity_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kno_kp
         )
@@ -716,12 +789,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_kno_kpr(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.sowcr_file_path,
-                flag_d3=False
+                self.sowcr_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.open_perm_x_file_path,
-                flag_d3=False
+                self.open_perm_x_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_kno_kpr
         )
@@ -729,12 +800,10 @@ class QA_QC_cubes(QA_QC_main):
     def test_kern_data_dependence_quo_kp_2(self):
         self.__test_kern_data_dependence(
             data1=self.__get_value_grid_prop(
-                self.swl_file_path,
-                flag_d3=False
+                self.swl_file_path
             ),
             data2=self.__get_value_grid_prop(
-                self.open_porosity_file_path,
-                flag_d3=False
+                self.open_porosity_file_path
             ),
             kern_func=self.connector_kern.kern_test_dependence_quo_kp_2
         )

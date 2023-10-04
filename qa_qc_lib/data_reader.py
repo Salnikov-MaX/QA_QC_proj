@@ -28,21 +28,31 @@ class QA_QC_grdecl_parser(object):
             grid=self.grid,
         ))
 
-    def get_prop_value(self, prop: xtgeo.GridProperty, flag_d3: bool = True) -> np.array:
-        if flag_d3:
-            data = prop.get_npvalues3d(fill_value=-1.0)
-        else:
-            data = prop.get_npvalues1d(fill_value=-1.0)
-
-        return data
+    def get_prop_value(self, prop: xtgeo.GridProperty) -> np.array:
+        return prop.get_npvalues3d()
     def get_grid(self) -> xtgeo.Grid:
         return self.grid
+
+    def generate_wrong_actnum(self,wrong_actnum: xtgeo.GridProperty, head: str = "",save_path: str = '.', func_name:str = "QA/QC"):
+        result_data = f"{head}\n-- Generated QA/QC\n"
+
+        with open(f"{save_path}/{func_name}_WRONG_ACTNUM.GRDECL", 'w') as f:
+            f.write(result_data)
+            f.close()
+
+        wrong_actnum.to_file(
+            pfile=f"{save_path}/{func_name}_WRONG_ACTNUM.GRDECL",
+            fformat="grdecl",
+            name="ACTNUM",
+            append=True)
+
+        print(f"Файл WRONG_ACTNUM сохранён по пути: {save_path}")
 
 def test():
     test = QA_QC_grdecl_parser("../data/grdecl_data","GRID")
     poro_file = "../data/grdecl_data/input/Poro.GRDECL.grdecl"
     flag, key = CubesTools().find_key(poro_file)
     test.add_prop(poro_file, key)
-    prop_value = test.get_prop_value(test.get_grid().get_prop_by_name(key),False)
+    prop_value = test.get_prop_value(test.get_grid().get_prop_by_name(key))
+    np.set_printoptions(threshold=np.inf)
     print(prop_value)
-

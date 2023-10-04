@@ -32,9 +32,26 @@ class CubesTools:
             else:
                 return True, contents_in_block[NumKeywords - 1].split()[0]
 
-    def generate_wrong_actnum(self,wrong_list: np.array, save_path: str = '.', func_name:str = "QA/QC"):
+    def find_head(self, file_path:str) -> str:
+        head = ""
+        with open(file_path, 'r') as f:
+            contants = f.readlines()
+            readflag = False
+            for line in contants:
+                if '[' in line:
+                    readflag = True
+
+                if readflag:
+                    head += f"{line.strip()}\n"
+
+                if ']' in line:
+                    break
+
+        return head
+
+    def generate_wrong_actnum(self,wrong_list: np.array, head: str = "",save_path: str = '.', func_name:str = "QA/QC"):
         wrong_data = wrong_list.astype(dtype=int)
-        result_data = "-- Generated QA/QC\nACTNUM\n"
+        result_data = f"{head}\n-- Generated QA/QC\nACTNUM\n"
         counter = 0
         for index in range(len(wrong_data) - 2):
             if wrong_data[index] == wrong_data[index + 1]:
@@ -68,13 +85,13 @@ class CubesTools:
             value: data2[np.where(lit_data == value)] for value in litatype_unique_data}
 
     def conver_n3d_to_n1d(self, cube):
-        return np.ravel(cube, order='F').reshape((1, -1))[0]
+        return np.ravel(cube, order='C').reshape((1, -1))[0]
 
     def conver_n1d_to_n3d(self, grid, vector):
         i_max = grid.ncol
         j_max = grid.nrow
         k_max = grid.nlay
-        return np.reshape(vector, (i_max, j_max, k_max), order='F')
+        return np.reshape(vector, (i_max, j_max, k_max), order='C')
 
 
 
