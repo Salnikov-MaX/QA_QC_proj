@@ -186,7 +186,7 @@ class QA_QC_cubes(QA_QC_main):
             print("Тест пройден")
             self.update_report(self.generate_report_text("", Type_Status.Passed.value))
         else:
-            r_text = f"Данные лежат не в интервале от 0 до 47,6"
+            r_text = f"Данные лежат не в интервале от 0 до 0.476"
             print(f"Тест не пройден {r_text}")
             self.update_report(self.generate_report_text(f"Данные лежат не в интервале от 0 до 47,6",
                                                          Type_Status.NotPassed.value))
