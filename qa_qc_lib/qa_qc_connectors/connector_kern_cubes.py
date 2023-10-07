@@ -51,15 +51,15 @@ class Connector_kern_cubes:
 
         return (flat_array[0],
                 [
-                    (x_out_down[0], y_out_down[0]), (x_out_down[1], y_out_down[1])
+                    x_out_down, y_out_down
                 ],
                 [
-                    (x_out_up[0], y_out_up[0]), (x_out_up[1], y_out_up[1])
+                    x_out_up, y_out_up
                 ])
 
-    def is_point_line(self, point1, point2, test_point, _lambda) -> bool:
-        x1, y1 = point1
-        x2, y2 = point2
+    def is_point_line(self, points_x, points_y, test_point, _lambda) -> bool:
+        x1, x2 = points_x
+        y1, y2 = points_y
         x3, y3 = test_point
 
         m = (y2 - y1) / (x2 - x1)
@@ -68,7 +68,7 @@ class Connector_kern_cubes:
         expected_y = m * x3 + b
         return _lambda(y3, expected_y)
 
-    def draw_plot(self, name, points, points2, line_up, line_down):
+    def draw_plot(self, name, points, line_up, line_down):
         plt.title(f"Скважина {name}")
         plt.scatter(x=points[0], y=points[1], color='b', label="cubes_points")
         plt.plot(line_down[0], line_down[1], label='down', color='C2')
@@ -97,7 +97,7 @@ class Connector_kern_cubes:
 
         result = np.array(result_array)
 
-        self.draw_plot(key, [data_x_2, data_y_2], [data_x_1, data_y_1], hallway_kern_up, hallway_kern_down)
+        self.draw_plot(key, [data_x_2, data_y_2], hallway_kern_up, hallway_kern_down)
         if all(result):
             return True, None
         else:
