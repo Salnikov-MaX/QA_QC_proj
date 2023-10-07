@@ -613,13 +613,12 @@ class QA_QC_cubes(QA_QC_main):
         data1 = data1[self.actnum == 1]
         data2 = data2[self.actnum == 1]
 
+        nul_data = (data1 == 0) + (data2 == 0)
+        data1 = data1[nul_data == False]
+        data2 = data2[nul_data == False]
+
         if any(data1 > 1):
             data1 = data1 / 100
-
-        if any(data2 > 1):
-            if any(data2 > 100):
-                data2[data2 > 100] = 99
-            data2 = data2 / 100
 
         print(data1)
         print(data2)
@@ -628,7 +627,7 @@ class QA_QC_cubes(QA_QC_main):
         if self.litatype_file_path is not None:
             lit_data = self.__get_value_grid_prop(
                 self.litatype_file_path,
-            )[self.actnum == 1]
+            )[self.actnum == 1][nul_data == False]
 
             group_data_1, group_data_2 = CubesTools().get_cluster_dates(
                 data1, data2, lit_data)

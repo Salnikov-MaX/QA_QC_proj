@@ -68,16 +68,20 @@ class Connector_kern_cubes:
         expected_y = m * x3 + b
         return _lambda(y3, expected_y)
 
-    def draw_plot(self, name, points, line_up, line_down):
-        plt.title(f"Скважина {name}")
-        plt.scatter(x=points[0], y=points[1], color='b', label="cubes_points")
-        plt.plot(line_down[0], line_down[1], label='down', color='C2')
-        plt.plot(line_up[0], line_up[1], label='up', color='C3')
+    def draw_plot(self, name, points_true,points_false,points_core, line_up, line_down,x_l, y_l):
+        plt.title(f"Cопоставление измеренного и модельного распределений\nСкважина {name}")
+        plt.scatter(x=points_false[0], y=points_false[1],s=3,marker='o', color='r', label="cubes_points_false")
+        plt.scatter(x=points_true[0], y=points_true[1],s=3,marker='o', color='g', label="cubes_points_true")
+        plt.scatter(x=points_core[0], y=points_core[1],s=3,marker='o', color='b', label="core_data_points")
+        plt.plot(line_down[0], line_down[1], label='mean + 3σ, mean - 3σ', color='b')
+        plt.plot(line_up[0], line_up[1], color='b')
+        plt.xlabel(x_l)
+        plt.ylabel(y_l)
         plt.legend()
         plt.show()
         plt.close()
 
-    def check_data_point(self, data_x_1, data_y_1, data_x_2, data_y_2,key):
+    def check_data_point(self, data_x_1, data_y_1, data_x_2, data_y_2,key,x_l,y_l):
         _, hallway_kern_down, hallway_kern_up = self.borders_initializer(data_x_1, data_y_1)
         _float, _,_ = self.borders_initializer(data_x_2, data_y_2)
         result_array = []
@@ -97,7 +101,7 @@ class Connector_kern_cubes:
 
         result = np.array(result_array)
 
-        self.draw_plot(key, [data_x_2, data_y_2], hallway_kern_up, hallway_kern_down)
+        self.draw_plot(key, [data_x_2[result], data_y_2[result]],[data_x_2[result == False], data_y_2[result == False]],[data_x_1, data_y_1], hallway_kern_up, hallway_kern_down,x_l, y_l)
         if all(result):
             return True, None
         else:
@@ -108,10 +112,12 @@ class Connector_kern_cubes:
                                cube_group_data_2: np.array,
                                kern_group_data_1: np.array,
                                kern_group_data_2: np.array,
-                               cluster_key: str) -> (bool, np.array or None):
+                               cluster_key: str,
+                               x_l = "data1",
+                               y_l = "data2") -> (bool, np.array or None):
 
-        kern_group_data_1 = kern_group_data_1[np.isnan(kern_group_data_1) == False]
-        kern_group_data_2 = kern_group_data_2[np.isnan(kern_group_data_2) == False]
+        kern_group_data_1[np.isnan(kern_group_data_1)] = 0
+        kern_group_data_2[np.isnan(kern_group_data_2)] = 0
         cluster1 = None
         cluster2 = None
 
@@ -127,7 +133,9 @@ class Connector_kern_cubes:
                 cluster2[cluster_key],
                 cube_group_data_1,
                 cube_group_data_2,
-                cluster_key)
+                cluster_key,
+                x_l,
+                y_l)
         return False, "Not Key"
 
     def kern_test_dependence_kpr_kp(
@@ -140,7 +148,9 @@ class Connector_kern_cubes:
             permX_group_data,
             self.QA_QC_kern.porosity_open,
             self.QA_QC_kern.kpr,
-            cluster_key)
+            cluster_key,
+            "Пористость,  v/v",
+            "Проницаемость, мД")
 
     def kern_test_dependence_kp_kgo(
             self,
