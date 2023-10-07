@@ -617,7 +617,12 @@ class QA_QC_cubes(QA_QC_main):
             data1 = data1 / 100
 
         if any(data2 > 1):
+            if any(data2 > 100):
+                data2[data2 > 100] = 99
             data2 = data2 / 100
+
+        print(data1)
+        print(data2)
         group_data_1 = None
         group_data_2 = None
         if self.litatype_file_path is not None:
@@ -634,6 +639,9 @@ class QA_QC_cubes(QA_QC_main):
         mas_flag = []
         mas_wrong_data = []
         for cluster_key in group_data_1.keys():
+            if all(group_data_1[cluster_key] == 0) and all(group_data_2[cluster_key] == 0):
+                continue
+
             flag, wrong_data = kern_func(
                 group_data_1[cluster_key],
                 group_data_2[cluster_key],

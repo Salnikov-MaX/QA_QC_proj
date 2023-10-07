@@ -37,7 +37,7 @@ class Connector_kern_cubes:
         k, b = self.linear_regressor(data_array_1, data_array_2)
 
         flat_array = data_array_2 - (k * data_array_1 + b)
-
+        flat_array[flat_array < 0] = 0
         sigma_min, sigma_max = self.sigma_counter(flat_array, outer_limit)
 
         gamma_min = k * X_min + b + sigma_min
@@ -79,7 +79,7 @@ class Connector_kern_cubes:
 
     def check_data_point(self, data_x_1, data_y_1, data_x_2, data_y_2,key):
         _, hallway_kern_down, hallway_kern_up = self.borders_initializer(data_x_1, data_y_1)
-
+        _float, _,_ = self.borders_initializer(data_x_2, data_y_2)
         result_array = []
         for index in range(len(data_x_2)):
             result_array.append(
@@ -92,7 +92,7 @@ class Connector_kern_cubes:
                 self.is_point_line(
                     hallway_kern_up[0],
                     hallway_kern_up[1],
-                    (data_x_2[index], data_y_2[index]),
+                    (data_x_2[index],  data_y_2[index]),
                     lambda x, y: x <= y))
 
         result = np.array(result_array)

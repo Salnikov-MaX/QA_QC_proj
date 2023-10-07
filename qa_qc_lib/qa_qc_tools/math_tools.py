@@ -52,8 +52,6 @@ def exponential_function(x, y):
         a: коэффицент наклона
         b: коэффицент сдвига от начала координат
     """
-    x=list(x)
-    y=list(y)
     coefficients = np.polyfit(x, np.log(y), 1)
     a = coefficients[0]
     b = coefficients[1]
