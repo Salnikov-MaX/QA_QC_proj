@@ -612,12 +612,18 @@ class QA_QC_cubes(QA_QC_main):
 
         data1 = data1[self.actnum == 1]
         data2 = data2[self.actnum == 1]
+
+        if any(data1 > 1):
+            data1 = data1 / 100
+
+        if any(data2 > 1):
+            data2 = data2 / 100
         group_data_1 = None
         group_data_2 = None
         if self.litatype_file_path is not None:
-            lit_data = CubesTools().conver_n3d_to_n1d(self.__get_value_grid_prop(
+            lit_data = self.__get_value_grid_prop(
                 self.litatype_file_path,
-            ))
+            )[self.actnum == 1]
 
             group_data_1, group_data_2 = CubesTools().get_cluster_dates(
                 data1, data2, lit_data)
@@ -642,9 +648,14 @@ class QA_QC_cubes(QA_QC_main):
                 r_text = ""
                 if wrong_data is None:
                     r_text += "Данные имеют None значение. "
+                elif type(wrong_data) == str:
+                    if wrong_data == "Not Key":
+                        r_text += "Скважина не найдена в керновых данных "
+                else:
+                    r_text += "Зависимость по кубу не входят в коридор неопределенности"
                 self.update_report(
                     self.generate_report_text(f"{r_text} Скважина {cluster_key} не прошла тест", Type_Status.Passed.value))
-                print(f"Скважина {cluster_key} не прошла тест")
+                print(f"Скважина {cluster_key} не прошла тест -> {r_text}")
 
         if all(mas_flag):
             print("Тест пройден!!!")

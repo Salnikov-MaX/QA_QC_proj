@@ -2,89 +2,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from qa_qc_lib.qa_qc_tools.cubes_tools import CubesTools
 
-
-def linear_regressor(data_array_1: np.array, data_array_2: np.array):
-    linear_regressor = LinearRegression().fit(data_array_1.reshape(-1, 1),
-                                              data_array_2.reshape(-1, 1))  # perform linear regression
-
-    # The coefficients of linear gerression
-    k = linear_regressor.coef_
-    b = linear_regressor.intercept_
-
-    return (k, b)
-
-
-def sigma_counter(flat_data: np.array, how_many_sigmas=1):
-    return (flat_data.mean() - how_many_sigmas * flat_data.std(), flat_data.mean() + how_many_sigmas * flat_data.std())
-
-
-def borders_initializer(data_array_1: np.array,
-                        data_array_2: np.array,
-                        outer_limit=3):
-    X_max = data_array_1.max()
-    X_min = data_array_1.min()
-
-    k, b = linear_regressor(data_array_1, data_array_2)
-
-    flat_array = data_array_2 - (k * data_array_1 + b)
-
-    sigma_min, sigma_max = sigma_counter(flat_array, outer_limit)
-
-    gamma_min = k * X_min + b + sigma_min
-    gamma_max = k * X_min + b + sigma_max
-
-    beta_min = k * X_max + b + sigma_min
-    beta_max = k * X_max + b + sigma_max
-
-    x_out_down, y_out_down = [X_min, X_max], [gamma_min.item(), beta_min.item()]
-    x_out_up, y_out_up = [X_min, X_max], [gamma_max.item(), beta_max.item()]
-
-    return (flat_array[0],
-            [
-                (x_out_down[0], y_out_down[0]), (x_out_down[1], x_out_down[1])
-            ],
-            [
-                (x_out_up[0], y_out_up[0]), (x_out_up[1], x_out_up[1])
-            ])
-
-
-def is_point_line(point1, point2, test_point, _lambda) -> bool:
-    x1, y1 = point1
-    x2, y2 = point2
-    x3, y3 = test_point
-
-    m = (y2 - y1) / (x2 - x1)
-    b = y1 - m * x1
-
-    expected_y = m * x3 + b
-    return _lambda(y3, expected_y)
-
-
-def check_data_point(data_x_1, data_y_1, data_x_2, data_y_2):
-    _, hallway_kern_down, hallway_kern_up = borders_initializer(data_x_1, data_y_1)
-    flat_array, _, _ = borders_initializer(data_x_2, data_y_2)
-
-    result_array = []
-    for index in range(len(flat_array)):
-        result_array.append(
-            is_point_line(
-                hallway_kern_down[0],
-                hallway_kern_down[1],
-                (data_x_2[index], flat_array[index]),
-                lambda x, y: x >= y)
-            and
-            is_point_line(
-                hallway_kern_up[0],
-                hallway_kern_up[1],
-                (data_x_2[index], flat_array[index]),
-                lambda x, y: x <= y))
-
-    result = np.array(result_array)
-    if all(result):
-        return True, None
-    else:
-        return False, result == False
-
+from matplotlib import pyplot as plt
 
 class Connector_kern_cubes:
 
@@ -96,6 +14,95 @@ class Connector_kern_cubes:
         self.QA_QC_kern = qa_qc_kern
         self.QA_QC_cubes = qa_qc_cubes
 
+    def linear_regressor(self, data_array_1: np.array, data_array_2: np.array):
+        linear_regressor = LinearRegression().fit(data_array_1.reshape(-1, 1),
+                                                  data_array_2.reshape(-1, 1))  # perform linear regression
+
+        # The coefficients of linear gerression
+        k = linear_regressor.coef_
+        b = linear_regressor.intercept_
+
+        return (k, b)
+
+    def sigma_counter(self, flat_data: np.array, how_many_sigmas=1):
+        return (
+            flat_data.mean() - how_many_sigmas * flat_data.std(), flat_data.mean() + how_many_sigmas * flat_data.std())
+
+    def borders_initializer(self, data_array_1: np.array,
+                            data_array_2: np.array,
+                            outer_limit=3):
+        X_max = data_array_1.max()
+        X_min = data_array_1.min()
+
+        k, b = self.linear_regressor(data_array_1, data_array_2)
+
+        flat_array = data_array_2 - (k * data_array_1 + b)
+
+        sigma_min, sigma_max = self.sigma_counter(flat_array, outer_limit)
+
+        gamma_min = k * X_min + b + sigma_min
+        gamma_max = k * X_min + b + sigma_max
+
+        beta_min = k * X_max + b + sigma_min
+        beta_max = k * X_max + b + sigma_max
+
+        x_out_down, y_out_down = [X_min, X_max], [gamma_min.item(), beta_min.item()]
+        x_out_up, y_out_up = [X_min, X_max], [gamma_max.item(), beta_max.item()]
+
+        return (flat_array[0],
+                [
+                    (x_out_down[0], y_out_down[0]), (x_out_down[1], y_out_down[1])
+                ],
+                [
+                    (x_out_up[0], y_out_up[0]), (x_out_up[1], y_out_up[1])
+                ])
+
+    def is_point_line(self, point1, point2, test_point, _lambda) -> bool:
+        x1, y1 = point1
+        x2, y2 = point2
+        x3, y3 = test_point
+
+        m = (y2 - y1) / (x2 - x1)
+        b = y1 - m * x1
+
+        expected_y = m * x3 + b
+        return _lambda(y3, expected_y)
+
+    def draw_plot(self, name, points, points2, line_up, line_down):
+        plt.title(f"Скважина {name}")
+        plt.scatter(x=points[0], y=points[1], color='b', label="cubes_points")
+        plt.plot(line_down[0], line_down[1], label='down', color='C2')
+        plt.plot(line_up[0], line_up[1], label='up', color='C3')
+        plt.legend()
+        plt.show()
+        plt.close()
+
+    def check_data_point(self, data_x_1, data_y_1, data_x_2, data_y_2,key):
+        _, hallway_kern_down, hallway_kern_up = self.borders_initializer(data_x_1, data_y_1)
+
+        result_array = []
+        for index in range(len(data_x_2)):
+            result_array.append(
+                self.is_point_line(
+                    hallway_kern_down[0],
+                    hallway_kern_down[1],
+                    (data_x_2[index], data_y_2[index]),
+                    lambda x, y: x >= y)
+                and
+                self.is_point_line(
+                    hallway_kern_up[0],
+                    hallway_kern_up[1],
+                    (data_x_2[index], data_y_2[index]),
+                    lambda x, y: x <= y))
+
+        result = np.array(result_array)
+
+        self.draw_plot(key, [data_x_2, data_y_2], [data_x_1, data_y_1], hallway_kern_up, hallway_kern_down)
+        if all(result):
+            return True, None
+        else:
+            return False, result == False
+
     def __kern_test_dependence(self,
                                cube_group_data_1: np.array,
                                cube_group_data_2: np.array,
@@ -103,10 +110,10 @@ class Connector_kern_cubes:
                                kern_group_data_2: np.array,
                                cluster_key: str) -> (bool, np.array or None):
 
-        if len(kern_group_data_1 == np.nan) != 0 or len(kern_group_data_2 == np.nan) != 0:
-            return False, None
-
-        cluster1, cluster2 = None
+        kern_group_data_1 = kern_group_data_1[np.isnan(kern_group_data_1) == False]
+        kern_group_data_2 = kern_group_data_2[np.isnan(kern_group_data_2) == False]
+        cluster1 = None
+        cluster2 = None
 
         if cluster_key != "lit_none":
             lithotype = self.QA_QC_kern.lithotype
@@ -114,12 +121,15 @@ class Connector_kern_cubes:
         else:
             cluster1 = {"lit_none": kern_group_data_1}
             cluster2 = {"lit_none": kern_group_data_2}
+        if cluster_key in cluster1:
+            return self.check_data_point(
+                cluster1[cluster_key],
+                cluster2[cluster_key],
+                cube_group_data_1,
+                cube_group_data_2,
+                cluster_key)
+        return False, "Not Key"
 
-        return check_data_point(
-            cluster1[cluster_key],
-            cluster2[cluster_key],
-            cube_group_data_1,
-            cube_group_data_2)
     def kern_test_dependence_kpr_kp(
             self,
             poro_group_data: np.array,
@@ -275,4 +285,3 @@ class Connector_kern_cubes:
             self.QA_QC_kern.sw_residual,
             self.QA_QC_kern.porosity_open,
             cluster_key)
-
