@@ -7,18 +7,56 @@ import re
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib.legend_handler import HandlerLine2D
+from sklearn.linear_model import LinearRegression
+
+
+def sigma_counter(df, how_many_sigmas=1):
+    return df['Flat'].mean() - how_many_sigmas * df['Flat'].std(), df['Flat'].mean() + how_many_sigmas * df[
+        'Flat'].std()
+
+
+def linear_regressor(df):
+    alf_PS = df.iloc[:, 0].values.reshape(-1, 1)  # values converts it into a numpy array
+    Poro = df.iloc[:, 1].values.reshape(-1, 1)  # -1 means that calculate the dimension of rows, but have 1 column
+    linear_regressor = LinearRegression()  # create object for the class
+    linear_regressor.fit(alf_PS, Poro)  # perform linear regression
+
+    # The coefficients of linear gerression
+    k = linear_regressor.coef_
+    b = linear_regressor.intercept_
+
+    return k, b
+
+
+def bourders_initializer(x, y, inner_limit=1):
+    df = pd.DataFrame({'X': x, 'Y': y})
+    k = linear_regressor(df)[0]  # k of k*x + b
+    b = linear_regressor(df)[1]  # b of k*x + b
+    df["Flat"] = pd.Series(np.nan, index=df.index)
+    df["Flat"] = df.apply(lambda row: row['Y'] - (k * row['X'] + b), axis=1)
+    sigmaDown = sigma_counter(df, inner_limit)[0]
+    sigmaUp = sigma_counter(df, inner_limit)[1]
+    X_max = df.iloc[:, 0].max()  # макс значение по Х
+    X_min = df.iloc[:, 0].min()  # мин значение по Х
+
+    gamma_min = k * X_min + b + sigma_counter(df, inner_limit)[0]
+    gamma_max = k * X_min + b + sigma_counter(df, inner_limit)[1]
+    beta_min = k * X_max + b + sigma_counter(df, inner_limit)[0]
+    beta_max = k * X_max + b + sigma_counter(df, inner_limit)[1]
+
+    x_in_down, y_in_down = [X_min, X_max], [gamma_min.item(),beta_min.item()]
+    x_in_up, y_in_up = [X_min, X_max], [gamma_max.item(),beta_max.item()]
+
+    return sigmaDown, sigmaUp,x_in_down, y_in_down,x_in_up, y_in_up
 
 
 def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, test_name):
-    y_pred = a * x + b
-    data = pd.DataFrame({'x': x, 'y': y})
-    data['pred_val'] = a * data['x'] + b
-
-    wrong_values1 = data.index[(data['x'] + data['pred_val'] * 0.03) < data['pred_val']].tolist()
-    wrong_values2 = data.index[(data['y'] + data['pred_val'] * 0.03) < data['pred_val']].tolist()
-
     x_trend = np.linspace(np.min(x), np.max(x), 100)
     y_trend = a * x_trend + b
+    sigmaDown, sigmaUp, x_in_down, y_in_down,x_in_up, y_in_up = bourders_initializer(x, y)
+    wrong_values1 = []
+    wrong_values2 = []
 
     # Построение кроссплота
     plt.title(test_name)
@@ -27,10 +65,16 @@ def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, te
     plt.xlabel(x_name)
     plt.ylabel(y_name)
     plt.legend()
+
+    for i in range(x.size):
+        if not(a * x[i] + b + sigmaDown < y[i] < a * x[i] + b + sigmaUp):
+            wrong_values2.append(i)
+            plt.scatter(x[i], y[i], color='r')
+
+    line1, = plt.plot(x_in_down, y_in_down, marker='o', label='inner_down', color='C2')
+    line2, = plt.plot(x_in_up, y_in_up, marker='o', label='inner_up', color='C2')
+    plt.legend(handler_map={line1: HandlerLine2D(numpoints=2), line2: HandlerLine2D(numpoints=2)})
     equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
-    for x_val, y_val, pred_val in zip(x, y, y_pred):
-        if y_val + (pred_val * 0.03) < pred_val or x_val + (pred_val * 0.03) < pred_val:
-            plt.scatter(x_val, y_val, color='r')
     plt.text(np.min(x), np.mean(y), equation)
     plt.savefig(f"report\\{test_name}")
     if get_report:
