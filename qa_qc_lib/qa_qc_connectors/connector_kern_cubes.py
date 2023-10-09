@@ -69,7 +69,7 @@ class Connector_kern_cubes:
         return _lambda(y3, expected_y)
 
     def draw_plot(self, name, points_true,points_false,points_core, line_up, line_down,x_l, y_l):
-        plt.title(f"Cопоставление измеренного и модельного распределений\nСкважина {name}")
+        plt.title(f"Cопоставление измеренного и модельного распределений")
         plt.scatter(x=points_false[0], y=points_false[1],s=3,marker='o', color='r', label="cubes_points_false")
         plt.scatter(x=points_true[0], y=points_true[1],s=3,marker='o', color='g', label="cubes_points_true")
         plt.scatter(x=points_core[0], y=points_core[1],s=3,marker='o', color='b', label="core_data_points")
