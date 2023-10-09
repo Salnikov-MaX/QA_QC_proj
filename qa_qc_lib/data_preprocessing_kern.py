@@ -20,7 +20,7 @@ class DataPreprocessing:
             "Sw", "Кпр абс", "Газопроницаемость по Кликенбергу",
             "Объемная плотность", "Минералогическая плотность", "Газопроницаемость по воде",
             "Плотность максимально увлажненного образца",
-            "Скорость продольной волны(Vp)", "Кно(Sowcr)", "Sgl", "Sogcr ",
+            "Скорость продольной волны(Vp)", "Кно(Sowcr)", "Sgl", "Sogcr",
             "Примечание(в керне)", "Направление измерений(// ⊥)",
             "Описание керна",
             "Кпр абс Z", "Кпр абс Y", "Sg", "Данные фракционного потока", "Сопротивление пластовой воды(Rw)",
@@ -45,6 +45,7 @@ class DataPreprocessing:
         self.pororsity_changed = False
         self.kpr_changed = False
         self.newdic = {}
+
 
     def get_possible_tests(self, columns_with_data):
         """
@@ -82,6 +83,8 @@ class DataPreprocessing:
                     continue
 
                 self.df_result.loc[:, col_name] = data[col_name_in_file]
+        self.porosity_parsing()
+        self.kpr_parsing()
         # сортируем df так, чтобы все пустые колонки были справа
         column_order = np.concatenate(
             [self.df_result.columns[~self.df_result.isna().all(axis=0)],
@@ -117,9 +120,9 @@ class DataPreprocessing:
             "Подошва интервала отбора"].notna().any():
             self.interval_data_parsing()
         if self.pororsity_changed:
-            self.df_result["Кп откр"] = np.array([None])
+            self.df_result["Кп откр"] = np.nan
         if self.kpr_changed:
-            self.df_result["Кпр абс"] = np.array([None])
+            self.df_result["Кпр абс"] = np.nan
         test_system = QA_QC_kern(pas=np.array(self.df_result["Плотность абсолютно сухого образца"]),
                                  vp=np.array(self.df_result["Скорость продольной волны(Vp)"]),
                                  note=np.array(self.df_result["Примечание(в керне)"]),
@@ -185,6 +188,8 @@ class DataPreprocessing:
                                  lithotype=np.array(self.df_result["Литотип"]),
                                  facies=np.array(self.df_result["Капиллярометрия"]),
                                  sk=np.array(self.df_result["Карбонатность"]),
+                                 sgl=np.array(self.df_result["Sgl"]),
+                                 sogcr= np.array(self.df_result["Sogcr"]),
                                  show=False)
 
         self.failed_tests = test_system.start_tests(test_array)["wrong_parameters"]
@@ -198,7 +203,6 @@ class DataPreprocessing:
             "Открытая пористость по газу"].isna().all()):
             value_to_assign = self.df_result["Открытая пористость по керосину"].fillna(
                 self.df_result["Открытая пористость по газу"])
-
             self.df_result["Кп откр"] = value_to_assign
             self.pororsity_changed = True
 
@@ -206,7 +210,7 @@ class DataPreprocessing:
         if self.df_result["Кпр абс"].isna().all() and (not self.df_result[
             "Газопроницаемость по Кликенбергу"].isna().all() or not self.df_result[
             "Кпр_газ(гелий)"].isna().all() or not self.df_result["Газопроницаемость по воде"].isna().all()):
-            value_to_assign = self.df_result["Открытая пористость по керосину"].fillna(
+            value_to_assign = self.df_result["Газопроницаемость по воде"].fillna(
                 self.df_result["Открытая пористость по газу"])
 
             self.df_result["Кпр абс"] = value_to_assign
