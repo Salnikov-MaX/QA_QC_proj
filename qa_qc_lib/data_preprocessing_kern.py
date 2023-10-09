@@ -188,6 +188,8 @@ class DataPreprocessing:
                                  lithotype=np.array(self.df_result["Литотип"]),
                                  facies=np.array(self.df_result["Капиллярометрия"]),
                                  sk=np.array(self.df_result["Карбонатность"]),
+                                 sgl=np.array(self.df_result["Sql"]),
+                                 sogcr= np.array(self.df_result["Sogcr"]),
                                  show=False)
 
         self.failed_tests = test_system.start_tests(test_array)["wrong_parameters"]

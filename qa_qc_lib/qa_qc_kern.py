@@ -28,9 +28,10 @@ class QA_QC_kern(QA_QC_main):
                  cut_off_clay_content=None,
                  cut_off_porosity=None, poissons_coefficient=None, vs=None, DT_matrix=None,
                  kpc_r=None, cut_off_permeability=None, cut_off_water_saturation=None, lithotype=None,
-                 capillarometry=None,
+                 capillarometry=None, sgl=None,
                  facies=None, sk=None, vp=None,
                  lithology=None, show=True,
+                 sogcr=None,
                  file_name="не указан", r2=0.7) -> None:
         """_summary_
 
@@ -39,6 +40,8 @@ class QA_QC_kern(QA_QC_main):
         """
 
         super().__init__()
+        self.sogcr = sogcr
+        self.sgl = sgl
         self.facies = facies
         self.capillarometry = capillarometry
         self.lithotype = lithotype
@@ -140,8 +143,8 @@ class QA_QC_kern(QA_QC_main):
                 bool: результат выполнения теста
         """
         if not isinstance(array, np.ndarray):
-            text= f"Не запускался. Причина {param_name}" \
-                                f" не является массивом. Входной файл {self.file_name}\n\n"
+            text = f"Не запускался. Причина {param_name}" \
+                   f" не является массивом. Входной файл {self.file_name}\n\n"
             self.dict_of_wrong_values[test_name] = [{param_name: [0]}, "не является массивом"]
             report_text = self.generate_report_text(text, 2)
             self.update_report(report_text)
@@ -155,7 +158,7 @@ class QA_QC_kern(QA_QC_main):
         except:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             text = f"{timestamp:10} / {test_name}:\n Не запускался. Причина {param_name}" \
-                                f" пустой. Входной файл {self.file_name}\n\n"
+                   f" пустой. Входной файл {self.file_name}\n\n"
             self.dict_of_wrong_values[test_name] = [{param_name: [0]}, "пустой"]
             report_text = self.generate_report_text(text, 2)
             self.update_report(report_text)
@@ -166,8 +169,8 @@ class QA_QC_kern(QA_QC_main):
         if string_indices[0].size != 0:
             self.dict_of_wrong_values[test_name] = [{
                 param_name: string_indices[0]}, "содержит не числовое значение"]
-            text=f"Не запускался. Причина {param_name}" \
-                    f"содержит не числовое значение. Входной файл {self.file_name}\n\n"
+            text = f"Не запускался. Причина {param_name}" \
+                   f"содержит не числовое значение. Входной файл {self.file_name}\n\n"
             report_text = self.generate_report_text(text, 3)
             self.update_report(report_text)
             if self.get_report:
@@ -179,7 +182,7 @@ class QA_QC_kern(QA_QC_main):
                 self.dict_of_wrong_values[test_name] = [{
                     param_name: [i]}, "содержит nan"]
                 text = f"Не запускался. Причина {param_name}" \
-                                    f" содержит nan. Входной файл {self.file_name}\n\n"
+                       f" содержит nan. Входной файл {self.file_name}\n\n"
                 report_text = self.generate_report_text(text, 2)
                 self.update_report(report_text)
                 if self.get_report:
@@ -190,26 +193,26 @@ class QA_QC_kern(QA_QC_main):
 
     def poro_preproccess(self):
         if not np.array_equal(self.porosity_open, np.array([None])):
-                self.porosity_array["self.porosity_open"] = self.porosity_open
+            self.porosity_array["self.porosity_open"] = self.porosity_open
 
         if not np.array_equal(self.poroHe, np.array([None])):
-                self.porosity_array["self.poroHe"] = self.poroHe
+            self.porosity_array["self.poroHe"] = self.poroHe
 
         if not np.array_equal(self.porosity_kerosine, np.array([None])):
-                self.porosity_array["self.porosity_kerosine"] = self.porosity_kerosine
+            self.porosity_array["self.porosity_kerosine"] = self.porosity_kerosine
 
     def kpr_preproccess(self):
         if not np.array_equal(self.klickenberg_permeability, np.array([None])):
-                self.kpr_array["self.klickenberg_permeability"] = self.klickenberg_permeability
+            self.kpr_array["self.klickenberg_permeability"] = self.klickenberg_permeability
 
         if not np.array_equal(self.kpr, np.array([None])):
-                self.kpr_array["self.kpr"] = self.kpr
+            self.kpr_array["self.kpr"] = self.kpr
 
         if not np.array_equal(self.parallel_permeability, np.array([None])):
-                self.kpr_array["self.parallel_permeability"] = self.parallel_permeability
+            self.kpr_array["self.parallel_permeability"] = self.parallel_permeability
 
         if not np.array_equal(self.water_permeability, np.array([None])):
-                    self.kpr_array["self.water_permeability"] = self.water_permeability
+            self.kpr_array["self.water_permeability"] = self.water_permeability
 
     def __water_saturation(self, array):
         wrong_values = []
@@ -303,7 +306,6 @@ class QA_QC_kern(QA_QC_main):
             file: запись результата теста для сохранения состояния
         """
         if self.__check_data(self.porosity_open, "Кп откр", "test_open_porosity"):
-            print(self.porosity_open)
             result, wrong_values = self.__test_porosity(self.porosity_open)
             if not result:
                 text = f"Данные с индексом {wrong_values} лежат не в " \
@@ -524,6 +526,118 @@ class QA_QC_kern(QA_QC_main):
                 report_text = self.generate_report_text(f"Все данные лежат в интервале от 0 до 1.", 1)
             self.dict_of_wrong_values["test residual water saturation"] = [{"Кво": wrong_values},
                                                                            "не соответсвует интервалу от 0 до 1"]
+            self.update_report(report_text)
+            if get_report:
+                print('\n' + report_text + self.delimeter)
+            return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
+
+    def test_sg(self, get_report=True):
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+
+        Required data:
+            Sg
+        Args:
+            self.sg (array[int/float]): массив с остаточной водонасыщенностью для проверки
+
+        Returns:
+            bool: результат выполнения теста
+            file: запись результата теста для сохранения состояния
+        """
+        if self.__check_data(self.sg, "Sg",
+                             "test sg"):
+            result, wrong_values = self.__water_saturation(self.sg)
+            if not result:
+                report_text = self.generate_report_text(
+                    f"Данные с индексом {wrong_values} лежат не в интервале от 0 до 1.", 0)
+            else:
+                report_text = self.generate_report_text(f"Все данные лежат в интервале от 0 до 1.", 1)
+            self.dict_of_wrong_values["test sg"] = [{"Sg": wrong_values}, "не соответсвует интервалу от 0 до 1"]
+            self.update_report(report_text)
+            if get_report:
+                print('\n' + report_text + self.delimeter)
+            return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
+
+    def test_sgl(self, get_report=True):
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+
+        Required data:
+            Sgl
+        Args:
+            self.sgl (array[int/float]): массив с остаточной водонасыщенностью для проверки
+
+        Returns:
+            bool: результат выполнения теста
+            file: запись результата теста для сохранения состояния
+        """
+        if self.__check_data(self.sgl, "Sgl",
+                             "test sgl"):
+            result, wrong_values = self.__water_saturation(self.sgl)
+            if not result:
+                report_text = self.generate_report_text(
+                    f"Данные с индексом {wrong_values} лежат не в интервале от 0 до 1.", 0)
+            else:
+                report_text = self.generate_report_text(f"Все данные лежат в интервале от 0 до 1.", 1)
+            self.dict_of_wrong_values["test sgl"] = [{"+": wrong_values}, "не соответсвует интервалу от 0 до 1"]
+            self.update_report(report_text)
+            if get_report:
+                print('\n' + report_text + self.delimeter)
+            return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
+
+    def test_so(self, get_report=True):
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+
+        Required data:
+            So
+        Args:
+            self.so (array[int/float]): массив с остаточной водонасыщенностью для проверки
+
+        Returns:
+            bool: результат выполнения теста
+            file: запись результата теста для сохранения состояния
+        """
+        if self.__check_data(self.kno, "+",
+                             "test so"):
+            result, wrong_values = self.__water_saturation(self.kno)
+            if not result:
+                report_text = self.generate_report_text(
+                    f"Данные с индексом {wrong_values} лежат не в интервале от 0 до 1.", 0)
+            else:
+                report_text = self.generate_report_text(f"Все данные лежат в интервале от 0 до 1.", 1)
+            self.dict_of_wrong_values["test so"] = [{"So": wrong_values}, "не соответсвует интервалу от 0 до 1"]
+            self.update_report(report_text)
+            if get_report:
+                print('\n' + report_text + self.delimeter)
+            return {"result": result, "wrong_values": wrong_values, "file_name": self.file_name, "date": self.dt_now}
+
+    def test_sogcr(self, get_report=True):
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+
+        Required data:
+            +
+        Args:
+            self.+ (array[int/float]): массив с остаточной водонасыщенностью для проверки
+
+        Returns:
+            bool: результат выполнения теста
+            file: запись результата теста для сохранения состояния
+        """
+        if self.__check_data(self.sogcr, "+",
+                             "test sogcr"):
+            result, wrong_values = self.__water_saturation(self.sogcr)
+            if not result:
+                report_text = self.generate_report_text(
+                    f"Данные с индексом {wrong_values} лежат не в интервале от 0 до 1.", 0)
+            else:
+                report_text = self.generate_report_text(f"Все данные лежат в интервале от 0 до 1.", 1)
+            self.dict_of_wrong_values["test sogcr"] = [{"Sogcr": wrong_values}, "не соответсвует интервалу от 0 до 1"]
             self.update_report(report_text)
             if get_report:
                 print('\n' + report_text + self.delimeter)
@@ -1315,7 +1429,6 @@ class QA_QC_kern(QA_QC_main):
                         wrong_values1.append(self.pmu[i])
                         wrong_values2.append(porosity_open[i])
 
-
                 self.dict_of_wrong_values[f"test_pmu_{poro_name}_dependence"] = [
                     {"Минералогическая плотность": wrong_values1,
                      f"{poro_name}": wrong_values2},
@@ -1437,7 +1550,8 @@ class QA_QC_kern(QA_QC_main):
                 if a <= 0 or b >= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open,parsed_kp_ef, a, b, r2,
+                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open, parsed_kp_ef, a, b,
+                                                                             r2,
                                                                              get_report,
                                                                              f"{poro_name}",
                                                                              "Коэффициент эффективной пористости",
@@ -1496,7 +1610,8 @@ class QA_QC_kern(QA_QC_main):
                 if a <= 0 or b >= 0 or r2 < 0.7:
                     result = False
 
-                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open, parsed_kp_din, a, b, r2,
+                wrong_values1, wrong_values2 = linear_function_visualization(parsed_porosity_open, parsed_kp_din, a, b,
+                                                                             r2,
                                                                              get_report,
                                                                              f"{poro_name}",
                                                                              "Коэффициент динамической пористости",
@@ -1622,7 +1737,8 @@ class QA_QC_kern(QA_QC_main):
 
                 result_array.append(result)
 
-                wrong_values1, wrong_values2 = expon_function_visualization(parsed_kpr, parsed_kp_din, a, b, r2, get_report,
+                wrong_values1, wrong_values2 = expon_function_visualization(parsed_kpr, parsed_kp_din, a, b, r2,
+                                                                            get_report,
                                                                             f"{kpr_name}",
                                                                             "Коэффициент динамической пористости",
                                                                             f"test_dependence_{kpr_name}_kp_din")
@@ -1676,7 +1792,8 @@ class QA_QC_kern(QA_QC_main):
                 coefficients = np.polyfit(parsed_kpr, np.exp(parsed_sw_residual), 1)
                 a, b = coefficients[0], coefficients[1]
                 result = True
-                wrong_values1, wrong_values2 = logarithmic_function_visualization(parsed_kpr, parsed_sw_residual, a, b, r2,
+                wrong_values1, wrong_values2 = logarithmic_function_visualization(parsed_kpr, parsed_sw_residual, a, b,
+                                                                                  r2,
                                                                                   get_report, f"{kpr_name}",
                                                                                   "Коэффициент остаточной водонасыщенности",
                                                                                   f"test_dependence_sw_residual_{kpr_name}")
@@ -1736,7 +1853,7 @@ class QA_QC_kern(QA_QC_main):
             wrong_values1 = []
             wrong_values2 = []
             for i in range(len(parsed_rn)):
-                if parsed_rn[i] +(b / (parsed_sw_residual[i] ** n))*0.1 > b / (parsed_sw_residual[i] ** n):
+                if parsed_rn[i] + (b / (parsed_sw_residual[i] ** n)) * 0.1 > b / (parsed_sw_residual[i] ** n):
                     wrong_values1.append(parsed_rn[i])
                     wrong_values2.append(parsed_sw_residual[i])
 
@@ -1815,7 +1932,7 @@ class QA_QC_kern(QA_QC_main):
                 wrong_values1 = []
                 wrong_values2 = []
                 for i in range(len(parsed_rp)):
-                    if parsed_rp[i] + (a/(parsed_porosity_open[i] ** m))*0.1 > a/(parsed_porosity_open[i] ** m):
+                    if parsed_rp[i] + (a / (parsed_porosity_open[i] ** m)) * 0.1 > a / (parsed_porosity_open[i] ** m):
                         wrong_values2.append(i)
 
                 wrong_values1 = remap_wrong_values(wrong_values1, index_dic)
@@ -1849,7 +1966,7 @@ class QA_QC_kern(QA_QC_main):
                 if get_report:
                     plt.show()
                     print(report_text)
-                #plt.savefig(f"report\\test_rp_{poro_name}_dependencies.png")
+                # plt.savefig(f"report\\test_rp_{poro_name}_dependencies.png")
                 plt.close()
                 result_array.append(result)
 
