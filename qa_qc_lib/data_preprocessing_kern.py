@@ -20,7 +20,7 @@ class DataPreprocessing:
             "Sw", "Кпр абс", "Газопроницаемость по Кликенбергу",
             "Объемная плотность", "Минералогическая плотность", "Газопроницаемость по воде",
             "Плотность максимально увлажненного образца",
-            "Скорость продольной волны(Vp)", "Кно(Sowcr)", "Sgl", "Sogcr ",
+            "Скорость продольной волны(Vp)", "Кно(Sowcr)", "Sgl", "Sogcr",
             "Примечание(в керне)", "Направление измерений(// ⊥)",
             "Описание керна",
             "Кпр абс Z", "Кпр абс Y", "Sg", "Данные фракционного потока", "Сопротивление пластовой воды(Rw)",
@@ -188,7 +188,7 @@ class DataPreprocessing:
                                  lithotype=np.array(self.df_result["Литотип"]),
                                  facies=np.array(self.df_result["Капиллярометрия"]),
                                  sk=np.array(self.df_result["Карбонатность"]),
-                                 sgl=np.array(self.df_result["Sql"]),
+                                 sgl=np.array(self.df_result["Sgl"]),
                                  sogcr= np.array(self.df_result["Sogcr"]),
                                  show=False)
 
