@@ -391,7 +391,7 @@ class QA_QC_seismic(QA_QC_main):
             variance = compute_variance(seismic_cube[numeric_mask==2])
             variance_list.append(variance)
         # Находим индекс разделяющий краевую зону и основную часть сейсмического куба
-        split_point = best_split_point(variance_list)
+        split_point = find_inflection_point(variance_list)
         # Далее получаем маску для сейсического куба с краевой зоной
         edge_zone_mask = (~mask).astype(int)
         for i in range(split_point+1):   # задаём ширину краевой зоны в дискретах сейсмического куба`

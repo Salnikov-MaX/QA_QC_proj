@@ -10,6 +10,7 @@ from scipy.signal import convolve2d
 from scipy.spatial import cKDTree
 from .math_tools import compute_variance
 import pandas as pd
+from scipy.signal import argrelextrema
 
 
 def build_polygon_from_points(x_coords:np.array, y_coords:np.array):
@@ -48,32 +49,25 @@ def find_border(mask):
     return border
     
 
-def best_split_point(variance_list):
+def find_inflection_point(y):
     """
-    Находит оптимальную точку разделения кривой, основываясь на дисперсии производных.
+    Находит точку перегиба на кривой, заданной массивом y.
+
+    Для определения точки перегиба кривая интерполируется таким образом, чтобы 
+    первая и последняя точка были на оси X. Затем находится глобальный максимум 
+    интерполированной кривой.
 
     Args:
-        variance_list (list or numpy.ndarray): Одномерный массив или список значений дисперсии.
+        y (np.array): массив y-координат кривой.
 
     Returns:
-        int: Индекс, на котором достигается наибольшая разница в дисперсии производных слева и справа.
-    """    
-    # Вычисляем производные кривой
-    derivatives = np.diff(variance_list)
-    # Инициализируем переменную для хранения максимальной разницы в дисперсии и лучшей точки разделения
-    best_point, max_variance_diff = 0, 0
-    # Перебор всех возможных точек разделения
-    for i in range(1, len(derivatives)):
-        # Вычисляем дисперсию для производных слева и справа от текущей точки
-        left_variance = compute_variance(derivatives[:i])
-        right_variance = compute_variance(derivatives[i:])
-        # Вычисляем разницу в дисперсиях
-        variance_diff = np.abs(left_variance - right_variance)
-        # Если текущая разница в дисперсиях больше максимальной, обновляем максимальное значение и индекс лучшей точки
-        if variance_diff > max_variance_diff:
-            max_variance_diff = variance_diff
-            best_point = i
-    return best_point
+        int or None: индекс точки перегиба или None, если таковая не найдена.
+    """
+    # Интерполируем кривую так, чтобы первая и последняя точка лежали на оси X
+    y_transformed = y - np.linspace(y[0], y[-1], len(y))
+    # Ищем глобальный максимум
+    extrema_indices = argrelextrema(y_transformed, np.greater)[0]
+    return extrema_indices[0] if extrema_indices.size > 0 else None
 
 
 def find_closest_indices_x_y(x_coords, y_coords, target_x_array, target_y_array):
