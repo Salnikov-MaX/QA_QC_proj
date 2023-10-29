@@ -32,7 +32,7 @@ class CubesTools:
             else:
                 return True, contents_in_block[NumKeywords - 1].split()[0]
 
-    def generate_wrong_actnum(self,wrong_list: np.array, save_path: str = '.', func_name:str = "QA/QC"):
+    def generate_wrong_actnum(self,wrong_list: np.array, save_path: str = '.', name: str = "QA/QC"):
         wrong_data = wrong_list.astype(dtype=int)
         result_data = "-- Generated QA/QC\nACTNUM\n"
         counter = 0
@@ -56,7 +56,7 @@ class CubesTools:
                 s += f"{counter + 1}*{wrong_data[len(wrong_data) - 2]}"
             result_data += f"{s} {wrong_data[len(wrong_data) - 1]} \\"
 
-        with open(f"{save_path}/{func_name}_WRONG_ACTNUM.GRDECL", 'w') as f:
+        with open(f"{save_path}/{name}_WRONG_ACTNUM.GRDECL", 'w') as f:
             f.write(result_data)
             f.close()
 
