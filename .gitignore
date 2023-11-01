@@ -1,0 +1,37 @@
+# секция сейсмики
+data/Глубинный куб NP cropped
+data/Временной куб NP cropped
+data/TWT_NP5
+data/TWT_NP4
+data/NP4_TWT_TOP
+data/NP4_TVD_TOP
+data/Faults TWT
+data/Check-shots(probably).xlsx
+data/Faults TVD
+workflow.ipynb
+data/seismic_data/Check-shots(probably).xlsx
+data/seismic_data/Faults TVD
+data/seismic_data/Faults TWT
+data/seismic_data/NP4_TVD_TOP
+data/seismic_data/NP4_TWT_TOP
+data/seismic_data/TWT_NP4
+data/seismic_data/TWT_NP5
+data/seismic_data/Временной куб NP cropped
+data/seismic_data/Глубинный куб NP cropped
+
+
+__pycache__
+venv
+report
+.idea
+
+*.pyc
+
+
+# секция гис
+
+
+# секция керн
+
+
+# секция кубы
