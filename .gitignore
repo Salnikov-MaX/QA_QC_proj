@@ -1,4 +1,4 @@
-
+# секция сейсмики
 data/Глубинный куб NP cropped
 data/Временной куб NP cropped
 data/TWT_NP5
@@ -19,6 +19,19 @@ data/seismic_data/TWT_NP5
 data/seismic_data/Временной куб NP cropped
 data/seismic_data/Глубинный куб NP cropped
 
+
+__pycache__
 venv
 report
 .idea
+
+*.pyc
+
+
+# секция гис
+
+
+# секция керн
+
+
+# секция кубы

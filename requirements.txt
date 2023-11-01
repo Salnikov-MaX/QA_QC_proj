@@ -1,3 +1,4 @@
+notebook
 lasio==0.31
 matplotlib==3.8.1
 scipy==1.11.3
