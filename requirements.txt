@@ -1,0 +1,9 @@
+notebook
+lasio==0.31
+matplotlib==3.8.1
+scipy==1.11.3
+plotly==5.18.0
+openpyxl==3.1.2
+shapely
+segyio~=1.9
+pandas
