@@ -1,14 +1,15 @@
 import json
 import os
+from dataclasses import dataclass
 
 
+@dataclass
 class TestConfig:
+
     def __init__(self, file_path: str):
         """
-
-        :param file_path: Путь до
+        :param file_path: Путь до файла
         """
-        file_path
         if not os.path.isfile(file_path):
             raise f"Конфигурационный файл: {file_path} не найден"
 

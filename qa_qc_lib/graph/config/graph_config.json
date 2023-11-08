@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "test_name": "",
+      "test_path": {
+        "class_name": "",
+        "method_name": ""
+      },
+      "required_data": [
+        {
+          "constructor_parameter_name": "",
+          "file_key": "",
+          "file_path": ""
+        }
+      ]
+    }
+  ]
+}
