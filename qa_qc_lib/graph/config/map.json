@@ -1,16 +1,19 @@
 {
-  "data": [
+  "map_files": [
     {
-      "name": "x1",
-      "path": "./x.1"
+      "file_key": "Кво(SWL)|las|ПЕТРОФИЗИКА|",
+      "file_path": "C:\\Users\\kos4v\\PycharmProjects\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
     },
     {
-      "name": "x2",
-      "path": "./x.2"
+      "file_key": "Кво|las|ПЕТРОФИЗИКА|",
+      "file_path": "C:\\Users\\kos4v\\PycharmProjects\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
     },
     {
-      "name": "x1",
-      "path": "./x.3"
+      "file_key": "Отчет_по_ПГИ|txt/xlsx|скв.иссл|",
+      "file_path": "C:\\Users\\kos4v\\PycharmProjects\\QA_QC_proj\\data\\data_1.xlsx"
     }
+  ],
+  "tests": [
+
   ]
 }

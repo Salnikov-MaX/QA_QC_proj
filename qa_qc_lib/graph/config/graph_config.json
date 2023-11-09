@@ -1,16 +1,18 @@
 {
   "tests": [
     {
-      "test_name": "",
       "test_path": {
-        "class_name": "",
-        "method_name": ""
+        "class_name": "QA_QC_seismic",
+        "method_name": "test_miss_traces"
       },
       "required_data": [
         {
           "constructor_parameter_name": "",
-          "file_key": "",
-          "file_path": ""
+          "file_keys": ["Временной(TWT)_куб_NP_cropped|SEG-Y|Сейсмика"]
+        },
+        {
+          "constructor_parameter_name": "",
+          "file_keys": ["Глубинный(TVDSS)_куб_NP_cropped|SEG-Y|Сейсмика|"]
         }
       ]
     }
