@@ -8,3 +8,5 @@ class KernConsts:
         self.check_data_has_nan_wrong = "Содержит nan"
         self.monotony_wrong = "Нарушена монотонность глубины"
         self.monotony_accepted = "Глубина монотонно возрастает"
+        self.dependency_wrong = "Зависимость не выполняется. Выпадающие точки"
+        self.dependency_accepted = "Зависимость выполняется. Выпадающие точки"
