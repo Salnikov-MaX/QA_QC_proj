@@ -1,5 +1,6 @@
 import datetime
 import inspect
+import os
 
 
 class QA_QC_main():
@@ -61,6 +62,9 @@ class QA_QC_main():
             data_name (str, optional): название данных который подвергались тестированию. 
                                        Данное название отобразится в итоговом отчете. Defaults to self.file_name.
         """
+        if not os.path.isdir(file_path):
+            os.mkdir(file_path)
+
         data_name = self.file_name if not data_name else data_name
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
         report = f"Отчет о тестировании от {timestamp}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
