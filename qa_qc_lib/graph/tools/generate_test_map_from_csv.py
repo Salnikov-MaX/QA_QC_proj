@@ -28,42 +28,47 @@ class RequiredData:
         return [{"alternative_names": [r for r in r.all_alternative_name if r in valid_keys]} for r in self.required]
 
 
-df1 = pd.read_csv(
-    '../../../scenarios_for_testing/graph_scenarios/Тесты первого порядка 4c26c782b8344372a162c96b9db807c8_all.csv', delimiter=',')
-df2 = pd.read_csv(
-    '../../../scenarios_for_testing/graph_scenarios/Тесты второго порядка c7d28051a1e9439bbd82c125966c5e6f_all.csv', delimiter=',')
-df = pd.concat([df1, df2])
+def generate_test_map_from_csv(csv_paths: [str], save_path: str, data_valid_keys: [str]):
+    """
+    Сохраняет конфигурационный файл содержащий граф тестирования данных
 
-df = df[df['FLAG'].astype(float) > 0]
+    Args:
+        csv_paths: пути до файлов CSV
+        save_path: путь сохранения итогового json файла
+        data_valid_keys: коллекция ключевых именований данных
 
-keys = []
-all_data = []
+    """
 
-with open('../../../scenarios_for_testing/graph_scenarios/data_keys.txt', encoding='utf-8') as file:
-    good_keys = file.read().splitlines()
+    dfs = [pd.read_csv(csv_path, delimiter=',') for csv_path in csv_paths]
+    df = pd.concat(dfs)
+    df = df[df['FLAG'].astype(float) >= 1]
+    df['test_code_name'] = df['Источник данных'].astype(str) + df['№'].astype(int).astype(str)
 
-for iii, row in df.iterrows():
-    inner_data = (row['Входные данные']
-                  .replace('vs.', 'vs')
-                  .replace('|,', '|;'))
+    keys = []
+    all_data = []
 
-    data = RequiredData(inner_data)
-    all_data.append({
-        "test_key": str(row['Источник данных']) + str(int(row['№'])),
-        "test_name": row['Название теста в коде'],
-        "required_data": data.get_data_as_dict(good_keys)
-    })
+    for _, row in df.iterrows():
+        inner_data = (row['Входные данные']
+                      .replace('vs.', 'vs')
+                      .replace('|,', '|;'))
 
-    for d in data.required:
-        keys += d.all_alternative_name
+        data = RequiredData(inner_data)
+        all_data.append({
+            "test_key": row['test_code_name'],
+            "test_name": row['Название теста в коде'],
+            "required_data": data.get_data_as_dict(data_valid_keys)
+        })
 
-with open('../config/kern_graph.json', 'w+', encoding='utf-8') as file:
-    json.dump(all_data, file, ensure_ascii=False)
+        for d in data.required:
+            keys += d.all_alternative_name
 
-all_keys = list(set(keys))
-ignore_keys = list(set(all_keys) - set(good_keys))
+    with open(save_path, 'w+', encoding='utf-8') as file:
+        json.dump(all_data, file, ensure_ascii=False)
 
-print('Не валидные имена тестов:',
-      [{str(row['Источник данных']) + str(int(row['№'])): row['Название теста в коде']} for _, row in df.iterrows() if
-       row['Название теста в коде'][:4] != 'test'])
-print('Не валидные ключи из csv:', ignore_keys)
+    ignore_keys = list(set(keys) - set(data_valid_keys))
+
+    print('Не валидные имена тестов:',
+          [{row['test_code_name']: row['Название теста в коде']}
+           for _, row in df.iterrows()
+           if row['Название теста в коде'][:4] != 'test'])
+    print('Не валидные ключи из csv:', ignore_keys)
