@@ -88,7 +88,7 @@ class QA_QC_kern(QA_QC_main):
         lower_limit, upper_limit = (0, 0.476) if np.mean((0 <= porosity) &
                                                          (porosity <= 1)) > 0.5 else (0, 47.6)
 
-        result_mask = (porosity > upper_limit) | (porosity < lower_limit)
+        result_mask = (porosity > upper_limit) | (porosity <= lower_limit)
         result = sum(result_mask) == 0
         return result_mask, result
 
