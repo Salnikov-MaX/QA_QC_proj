@@ -5,6 +5,7 @@ from qa_qc_lib.tests.base_test import QA_QC_main
 from qa_qc_lib.tests.kern_tests.kern_consts import KernConsts
 from qa_qc_lib.tools.math_tools import linear_dependence_function
 from qa_qc_lib.tools.kern_tools import linear_function_visualization
+from qa_qc_lib.tools.kern_tools import dropdown_search
 
 
 class QA_QC_kern(QA_QC_main):
@@ -130,7 +131,7 @@ class QA_QC_kern(QA_QC_main):
                     x (array[int/float]): массив с данными для проверки
                     y (array[int/float]): массив с данными для проверки
                 Returns:
-                    dict: Словарь с результатом теста, коэффиентом r2
+                    dic: Словарь с результатом теста, коэффиентом r2
             """
 
         result = False
@@ -207,10 +208,10 @@ class QA_QC_kern(QA_QC_main):
             self.porosity_open (array[int/float]): массив с данными Кп откр для проверки
 
         Returns:
-            dick:cловарь, result_mask - маска с результатом, test_name - название теста,
-             x_param_name - название параметра переданного в качесте X,
-             y_param_name - название параметра переданного в качесте Y,
-             error_decr - описание ошибки
+            dic: cловарь, result_mask - маска с результатом, test_name - название теста,
+            x_param_name- название параметра переданного в качесте X,
+            y_param_name- название параметра переданного в качесте Y,
+            error_decr- описание ошибки
         """
         check_result_for_first_param, wrong_for_first_param, check_text_for_first_param = self.__check_data(
             self.porosity_open, get_report)
@@ -222,16 +223,22 @@ class QA_QC_kern(QA_QC_main):
             a, b = linear_dependence_function(self.porosity_open, self.sw_residual)
             if a >= 0 or r2 < 0.7:
                 result = False
-            wrong_values = linear_function_visualization(self.porosity_open,
-                                                         self.sw_residual,
-                                                         a, b,
-                                                         r2,
-                                                         get_report,
-                                                         "Porosity open",
-                                                         "Swl",
-                                                         f"test_porosity_open_vs_swl")
 
-            text = self.consts.dependency_accepted + str(wrong_values) if result\
+            wrong_values = dropdown_search(self.porosity_open,
+                                           self.sw_residual,
+                                           a, b)
+            linear_function_visualization(self.porosity_open,
+                                          self.sw_residual,
+                                          a, b,
+                                          r2,
+                                          get_report,
+                                          "Porosity open",
+                                          "Swl",
+                                          "test_porosity_open_vs_swl",
+                                          wrong_values)
+            wrong_values = np.where(wrong_values, 1, result)
+
+            text = self.consts.dependency_accepted + str(wrong_values) if result \
                 else self.consts.dependency_wrong + str(wrong_values)
 
             self.__generate_report(text, result, get_report)
@@ -246,7 +253,7 @@ class QA_QC_kern(QA_QC_main):
                         "error_decr": text
                     }}
         else:
-            return {"data_availability": True,
+            return {"data_availability": False,
                     "result": check_result_for_first_param * check_result_for_second_param,
                     "specification": {
                         "result_mask": wrong_for_first_param + " " + wrong_for_second_param,
