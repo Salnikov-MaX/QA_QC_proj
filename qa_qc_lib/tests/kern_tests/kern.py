@@ -6,13 +6,16 @@ from qa_qc_lib.tests.kern_tests.kern_consts import KernConsts
 
 
 class QA_QC_kern(QA_QC_main):
-    def __init__(self, file_path: str, depth=None, ) -> None:
+    def __init__(self, file_path: str, depth=None, porosity_abs=None, porosity_open=None, sw_residual=None) -> None:
         super().__init__()
+        self.sw_residual = sw_residual
+        self.porosity_open = porosity_open
         self.depth = depth
         self.__r2 = 0.7
-        self.__alpha = 0.05
+        self.__alpha = 0.053
         self.file_name = file_path.split('/')[-1]
         self.consts = KernConsts()
+        self.porosity_abs = porosity_abs
 
     def __generate_report(self, text, status, get_report):
         """
@@ -107,6 +110,110 @@ class QA_QC_kern(QA_QC_main):
                         "result_mask": wrong,
                         "test_name": "test_monotony",
                         "param_name": "Глубина отбора, м",
+                        "error_decr": check_text
+                    }}
+
+    def __check_poro_intervals(self, porosity):
+        """
+        Функция для проверки нахождения данных в интервале либо от 0 до 0.476,
+        в случае, если пористость дана в долях, либо в интерваое от 0 до 47.6,
+        если пористость дана в процентах
+
+        Args:
+            self.porosity (array[int/float]): массив с пористостью для проверки
+
+        Returns:
+            result_mask(np.ndarray[bool]): маска с выпадающими за интервал занчениями
+            result(bool):наличие ошибок в пористости
+            """
+        lower_limit, upper_limit = (0, 0.476) if np.mean((0 <= porosity) &
+                                                         (porosity <= 1)) > 0.5 else (0, 47.6)
+
+        result_mask = (porosity > upper_limit) | (porosity < lower_limit)
+        result = sum(result_mask) == 0
+        return result_mask, result
+
+    def test_porosity_open(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 47,6]
+
+        Required data:
+            Кп_откр
+
+        Args:
+            self.porosity_open (array[int/float]): массив с кп_откр для проверки
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.porosity_open, get_report)
+
+        if check_result:
+            result_mask, result = self.__check_poro_intervals(self.porosity_open)
+            text = self.consts.porosity_interval_accepted if result else self.consts.porosity_interval_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_porosity_open",
+                        "param_name": "Кп_откр",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_porosity_open",
+                        "param_name": "Кп_откр",
+                        "error_decr": check_text
+                    }}
+
+    def test_porosity_abs(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 47,6]
+
+        Required data:
+            Кп_абс
+
+        Args:
+            self.porosity_abs (array[int/float]): массив с кп_абс для проверки
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.porosity_abs, get_report)
+
+        if check_result:
+            result_mask, result = self.__check_poro_intervals(self.porosity_abs)
+            text = self.consts.porosity_interval_accepted if result else self.consts.porosity_interval_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_porosity_abs",
+                        "param_name": "Кп_абс",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_porosity_abs",
+                        "param_name": "Кп_абс",
                         "error_decr": check_text
                     }}
 

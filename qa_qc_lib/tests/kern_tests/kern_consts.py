@@ -8,3 +8,6 @@ class KernConsts:
         self.check_data_has_nan_wrong = "Содержит nan"
         self.monotony_wrong = "Нарушена монотонность глубины"
         self.monotony_accepted = "Глубина монотонно возрастает"
+        self.porosity_interval_accepted = "Все данные лежат в интервале от 0 до 47.6"
+        self.porosity_interval_wrong = "Данные не лежат в интервале от 0 до 47.6"
+
