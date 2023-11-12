@@ -6,13 +6,25 @@ from qa_qc_lib.tests.kern_tests.kern_consts import KernConsts
 
 
 class QA_QC_kern(QA_QC_main):
-    def __init__(self, file_path: str, depth=None, ) -> None:
+    def __init__(self, file_path: str, depth=None, porosity_abs=None, porosity_open=None,
+                 sw_residual=None, sowcr=None, sg=None, sgl=None, sogcr=None, so=None,
+                 sw=None) -> None:
         super().__init__()
+        self.sg = None
+        self.sw_residual = sw_residual
+        self.sowcr = sowcr
+        self.sg = sg
+        self.sgl = sgl
+        self.so = so
+        self.sogcr = sogcr
+        self.sw = sw
+        self.porosity_open = porosity_open
         self.depth = depth
         self.__r2 = 0.7
-        self.__alpha = 0.05
+        self.__alpha = 0.053
         self.file_name = file_path.split('/')[-1]
         self.consts = KernConsts()
+        self.porosity_abs = porosity_abs
 
     def __generate_report(self, text, status, get_report):
         """
@@ -30,6 +42,11 @@ class QA_QC_kern(QA_QC_main):
         self.update_report(report_text)
         if get_report:
             print(report_text)
+
+    def __zero_one_interval_check(self, array):
+        result_mask = (array > 1) | (array <= 0)
+        result = np.sum(result_mask) == 0
+        return result_mask, result
 
     def __check_data(self, array, get_report=True):
         """
@@ -107,6 +124,294 @@ class QA_QC_kern(QA_QC_main):
                         "result_mask": wrong,
                         "test_name": "test_monotony",
                         "param_name": "Глубина отбора, м",
+                        "error_decr": check_text
+                    }}
+
+    def test_sw_residual(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+        Required data:
+            Кво
+        Args:
+            self.sw_residual (array[int/float]): массив с коэффициентом остаточной водонасыщенности для проверки
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.sw_residual, get_report)
+
+        if check_result:
+            result_mask, result = self.__zero_one_interval_check(self.sw_residual)
+            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_sw_residual",
+                        "param_name": "Кво",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_sw_residual",
+                        "param_name": "Кво",
+                        "error_decr": check_text
+                    }}
+
+    def test_sowcr(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+        Required data:
+            Кно
+        Args:
+            self.sowcr (array[int/float]): массив с коэффициентом нефтенасыщенности для проверки
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.sowcr, get_report)
+
+        if check_result:
+            result_mask, result = self.__zero_one_interval_check(self.sowcr)
+            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_sowcr",
+                        "param_name": "Кно",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_sowcr",
+                        "param_name": "Кно",
+                        "error_decr": check_text
+                    }}
+
+    def test_sg(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+
+        Required data:
+            Sg
+
+        Args:
+            self.sg (array[int/float]): массив с остаточной водонасыщенностью для проверки
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.sg, get_report)
+
+        if check_result:
+            result_mask, result = self.__zero_one_interval_check(self.sg)
+            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_sg",
+                        "param_name": "Sg",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_sg",
+                        "param_name": "Sg",
+                        "error_decr": check_text
+                    }}
+
+    def test_sgl(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+
+        Required data:
+            Sgl
+
+        Args:
+            self.sgl (array[int/float]): массив с связанной газонасыщенностью для проверки
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.sgl, get_report)
+
+        if check_result:
+            result_mask, result = self.__zero_one_interval_check(self.sgl)
+            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_sgl",
+                        "param_name": "Sgl",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_sgl",
+                        "param_name": "Sgl",
+                        "error_decr": check_text
+                    }}
+
+    def test_so(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+
+        Required data:
+            So
+
+        Args:
+            self.so (array[int/float]): массив с остаточной водонасыщенностью для проверки
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.so, get_report)
+
+        if check_result:
+            result_mask, result = self.__zero_one_interval_check(self.so)
+            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_so",
+                        "param_name": "So",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_so",
+                        "param_name": "So",
+                        "error_decr": check_text
+                    }}
+
+    def test_sogcr(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+
+        Required data:
+            Sogcr
+
+        Args:
+            self.sogcr (array[int/float]): массив с критической нефтенасыщенностью для проверки
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.sogcr, get_report)
+
+        if check_result:
+            result_mask, result = self.__zero_one_interval_check(self.sogcr)
+            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_sogcr",
+                        "param_name": "Sogcr",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_sogcr",
+                        "param_name": "Sogcr",
+                        "error_decr": check_text
+                    }}
+
+    def test_sw(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+        В данном тесте проверяется соответствие интервалу (0 ; 1]
+
+        Required data:
+            Sw
+
+        Args:
+            self.sw (array[int/float]): массив с водонасыщенностью для проверки
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.sw, get_report)
+
+        if check_result:
+            result_mask, result = self.__zero_one_interval_check(self.sw)
+            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_sw",
+                        "param_name": "Sw",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_sw",
+                        "param_name": "Sw",
                         "error_decr": check_text
                     }}
 
