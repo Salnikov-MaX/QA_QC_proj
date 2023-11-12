@@ -6,13 +6,47 @@ from qa_qc_lib.tests.kern_tests.kern_consts import KernConsts
 
 
 class QA_QC_kern(QA_QC_main):
-    def __init__(self, file_path: str, depth=None, ) -> None:
+    def __init__(self, file_path: str, depth=None, porosity_abs=None, porosity_open=None,
+                 sw_residual=None, sowcr=None, sg=None, sgl=None, sogcr=None, so=None,
+                 sw=None, vp=None, vs=None) -> None:
         super().__init__()
+        self.vp = vp
+        self.vs = vs
+        self.sw_residual = sw_residual
+        self.sowcr = sowcr
+        self.sg = sg
+        self.sgl = sgl
+        self.so = so
+        self.sogcr = sogcr
+        self.sw = sw
+        self.porosity_open = porosity_open
+        self.depth = depth
         self.depth = depth
         self.__r2 = 0.7
+        self.__r2 = 0.7
         self.__alpha = 0.05
+        self.__alpha = 0.053
+        self.file_name = file_path.split('/')[-1]
         self.file_name = file_path.split('/')[-1]
         self.consts = KernConsts()
+        self.consts = KernConsts()
+        self.porosity_abs = porosity_abs
+
+    def __check_vp_vs(self, array):
+        """
+        Функция для проверки нахождения данных в интервале от 0.3 до 10
+
+        Args:
+            array (array[int/float]): массив со скоростью для проверки
+
+        Returns:
+            result_mask(np.ndarray[bool]): маска с выпадающими за интервал занчениями
+            result(bool):наличие ошибок в скорости
+        """
+
+        result_mask = (array >= 10) | (array <= 0.3)
+        result = sum(result_mask) == 0
+        return result_mask, result
 
     def __generate_report(self, text, status, get_report):
         """
@@ -107,6 +141,90 @@ class QA_QC_kern(QA_QC_main):
                         "result_mask": wrong,
                         "test_name": "test_monotony",
                         "param_name": "Глубина отбора, м",
+                        "error_decr": check_text
+                    }}
+
+    def test_vp(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+         В данном тесте проверяется соответствие интервалу 0.3<Vp<10 км/с.
+
+        Required data:
+            Скорость продольной волны(Vp)
+
+        Args:
+            self.vp (array[int/float]): массив со скоростью продольной волны(Vp) для проверки
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.vp, get_report)
+
+        if check_result:
+            result_mask, result = self.__check_vp_vs(self.vp)
+            text = self.consts.vp_vs_accepted if result else self.consts.vp_vs_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_vp",
+                        "param_name": " Скорость продольной волны(Vp)",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_vp",
+                        "param_name": " Скорость продольной волны(Vp)",
+                        "error_decr": check_text
+                    }}
+
+    def test_vs(self, get_report=True) -> dict:
+        """
+        Тест предназначен для проверки физичности данных.
+         В данном тесте проверяется соответствие интервалу 0.3<Vs<10 км/с.
+
+        Required data:
+            Скорость поперечной волны(Vs)
+
+        Args:
+            self.vs (array[int/float]): массив с cкоростью поперечной волны(Vs) для проверки
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+            """
+
+        check_result, wrong, check_text = self.__check_data(self.vs, get_report)
+
+        if check_result:
+            result_mask, result = self.__check_vp_vs(self.vs)
+            text = self.consts.vp_vs_accepted if result else self.consts.vp_vs_wrong
+            self.__generate_report(text, result, get_report)
+
+            return {"data_availability": check_result,
+                    "result": result,
+                    "specification": {
+                        "result_mask": result_mask,
+                        "test_name": "test_vs",
+                        "param_name": "Скорость поперечной волны(Vs)",
+                        "error_decr": text
+                    }}
+
+        else:
+            return {"data_availability": check_result,
+                    "result": False,
+                    "specification": {
+                        "result_mask": wrong,
+                        "test_name": "test_vs",
+                        "param_name": "Скорость поперечной волны(Vs)",
                         "error_decr": check_text
                     }}
 
