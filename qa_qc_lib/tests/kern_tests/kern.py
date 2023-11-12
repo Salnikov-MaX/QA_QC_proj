@@ -10,7 +10,6 @@ class QA_QC_kern(QA_QC_main):
                  sw_residual=None, sowcr=None, sg=None, sgl=None, sogcr=None, so=None,
                  sw=None) -> None:
         super().__init__()
-        self.sg = None
         self.sw_residual = sw_residual
         self.sowcr = sowcr
         self.sg = sg
@@ -44,6 +43,16 @@ class QA_QC_kern(QA_QC_main):
             print(report_text)
 
     def __zero_one_interval_check(self, array):
+        """
+        Функция для проверки нахождения данных в интервале либо от 0 до 1,
+
+            Args:
+                self.array (array[int/float]): массив с данными для проверки
+
+            Returns:
+                result_mask(np.ndarray[bool]): маска с выпадающими за интервал значениями
+                result(bool):наличие ошибок в данныз
+        """
         result_mask = (array > 1) | (array <= 0)
         result = np.sum(result_mask) == 0
         return result_mask, result
