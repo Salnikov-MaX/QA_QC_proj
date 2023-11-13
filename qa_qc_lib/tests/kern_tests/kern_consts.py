@@ -10,3 +10,6 @@ class KernConsts:
         self.monotony_accepted = "Глубина монотонно возрастает"
         self.zero_one_interval_accepted ="Все данные лежат в интервале от 0 до 1"
         self.zero_one_interval_wrong ="Данные не лежат в интервале от 0 до 1"
+        self.dependency_wrong = "Зависимость не выполняется. Выпадающие точки"
+        self.dependency_accepted = "Зависимость выполняется. Выпадающие точки"
+
