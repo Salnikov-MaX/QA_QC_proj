@@ -8,3 +8,4 @@ openpyxl==3.1.2
 shapely
 segyio~=1.9
 pandas
+dacite

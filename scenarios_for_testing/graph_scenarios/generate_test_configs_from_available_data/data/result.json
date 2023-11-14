@@ -1,88 +1,46 @@
 [
   {
-    "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
+    "file_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
     "tests": [
-      {
-        "test_name": "Керн/40",
-        "priority_data_for_launch": [
-          {
-            "file_key": "Кп_откр|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-          },
-          {
-            "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
-          }
-        ],
-        "all_data_for_launch": [
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ],
-          [
-            {
-              "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": true
-      },
-      {
-        "test_name": "Керн/66",
-        "priority_data_for_launch": [],
-        "all_data_for_launch": [
-          [],
-          [
-            {
-              "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": false
-      },
       {
         "test_name": "Керн/12",
         "priority_data_for_launch": [
           {
-            "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
+            "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+            "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
           }
         ],
         "all_data_for_launch": [
           [
             {
-              "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
+              "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+              "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
             },
             {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            },
-            {
-              "file_key": "Кп_откр_TBU|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\data_1.xlsx"
+              "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+              "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousOK(F).xlsx"
             }
           ]
         ],
         "ready_for_launch": true
       },
       {
-        "test_name": "Керн/6",
+        "test_name": "Керн/13",
         "priority_data_for_launch": [
           {
-            "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
+            "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+            "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
           }
         ],
         "all_data_for_launch": [
           [
             {
-              "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
+              "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+              "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
+            },
+            {
+              "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+              "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousOK(F).xlsx"
             }
           ]
         ],
@@ -91,272 +49,47 @@
     ]
   },
   {
-    "file_key": "Кп_откр|txt/xlsx|Керн|",
-    "tests": [
-      {
-        "test_name": "Керн/14",
-        "priority_data_for_launch": [],
-        "all_data_for_launch": [
-          [],
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": false
-      },
-      {
-        "test_name": "Керн/15",
-        "priority_data_for_launch": [],
-        "all_data_for_launch": [
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ],
-          []
-        ],
-        "ready_for_launch": false
-      },
-      {
-        "test_name": "Керн/18",
-        "priority_data_for_launch": [],
-        "all_data_for_launch": [
-          [],
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": false
-      },
-      {
-        "test_name": "Керн/19",
-        "priority_data_for_launch": [],
-        "all_data_for_launch": [
-          [],
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": false
-      },
-      {
-        "test_name": "Керн/21",
-        "priority_data_for_launch": [],
-        "all_data_for_launch": [
-          [],
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": false
-      },
-      {
-        "test_name": "Керн/38",
-        "priority_data_for_launch": [],
-        "all_data_for_launch": [
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ],
-          []
-        ],
-        "ready_for_launch": false
-      },
-      {
-        "test_name": "Керн/39",
-        "priority_data_for_launch": [],
-        "all_data_for_launch": [
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ],
-          []
-        ],
-        "ready_for_launch": false
-      },
-      {
-        "test_name": "Керн/40",
-        "priority_data_for_launch": [
-          {
-            "file_key": "Кп_откр|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-          },
-          {
-            "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
-          }
-        ],
-        "all_data_for_launch": [
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ],
-          [
-            {
-              "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": true
-      },
-      {
-        "test_name": "Керн/55",
-        "priority_data_for_launch": [
-          {
-            "file_key": "Кп_откр|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-          }
-        ],
-        "all_data_for_launch": [
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": true
-      },
-      {
-        "test_name": "Керн/61",
-        "priority_data_for_launch": [],
-        "all_data_for_launch": [
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ],
-          []
-        ],
-        "ready_for_launch": false
-      },
-      {
-        "test_name": "Керн/1",
-        "priority_data_for_launch": [
-          {
-            "file_key": "Кп_откр|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-          }
-        ],
-        "all_data_for_launch": [
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": true
-      },
-      {
-        "test_name": "Керн/12",
-        "priority_data_for_launch": [
-          {
-            "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
-          }
-        ],
-        "all_data_for_launch": [
-          [
-            {
-              "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
-            },
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            },
-            {
-              "file_key": "Кп_откр_TBU|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\data_1.xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": true
-      },
-      {
-        "test_name": "Керн/67",
-        "priority_data_for_launch": [
-          {
-            "file_key": "Кп_откр|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-          }
-        ],
-        "all_data_for_launch": [
-          [
-            {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            }
-          ]
-        ],
-        "ready_for_launch": true
-      }
-    ]
-  },
-  {
-    "file_key": "Кп_откр_TBU|txt/xlsx|Керн|",
+    "file_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
     "tests": [
       {
         "test_name": "Керн/12",
         "priority_data_for_launch": [
           {
-            "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
+            "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+            "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousOK(F).xlsx"
           }
         ],
         "all_data_for_launch": [
           [
             {
-              "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
+              "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+              "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
             },
             {
-              "file_key": "Кп_откр|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
-            },
-            {
-              "file_key": "Кп_откр_TBU|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\data_1.xlsx"
+              "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+              "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousOK(F).xlsx"
             }
           ]
         ],
         "ready_for_launch": true
       },
       {
-        "test_name": "Керн/2",
+        "test_name": "Керн/13",
         "priority_data_for_launch": [
           {
-            "file_key": "Кп_откр_TBU|txt/xlsx|Керн|",
-            "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\data_1.xlsx"
+            "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+            "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousOK(F).xlsx"
           }
         ],
         "all_data_for_launch": [
           [
             {
-              "file_key": "Кп_откр_TBU|txt/xlsx|Керн|",
-              "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\data_1.xlsx"
+              "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+              "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
+            },
+            {
+              "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
+              "data_path": "C:\\Users\\kosac\\PycharmProjects\\QA_QC_proj\\data\\MonotonousOK(F).xlsx"
             }
           ]
         ],

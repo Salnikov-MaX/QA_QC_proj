@@ -75,7 +75,8 @@ def generate_test_map_from_csv(csv_paths: [str],
             "required_data": data.get_data_as_dict(data_valid_keys)
         })
 
-        keys += [d.all_alternative_name for d in data.required]
+        for d in data.required:
+            keys += d.all_alternative_name
 
     with open(save_path, 'w+', encoding='utf-8') as file:
         json.dump(all_data, file, ensure_ascii=False)
