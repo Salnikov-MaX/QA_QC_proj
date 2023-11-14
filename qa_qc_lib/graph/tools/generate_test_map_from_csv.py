@@ -2,6 +2,8 @@ import json
 
 import pandas as pd
 
+from qa_qc_lib.graph.graph import EnumQAQCClass
+
 
 class AlternativeData:
     def __init__(self, alternative_data: str):
@@ -28,7 +30,9 @@ class RequiredData:
         return [{"alternative_names": [r for r in r.all_alternative_name if r in valid_keys]} for r in self.required]
 
 
-def generate_test_map_from_csv(csv_paths: [str], save_path: str, data_valid_keys: [str]):
+def generate_test_map_from_csv(csv_paths: [str],
+                               save_path: str,
+                               data_valid_keys: [str]):
     """
     Сохраняет конфигурационный файл содержащий граф тестирования данных
 
@@ -38,6 +42,12 @@ def generate_test_map_from_csv(csv_paths: [str], save_path: str, data_valid_keys
         data_valid_keys: коллекция ключевых именований данных
 
     """
+
+    test_groups_map = {
+        "керн/": EnumQAQCClass.Kern,
+        "cейсморазведка/": EnumQAQCClass.Seismic,
+        "гис/": EnumQAQCClass.Gis,
+    }
 
     dfs = [pd.read_csv(csv_path, delimiter=',') for csv_path in csv_paths]
     df = pd.concat(dfs)
@@ -53,22 +63,28 @@ def generate_test_map_from_csv(csv_paths: [str], save_path: str, data_valid_keys
                       .replace('|,', '|;'))
 
         data = RequiredData(inner_data)
+        if test_groups_map.get(row['Источник данных'].lower()) is None:
+            raise Exception(f'Указана не существующая группа данных: {row["Источник данных"].lower()}')
+
+        test_group = str(test_groups_map[row['Источник данных'].lower()]).split('.')[-1]
+
         all_data.append({
             "test_key": row['test_code_name'],
             "test_name": row['Название теста в коде'],
+            "test_group": test_group,
             "required_data": data.get_data_as_dict(data_valid_keys)
         })
 
-        for d in data.required:
-            keys += d.all_alternative_name
+        keys += [d.all_alternative_name for d in data.required]
 
     with open(save_path, 'w+', encoding='utf-8') as file:
         json.dump(all_data, file, ensure_ascii=False)
 
     ignore_keys = list(set(keys) - set(data_valid_keys))
 
-    print('Не валидные имена тестов:',
-          [{row['test_code_name']: row['Название теста в коде']}
-           for _, row in df.iterrows()
-           if row['Название теста в коде'][:4] != 'test'])
-    print('Не валидные ключи из csv:', ignore_keys)
+    invalid_tests = [{"test_name": row['test_code_name'], "data_key": row['Название теста в коде']}
+                     for _, row in df.iterrows()
+                     if row['Название теста в коде'][:4] != 'test']
+
+    print(f'Количество невалидных тестов {len(invalid_tests)}.\n', invalid_tests)
+    print(f'Количество невалидных ключей {len(ignore_keys)} из CSV.\n', ignore_keys)

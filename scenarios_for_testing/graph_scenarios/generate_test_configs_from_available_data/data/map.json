@@ -1,0 +1,19 @@
+{
+  "settings": {
+    "show_tests_not_ready_for_launch": true
+  },
+  "map_files": [
+    {
+      "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
+      "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
+    },
+    {
+      "file_key": "Кп_откр|txt/xlsx|Керн|",
+      "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\MonotonousFail(F).xlsx"
+    },
+    {
+      "file_key": "Кп_откр_TBU|txt/xlsx|Керн|",
+      "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\data_1.xlsx"
+    }
+  ]
+}

@@ -1,9 +1,4 @@
 import argparse
-import os
-import pathlib
-from typing import Optional
-
-from qa_qc_lib.graph.tools.read_map import read_map
 
 parser = argparse.ArgumentParser()
 
@@ -25,6 +20,4 @@ parser.add_argument("--config_path",
 if __name__ == '__main__':
     args = parser.parse_args()
     map_path = str(args.map_path).strip('\'').strip('\"')
-    x = read_map(map_path)
-    print(x)
 
