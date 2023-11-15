@@ -79,7 +79,6 @@ class QA_QC_cubes(QA_QC_main):
             if 'file' in key and attributes[key] is not None:
                 flag, prop_name = CubesTools().find_key(attributes[key])
                 if flag:
-                    print(attributes[key], "->", prop_name)
                     self.grid_model.add_prop(attributes[key], prop_name)
 
     def __generate_report_tests(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
@@ -206,8 +205,14 @@ class QA_QC_cubes(QA_QC_main):
             Args:
                 file_path: str: путь к файлу
                 prop_name: str: ключ
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+
+        }
         """
         if self.open_porosity_file_path is None:
+            self.update_report(self.generate_report_text("Данные отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
         _, key = CubesTools().find_key(self.open_porosity_file_path)
         flag, wrong_data = self.__test_value_conditions(
@@ -232,14 +237,12 @@ class QA_QC_cubes(QA_QC_main):
         """
         Функция для проверки данных на x >= 0
 
-            Required data:
-                PermX;
-                PermY;
-                PermZ;
-                J-function;
             Args:
                 file_path: str: путь к файлу
                 prop_name: str: ключ
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
         _, key = CubesTools().find_key(file_path)
         flag, wrong_data = self.__test_value_conditions(
@@ -249,12 +252,10 @@ class QA_QC_cubes(QA_QC_main):
         )
 
         if flag:
-            print("Тест пройден")
             self.update_report(self.generate_report_text("", 1))
             return self.__generate_returns_dict(True, True, None)
         else:
             r_text = f"Данные < 0"
-            print(f"Тест не пройден {r_text}")
             self.update_report(self.generate_report_text(
                 r_text,
                 0))
@@ -274,6 +275,9 @@ class QA_QC_cubes(QA_QC_main):
             Args:
                 file_path: str: путь к файлу
                 prop_name: str: ключ
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
         if self.open_perm_x_file_path is None:
             return self.__generate_returns_dict(False, None, None)
@@ -292,8 +296,12 @@ class QA_QC_cubes(QA_QC_main):
             Args:
                 file_path: str: путь к файлу
                 prop_name: str: ключ
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
         if self.open_perm_y_file_path is None:
+            self.update_report(self.generate_report_text("Данные отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
         return self.__abstract_test_permeability(file_path=self.open_perm_y_file_path)
 
@@ -310,7 +318,11 @@ class QA_QC_cubes(QA_QC_main):
             Args:
                 file_path: str: путь к файлу
                 prop_name: str: ключ
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
         if self.open_perm_y_file_path is None:
+            self.update_report(self.generate_report_text("Данные отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
         return self.__abstract_test_permeability(file_path=self.open_perm_z_file_path)
