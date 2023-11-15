@@ -189,3 +189,128 @@ class QA_QC_cubes(QA_QC_main):
             return True, None
         else:
             return False, wrong_data
+
+        """
+            Тесты первого порядка
+            """
+
+    def generate_report_tests_open_porosity(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_open_porosity(self) -> dict:
+        """
+        Функция для проверки открытой пористости
+
+            Required data:
+                Porosity;
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+        if self.open_porosity_file_path is None:
+            return self.__generate_returns_dict(False, None, None)
+        _, key = CubesTools().find_key(self.open_porosity_file_path)
+        flag, wrong_data = self.__test_value_conditions(
+            prop_name=key,
+            lambda_list=[lambda x: x >= 0, lambda x: x <= 0.476],
+            f=self.__muc_np_arrays
+        )
+
+        if flag:
+            self.update_report(self.generate_report_text("", 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Данные лежат не в интервале от 0 до 47,6"
+            self.update_report(
+                self.generate_report_text(
+                    r_text,
+                    0))
+
+            return self.__generate_returns_dict(True, False, wrong_data)
+
+    def __abstract_test_permeability(self, file_path: str) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+                PermX;
+                PermY;
+                PermZ;
+                J-function;
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+        _, key = CubesTools().find_key(file_path)
+        flag, wrong_data = self.__test_value_conditions(
+            key,
+            [lambda x: x >= 0],
+            sum
+        )
+
+        if flag:
+            print("Тест пройден")
+            self.update_report(self.generate_report_text("", 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Данные < 0"
+            print(f"Тест не пройден {r_text}")
+            self.update_report(self.generate_report_text(
+                r_text,
+                0))
+
+            return self.__generate_returns_dict(True, False, wrong_data)
+
+    def generate_report_tests_permeability_permX(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_permeability_permX(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+                PermX;
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+        if self.open_perm_x_file_path is None:
+            return self.__generate_returns_dict(False, None, None)
+        return self.__abstract_test_permeability(file_path=self.open_perm_x_file_path)
+
+    def generate_report_tests_permeability_permY(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_permeability_permY(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+                PermY;
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+        if self.open_perm_y_file_path is None:
+            return self.__generate_returns_dict(False, None, None)
+        return self.__abstract_test_permeability(file_path=self.open_perm_y_file_path)
+
+    def generate_report_tests_permeability_permZ(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_permeability_permZ(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+                PermZ;
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+        if self.open_perm_y_file_path is None:
+            return self.__generate_returns_dict(False, None, None)
+        return self.__abstract_test_permeability(file_path=self.open_perm_z_file_path)
