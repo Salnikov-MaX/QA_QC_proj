@@ -1,0 +1,40 @@
+-- Generated [
+-- Format      : ECLIPSE keywords (grid geometry and properties) (ASCII)
+-- Exported by : Petrel 2021.2 Schlumberger
+-- User name   : makarovns
+-- Date        : Thursday, June 01 2023 16:40:05
+-- Project     : NP4_GVAE_03.05.2023.pet
+-- Grid        : GDHM NP4_2019
+-- Generated ]
+
+PINCH
+  /
+
+NOECHO
+
+MAPUNITS
+  METRES /
+
+MAPAXES
+  385499.8105 7538825.282 385499.8105 7539825.282 386499.8105 7539825.282 /
+
+GRIDUNIT
+  METRES /
+
+SPECGRID
+  186 214 47 1 F /
+
+COORDSYS
+  1 47 /
+
+INCLUDE
+'GRID_COORD.GRDECL' /
+
+INCLUDE
+'GRID_ZCORN.GRDECL' /
+
+INCLUDE
+'GRID_ACTNUM.GRDECL' /
+
+ECHO
+
