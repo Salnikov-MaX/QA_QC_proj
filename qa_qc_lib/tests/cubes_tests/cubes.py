@@ -8,6 +8,10 @@ import datetime
 
 
 class QA_QC_cubes(QA_QC_main):
+    """
+    TEST DESCRIPTION
+    """
+
     def __init__(self,
                  directory_path: str,
                  grid_name: str,
@@ -189,9 +193,9 @@ class QA_QC_cubes(QA_QC_main):
         else:
             return False, wrong_data
 
-        """
-            Тесты первого порядка
-            """
+    """
+    Тесты первого порядка
+    """
 
     def generate_report_tests_open_porosity(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
         self.__generate_report_tests(returns_dict, save_path, name)
@@ -212,7 +216,7 @@ class QA_QC_cubes(QA_QC_main):
         }
         """
         if self.open_porosity_file_path is None:
-            self.update_report(self.generate_report_text("Данные отсутствуют", 2))
+            self.update_report(self.generate_report_text("Данные Porosity отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
         _, key = CubesTools().find_key(self.open_porosity_file_path)
         flag, wrong_data = self.__test_value_conditions(
@@ -222,7 +226,8 @@ class QA_QC_cubes(QA_QC_main):
         )
 
         if flag:
-            self.update_report(self.generate_report_text("", 1))
+            r_text = f"Данные лежат в интервале от 0 до 47,6"
+            self.update_report(self.generate_report_text(r_text, 1))
             return self.__generate_returns_dict(True, True, None)
         else:
             r_text = f"Данные лежат не в интервале от 0 до 47,6"
@@ -252,7 +257,8 @@ class QA_QC_cubes(QA_QC_main):
         )
 
         if flag:
-            self.update_report(self.generate_report_text("", 1))
+            r_text = f"Данные > 0"
+            self.update_report(self.generate_report_text(r_text, 1))
             return self.__generate_returns_dict(True, True, None)
         else:
             r_text = f"Данные < 0"
@@ -301,7 +307,7 @@ class QA_QC_cubes(QA_QC_main):
                  dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
         if self.open_perm_y_file_path is None:
-            self.update_report(self.generate_report_text("Данные отсутствуют", 2))
+            self.update_report(self.generate_report_text("Данные  PermY отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
         return self.__abstract_test_permeability(file_path=self.open_perm_y_file_path)
 
@@ -323,6 +329,7 @@ class QA_QC_cubes(QA_QC_main):
                  dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
         if self.open_perm_y_file_path is None:
-            self.update_report(self.generate_report_text("Данные отсутствуют", 2))
+            self.update_report(self.generate_report_text("Данные PermZ отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
         return self.__abstract_test_permeability(file_path=self.open_perm_z_file_path)
+
