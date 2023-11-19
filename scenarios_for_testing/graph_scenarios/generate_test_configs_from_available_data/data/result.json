@@ -7,7 +7,7 @@
         "priority_data_for_launch": [
           {
             "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-            "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+            "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
             "filters": {
               "well_name": "59",
               "md_from": 2878.0,
@@ -19,7 +19,7 @@
           [
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2878.0,
@@ -28,7 +28,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -37,7 +37,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2870.0,
@@ -46,7 +46,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -62,7 +62,7 @@
         "priority_data_for_launch": [
           {
             "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-            "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+            "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
             "filters": {
               "well_name": "59",
               "md_from": 2878.0,
@@ -74,7 +74,7 @@
           [
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2878.0,
@@ -83,7 +83,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -92,7 +92,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2870.0,
@@ -101,7 +101,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -122,7 +122,7 @@
         "priority_data_for_launch": [
           {
             "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-            "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+            "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
             "filters": {
               "well_name": "59",
               "md_from": 2885.0,
@@ -134,7 +134,7 @@
           [
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2878.0,
@@ -143,7 +143,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -152,7 +152,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2870.0,
@@ -161,7 +161,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -177,7 +177,7 @@
         "priority_data_for_launch": [
           {
             "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-            "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+            "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
             "filters": {
               "well_name": "59",
               "md_from": 2885.0,
@@ -189,7 +189,7 @@
           [
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2878.0,
@@ -198,7 +198,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -207,7 +207,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2870.0,
@@ -216,7 +216,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -237,7 +237,7 @@
         "priority_data_for_launch": [
           {
             "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-            "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+            "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
             "filters": {
               "well_name": "59",
               "md_from": 2870.0,
@@ -249,7 +249,7 @@
           [
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2878.0,
@@ -258,7 +258,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -267,7 +267,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2870.0,
@@ -276,7 +276,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -292,7 +292,7 @@
         "priority_data_for_launch": [
           {
             "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-            "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+            "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
             "filters": {
               "well_name": "59",
               "md_from": 2870.0,
@@ -304,7 +304,7 @@
           [
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2878.0,
@@ -313,7 +313,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -322,7 +322,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2870.0,
@@ -331,7 +331,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -352,7 +352,7 @@
         "priority_data_for_launch": [
           {
             "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-            "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+            "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
             "filters": {
               "well_name": "59",
               "md_from": 2885.0,
@@ -364,7 +364,7 @@
           [
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2878.0,
@@ -373,7 +373,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -382,7 +382,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2870.0,
@@ -391,7 +391,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -407,7 +407,7 @@
         "priority_data_for_launch": [
           {
             "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-            "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+            "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
             "filters": {
               "well_name": "59",
               "md_from": 2885.0,
@@ -419,7 +419,7 @@
           [
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2878.0,
@@ -428,7 +428,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousFail(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,
@@ -437,7 +437,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2870.0,
@@ -446,7 +446,7 @@
             },
             {
               "data_key": "Место_отбора_(ниже_кровли),м|txt/xlsx|Керн|",
-              "data_path": "C:/Projects/QA_QC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
+              "data_path": "C:/Projects/QAQC/QA_QC_proj/data\\MonotonousOK(F).xlsx",
               "filters": {
                 "well_name": "59",
                 "md_from": 2885.0,

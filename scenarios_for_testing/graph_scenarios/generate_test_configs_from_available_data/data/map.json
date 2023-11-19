@@ -1,7 +1,7 @@
 {
   "settings": {
     "show_tests_not_ready_for_launch": true,
-    "main_dir": "C:/Projects/QA_QC/QA_QC_proj/data"
+    "main_dir": "C:/Projects/QAQC/QA_QC_proj/data"
   },
   "map_files": [
     {
