@@ -48,7 +48,7 @@ class DataMap:
         with open(path, 'r', encoding='utf-8') as file:
             data: dict = json.loads(file.read())
 
-        files_info = [DataInfo(file_info['file_key'], file_info['file_path']) for file_info in data['map_files']]
+        files_info = [DataInfo(file_info['data_key'], file_info['data_path']) for file_info in data['map_files']]
 
         data_settings = data['settings'] if data.get('settings') else default_settings
 

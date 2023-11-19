@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import enum
 import json
-from typing import Any
+from typing import Any, List
 
 from qa_qc_lib.graph.tools.read_map import DataInfo
 
@@ -48,24 +48,24 @@ class GraphTest:
             ]
         )
         """
-        self.test_code = code_name
-        self.test_class = class_name
-        self.test_method = test_name_in_code
+        self.test_code_name = code_name
+        self.test_class_name = class_name
+        self.test_method_name = test_name_in_code
         self.required_data_for_test = required_data
 
-    def contains_required_data(self, target_file_key: str) -> bool:
-        return any([target_file_key in file_keys for file_keys in self.required_data_for_test])
+    def contains_required_data(self, target_data_key: str) -> bool:
+        return any([target_data_key in data_keys for data_keys in self.required_data_for_test])
 
-    def check_files_for_launch_test(self, file_keys: [str]) -> bool:
-        file_keys = set(file_keys)
-        return all([set(r) & file_keys for r in self.required_data_for_test])
+    def check_files_for_launch_test(self, data_keys: List[str]) -> bool:
+        data_keys = set(data_keys)
+        return all([set(r) & data_keys for r in self.required_data_for_test])
 
-    def get_test_config(self, main_files_info: DataInfo, files_info: [DataInfo]) \
+    def get_test_config(self, main_files_info: DataInfo, data_info: [DataInfo]) \
             -> dict[str, bool | str | list[list[Any]]]:
-        file_keys = [f.data_key for f in files_info]
-        data_for_test = [list(set(r) & set(file_keys)) for r in self.required_data_for_test]
-        ready_for_launch = self.check_files_for_launch_test(file_keys)
-        all_data_for_launch = [[fi.__dict__ for fi in files_info if fi.data_key in d] for d in data_for_test]
+        data_keys = [f.data_key for f in data_info]
+        data_for_test = [list(set(r) & set(data_keys)) for r in self.required_data_for_test]
+        ready_for_launch = self.check_files_for_launch_test(data_keys)
+        all_data_for_launch = [[fi.__dict__ for fi in data_info if fi.data_key in d] for d in data_for_test]
 
         if ready_for_launch:
             priority_data_for_launch = []
@@ -79,22 +79,22 @@ class GraphTest:
             priority_data_for_launch = []
 
         return {
-            "test_name": self.test_code,
+            "test_name": self.test_code_name,
             "priority_data_for_launch": priority_data_for_launch,
             "all_data_for_launch": all_data_for_launch,
             "ready_for_launch": ready_for_launch
         }
 
     @staticmethod
-    def get_tests_for_file_key(data_key: str, graph_tests: [GraphTest]):
+    def get_tests_for_data_key(data_key: str, graph_tests: List[GraphTest]):
         return [t for t in graph_tests if t.contains_required_data(data_key)]
 
     @staticmethod
-    def read_tests_info_file_as_dict(graph_path: str) -> [GraphTest]:
-        return {t.test_code: t for t in GraphTest.read_tests_info_file(graph_path)}
+    def read_tests_info_file_as_dict(graph_path: str) -> dict[str, GraphTest]:
+        return {t.test_code_name: t for t in GraphTest.read_tests_info_file(graph_path)}
 
     @staticmethod
-    def read_tests_info_file(graph_path: str) -> [GraphTest]:
+    def read_tests_info_file(graph_path: str) -> List[GraphTest]:
         with open(graph_path, 'r', encoding='utf-8') as file:
             kern_graph_data = json.loads(file.read())
 

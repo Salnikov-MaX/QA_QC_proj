@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     test_configs = []
     for data_info in data_keys_map.data_infos:
-        data_tests = GraphTest.get_tests_for_file_key(data_info.data_key, graph_tests)
+        data_tests = GraphTest.get_tests_for_data_key(data_info.data_key, graph_tests)
         tests_configs = [d.get_test_config(data_info, data_keys_map.data_infos) for d in data_tests]
 
         if not data_keys_map.settings.show_tests_not_ready_for_launch:
