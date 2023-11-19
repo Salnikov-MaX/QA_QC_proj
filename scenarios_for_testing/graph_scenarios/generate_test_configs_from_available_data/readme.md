@@ -14,8 +14,8 @@
   },
   "map_files": [
     {
-      "file_key": "Кно(Sowcr)|txt/xlsx|Керн|",
-      "file_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
+      "data_key": "Кно(Sowcr)|txt/xlsx|Керн|",
+      "data_path": "C:\\Users\\KosachevIV\\Desktop\\QAQC\\QA_QC_proj\\data\\PermeabilityParallelFail(L).xlsx"
     }
   ]
 }

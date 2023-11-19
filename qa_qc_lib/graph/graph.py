@@ -69,11 +69,11 @@ class GraphTest:
 
         if ready_for_launch:
             priority_data_for_launch = []
-            for alt_data in all_data_for_launch:
-                if main_files_info.data_path in [d['data_path'] for d in alt_data]:
+            for dat_info_item in all_data_for_launch:
+                if main_files_info.data_path in [d['data_path'] for d in dat_info_item]:
                     priority_data_for_launch.append(main_files_info.__dict__)
                 else:
-                    priority_data_for_launch.append(alt_data[0])
+                    priority_data_for_launch.append(dat_info_item[0])
 
         else:
             priority_data_for_launch = []
@@ -101,5 +101,8 @@ class GraphTest:
         return [GraphTest(code_name=d['test_key'],
                           class_name=EnumQAQCClass[d['test_group']],
                           test_name_in_code=d['test_name'],
-                          required_data=[names['alternative_names']
-                                         for names in d['required_data']]) for d in kern_graph_data]
+                          required_data=[names['alternative_names'] for names in d['required_data']]) for d in
+                kern_graph_data]
+
+    def launch_test(self, data_arr: [DataInfo]):
+        print(self.test_code_name, [d for d in data_arr])

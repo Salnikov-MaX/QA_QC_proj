@@ -1,26 +1,31 @@
 import json
 import os
 from dataclasses import dataclass, fields
+from typing import Optional
 
 
 @dataclass
 class DataInfo:
     data_key: str
     data_path: str
+    filters: dict
 
 
 @dataclass
 class MapSettings:
     show_tests_not_ready_for_launch: bool
+    main_dir: Optional[str]
 
+    def __post_init__(self):
+        if self.show_tests_not_ready_for_launch is None:
+            self.show_tests_not_ready_for_launch = False
 
-default_settings = {
-    "show_tests_not_ready_for_launch": True
-}
+        if self.main_dir is None:
+            pass
 
 
 class DataMap:
-    def __init__(self, map_path: str, data_keys_path='config\\data_keys.txt'):
+    def __init__(self, map_path: str, data_keys_path: str):
         self.valid_keys = self.read_data_keys(data_keys_path)
         self.settings: MapSettings
         (self.settings, self.data_infos) = self.read_map(map_path)
@@ -48,11 +53,13 @@ class DataMap:
         with open(path, 'r', encoding='utf-8') as file:
             data: dict = json.loads(file.read())
 
-        files_info = [DataInfo(file_info['data_key'], file_info['data_path']) for file_info in data['map_files']]
+        settings: MapSettings = DataMap.class_from_args(MapSettings, data.get('settings'))
 
-        data_settings = data['settings'] if data.get('settings') else default_settings
+        files_info: [DataInfo] = [DataMap.class_from_args(DataInfo, file_info) for file_info in data['map_files']]
 
-        settings = DataMap.class_from_args(MapSettings, data_settings)
+        if settings.main_dir is not None:
+            for f in files_info:
+                f.data_path = os.path.join(settings.main_dir, f.data_path)
 
         return settings, files_info
 

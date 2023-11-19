@@ -4,10 +4,9 @@ import os.path
 import time
 from datetime import datetime
 
-from nbformat import from_dict
 from dataclasses import dataclass
 from dacite import from_dict
-from typing_extensions import List
+from typing import List
 
 from qa_qc_lib.graph.graph import EnumQAQCClass, GraphTest
 from qa_qc_lib.graph.tools.read_map import DataInfo
@@ -21,6 +20,7 @@ class TestConfig:
     priority_data_for_launch: List[DataInfo]
     all_data_for_launch: List[List[DataInfo]]
     ready_for_launch: bool
+    graph_test: GraphTest
 
 
 class LaunchTest:
