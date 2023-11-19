@@ -177,7 +177,6 @@ class QA_QC_cubes(QA_QC_main):
                 bool: Выполняются ли все условия,
                 np.array or None: Данные которые не прошли условие
             ]
-
         """
 
         flag, wrong_data = self.__test_range_data(
@@ -333,3 +332,373 @@ class QA_QC_cubes(QA_QC_main):
             return self.__generate_returns_dict(False, None, None)
         return self.__abstract_test_permeability(file_path=self.open_perm_z_file_path)
 
+    def __abstract_test_range_data(self, file_path: str) -> dict:
+        _, key = CubesTools().find_key(file_path)
+
+        flag, wrong_data = self.__test_value_conditions(
+            key,
+            [lambda x: x >= 0, lambda x: x <= 1],
+            self.__muc_np_arrays
+        )
+
+        if flag:
+            r_text = f"Данные лежат в интервале от 0 до 1"
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Данные лежат не в интервале от 0 до 1"
+            print(f"Тест не пройден {r_text}")
+            self.update_report(self.generate_report_text(
+                r_text,
+                0))
+            return self.__generate_returns_dict(True, False, wrong_data)
+
+    def generate_report_tests_range_data_sgcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_sgcr(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                SGCR;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.sgcr_file_path is None:
+            self.update_report(self.generate_report_text("Данные SGCR отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.sgcr_file_path)
+
+    def generate_report_range_data_sgl(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_sgl(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                SGL;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.sgl_file_path is None:
+            self.update_report(self.generate_report_text("Данные SGL отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.sgl_file_path)
+
+    def generate_report_range_data_sogcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_sogcr(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                SOGCR;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.sogcr_file_path is None:
+            self.update_report(self.generate_report_text("Данные SOGCR отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.sogcr_file_path)
+
+    def generate_report_range_data_sowcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_sowcr(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                SOWCR;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.sowcr_file_path is None:
+            self.update_report(self.generate_report_text("Данные SOWCR отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.sowcr_file_path)
+
+    def generate_report_range_data_swatinit(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_swatinit(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                SWATINIT;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.sw_file_path is None:
+            self.update_report(self.generate_report_text("Данные SWATINIT отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.sw_file_path)
+
+    def generate_report_range_data_sgu(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_sgu(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                SGU;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.sgu_file_path is None:
+            self.update_report(self.generate_report_text("Данные SGU отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.sgu_file_path)
+
+    def generate_report_range_data_swl(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_swl(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                SWL;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.swl_file_path is None:
+            self.update_report(self.generate_report_text("Данные SWL отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.swl_file_path)
+
+    def generate_report_range_data_swcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_swcr(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                SWCR;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.swcr_file_path is None:
+            self.update_report(self.generate_report_text("Данные SWCR отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.swcr_file_path)
+
+    def generate_report_range_data_swu(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_swu(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                SWU;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.swu_file_path is None:
+            self.update_report(self.generate_report_text("Данные SWU отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.swu_file_path)
+
+    def generate_report_range_data_ntg(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_ntg(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                NTG;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.ntg_file_path is None:
+            self.update_report(self.generate_report_text("Данные NTG отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.ntg_file_path)
+
+    def generate_report_range_data_so(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_so(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                So;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.so_file_path is None:
+            self.update_report(self.generate_report_text("Данные SO отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.so_file_path)
+
+    def generate_report_range_data_sg(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_range_data_sg(self) -> dict:
+        """
+        Функция для проверки данных на x Є [0:1]
+
+            Required data:
+                Sg;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+
+        if self.sg_file_path is None:
+            self.update_report(self.generate_report_text("Данные SG отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        return self.__abstract_test_range_data(file_path=self.sg_file_path)
+
+    def generate_report_right_actnum(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_right_actnum(self) -> dict:
+        """
+        Функция для проверки данных на x == 0 || x == 1
+
+            Required data:
+                ACTNUM;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+        actnum_array = self.grid_model.get_grid().actnum_array
+        if actnum_array is None:
+            self.update_report(self.generate_report_text("Данные ACTNUM отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+        flag, wrong_data = self.__test_range_data(
+            actnum_array,
+            [lambda x: x == 0, lambda x: x == 1],
+            sum
+        )
+
+        if flag:
+            r_text = f"Данные равняются 0 или 1"
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Данные не равняются 0 или 1"
+            self.update_report(self.generate_report_text(
+                f"Данные не равняются 0 или 1",
+                0))
+
+            return self.__generate_returns_dict(True, False, wrong_data)
+
+    def generate_report_litatype(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_litatype(self) -> dict:
+        """
+        Функция для проверки данных на x целое число
+
+            Required data:
+                Литотип;
+
+            Args:
+                file_path: str: путь к файлу
+                prop_name: str: ключ
+        """
+        if self.litatype_file_path is None:
+            self.update_report(self.generate_report_text("Данные LITATYPE отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+        _, key = CubesTools().find_key(self.litatype_file_path)
+        flag, wrong_data = self.__test_value_conditions(
+            key,
+            [lambda x: x % 1 == 0],
+            sum
+        )
+
+        if flag:
+            r_text = f"Данные целочисленные"
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Данные не целочисленные"
+            self.update_report(self.generate_report_text(
+                r_text,
+                0))
+            return self.__generate_returns_dict(True, False, wrong_data)
+
+    def generate_report_bulk(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
+        self.__generate_report_tests(returns_dict, save_path, name)
+
+    def test_bulk(self):
+        """
+        Функция для проверки данных геометрического объема grid-a, должен быть не отрицательным
+        """
+        data = self.grid_model.get_grid().get_bulk_volume(asmasked=False).get_npvalues3d()
+        data[np.isnan(data)] = 0
+
+        flag, wrong_data = self.__test_range_data(
+            data,
+            [lambda x: x >= 0],
+            sum
+        )
+
+        if flag:
+            r_text = f"Данные имеют положительный объем"
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Данные имеют отрицательный объем"
+            self.update_report(self.generate_report_text(
+                r_text,
+                0))
+            return self.__generate_returns_dict(True, False, wrong_data)
