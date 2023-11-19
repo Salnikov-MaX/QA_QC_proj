@@ -243,7 +243,6 @@ class QA_QC_cubes(QA_QC_main):
 
             Args:
                 file_path: str: путь к файлу
-                prop_name: str: ключ
 
             Returns:
                  dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
@@ -277,9 +276,6 @@ class QA_QC_cubes(QA_QC_main):
 
             Required data:
                 PermX;
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
 
             Returns:
                  dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
@@ -298,9 +294,6 @@ class QA_QC_cubes(QA_QC_main):
 
             Required data:
                 PermY;
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
 
             Returns:
                  dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
@@ -320,9 +313,6 @@ class QA_QC_cubes(QA_QC_main):
 
             Required data:
                 PermZ;
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
 
             Returns:
                  dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
@@ -333,6 +323,15 @@ class QA_QC_cubes(QA_QC_main):
         return self.__abstract_test_permeability(file_path=self.open_perm_z_file_path)
 
     def __abstract_test_range_data(self, file_path: str) -> dict:
+        """
+            Абстрактная функция для проверки данных на x >= 0
+
+            Args:
+                file_path: str: путь к файлу
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
         _, key = CubesTools().find_key(file_path)
 
         flag, wrong_data = self.__test_value_conditions(
@@ -363,9 +362,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 SGCR;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.sgcr_file_path is None:
@@ -384,9 +382,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 SGL;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.sgl_file_path is None:
@@ -405,9 +402,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 SOGCR;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.sogcr_file_path is None:
@@ -426,9 +422,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 SOWCR;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.sowcr_file_path is None:
@@ -447,9 +442,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 SWATINIT;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.sw_file_path is None:
@@ -468,9 +462,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 SGU;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.sgu_file_path is None:
@@ -489,9 +482,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 SWL;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.swl_file_path is None:
@@ -510,9 +502,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 SWCR;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.swcr_file_path is None:
@@ -531,9 +522,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 SWU;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.swu_file_path is None:
@@ -552,9 +542,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 NTG;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.ntg_file_path is None:
@@ -573,9 +562,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 So;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.so_file_path is None:
@@ -594,9 +582,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 Sg;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
 
         if self.sg_file_path is None:
@@ -615,9 +602,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 ACTNUM;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
         actnum_array = self.grid_model.get_grid().actnum_array
         if actnum_array is None:
@@ -651,9 +637,8 @@ class QA_QC_cubes(QA_QC_main):
             Required data:
                 Литотип;
 
-            Args:
-                file_path: str: путь к файлу
-                prop_name: str: ключ
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
         if self.litatype_file_path is None:
             self.update_report(self.generate_report_text("Данные LITATYPE отсутствуют", 2))
@@ -682,6 +667,9 @@ class QA_QC_cubes(QA_QC_main):
     def test_bulk(self):
         """
         Функция для проверки данных геометрического объема grid-a, должен быть не отрицательным
+
+            Returns:
+                     dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
         data = self.grid_model.get_grid().get_bulk_volume(asmasked=False).get_npvalues3d()
         data[np.isnan(data)] = 0
