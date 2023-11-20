@@ -1,4 +1,5 @@
 import inspect
+import sys
 
 from qa_qc_lib.readers.data_reader import QA_QC_grdecl_parser
 from qa_qc_lib.tests.base_test import QA_QC_main
@@ -8,10 +9,6 @@ import datetime
 
 
 class QA_QC_cubes(QA_QC_main):
-    """
-    TEST DESCRIPTION
-    """
-
     def __init__(self,
                  directory_path: str,
                  grid_name: str,

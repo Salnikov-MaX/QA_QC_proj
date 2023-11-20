@@ -1,0 +1,34 @@
+name: Deploy documentation lib
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+
+env:
+  SERVER_HOST: 92.63.64.241
+  SERVER_USER: laborant
+  SERVER_PATH: qa-qc-lib-doc
+
+jobs:
+  deploy-doc:
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@main
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.9'
+          architecture: 'x64'
+      - name: Install requirements
+        run: pip install -r requirements.txt
+      - name: Generate documentation
+        run: pdoc --html --force qa_qc_lib
+
+       # Setup key
+      - run: set -eu
+      - run: mkdir "$HOME/.ssh"
+      - run: echo "${{ secrets.SSH_KEY }}" > "$HOME/.ssh/key"
+      - run: chmod 600 "$HOME/.ssh/key"
+
+      - name: Deploy
+        run: cd html/qa_qc_lib && rsync -e "ssh -i $HOME/.ssh/key -o StrictHostKeyChecking=no" --archive --compress --delete . ${{env.SERVER_USER}}@${{env.SERVER_HOST}}:${{env.SERVER_PATH}}
