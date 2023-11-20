@@ -619,7 +619,7 @@ class QA_QC_cubes(QA_QC_main):
         else:
             r_text = f"Данные не равняются 0 или 1"
             self.update_report(self.generate_report_text(
-                f"Данные не равняются 0 или 1",
+                r_text,
                 0))
 
             return self.__generate_returns_dict(True, False, wrong_data)
@@ -686,4 +686,181 @@ class QA_QC_cubes(QA_QC_main):
             self.update_report(self.generate_report_text(
                 r_text,
                 0))
+            return self.__generate_returns_dict(True, False, wrong_data)
+
+    """
+    Тесты второго порядка
+    """
+    def test_sum_cubes(self):
+        """
+        Функция для проверки того что сумма кубов = 1
+
+            Required data:
+                SWATINIT;
+                Sg;
+                So;
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.sw_file_path is None:
+            self.update_report(self.generate_report_text("Данные SWATINIT отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+        if self.so_file_path is None:
+            self.update_report(self.generate_report_text("Данные So отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+        if self.sg_file_path is None:
+            self.update_report(self.generate_report_text("Данные Sg отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        mas_file_path = [self.sw_file_path, self.so_file_path]
+        if self.sg_file_path is not None:
+            mas_file_path.append(self.sg_file_path)
+
+        data_mas = []
+        for file_path in mas_file_path:
+            _, prop_name = CubesTools().find_key(
+                file_path)
+            data_mas.append(
+                self.grid_model.get_prop_value(
+                    self.grid_model.get_grid().get_prop_by_name(
+                        prop_name
+                    )
+                )
+            )
+
+        flag, wrong_data = self.__test_range_data(
+            sum(data_mas),
+            [lambda x: x == 1],
+            sum
+        )
+
+        if flag:
+            r_text = f"Cумма кубов = 1"
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Cумма кубов != 1"
+            print(f"Тест не пройден {r_text}")
+            self.update_report(self.generate_report_text(
+                r_text,
+                0))
+            return self.__generate_returns_dict(True, False, wrong_data)
+
+    def test_affiliation_sqcr(self):
+        """
+        Функция для проверки того что SGCR Є [SGL:1]
+
+            Required data:
+                SGCR;
+                SGL;
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+
+        if self.sgcr_file_path is None:
+            self.update_report(self.generate_report_text("Данные SGCR отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+        if self.sgl_file_path is None:
+            self.update_report(self.generate_report_text("Данные SGL отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        sgcr_value = self.__get_value_grid_prop(self.sgcr_file_path)
+        sgl_value = self.__get_value_grid_prop(self.sgl_file_path)
+
+        flag, wrong_data = self.__test_range_data(
+            sgcr_value,
+            [lambda x: x >= sgl_value[self.actnum == 1], lambda x: x <= 1],
+            self.muc_np_arrays
+        )
+
+        if flag:
+            r_text = f"Данные  U [SGL:1] "
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Данные  ∉ [SGL:1] "
+            self.update_report(self.generate_report_text(
+                r_text,
+                0))
+            return self.__generate_returns_dict(True, False, wrong_data)
+
+    def test_affiliation_swcr(self):
+        """
+        Функция для проверки того что SWCR ≥ SWL
+
+            Required data:
+                SWCR;
+                SWL;
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.swcr_file_path is None:
+            self.update_report(self.generate_report_text("Данные SWCR отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+        if self.swl_file_path is None:
+            self.update_report(self.generate_report_text("Данные SWL отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        swcr_value = self.__get_value_grid_prop(self.swcr_file_path)
+
+        swl_value = self.__get_value_grid_prop(self.swl_file_path)
+
+        flag, wrong_data = self.__test_range_data(
+            swcr_value,
+            [lambda x: x >= swl_value[self.actnum == 1]],
+            sum
+        )
+
+        if flag:
+            r_text = f"Данные >= SWL "
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Данные < SWL "
+            self.update_report(self.generate_report_text(
+                r_text,
+               0))
+
+            return self.__generate_returns_dict(True, False, wrong_data)
+
+    def test_swl_sw(self):
+        """
+        Проверка SWATINIT >= SWL
+
+            Required data:
+                SWATINIT
+                SWL
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.swl_file_path is None:
+            self.update_report(self.generate_report_text("Данные SWL отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+        if self.sw_file_path is None:
+            self.update_report(self.generate_report_text("Данные SWATINIT отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        swl_value = self.__get_value_grid_prop(self.swl_file_path)
+        _, key = CubesTools().find_key(self.sw_file_path)
+        flag, wrong_data = self.__test_value_conditions(
+            key,
+            [lambda x: x >= swl_value[self.actnum == 1]],
+            sum
+        )
+
+        if flag:
+            r_text = f"Данные > SWL "
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Данные <= SWL "
+            self.update_report(
+                self.generate_report_text(
+                    r_text,
+                    0))
+
             return self.__generate_returns_dict(True, False, wrong_data)
