@@ -10,3 +10,4 @@ segyio~=1.9
 pandas
 xtgeo~=3.2.0
 pdoc3
+dacite
