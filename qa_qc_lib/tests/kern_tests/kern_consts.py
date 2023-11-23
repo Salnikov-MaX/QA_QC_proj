@@ -14,6 +14,8 @@ class KernConsts:
         self.dependency_accepted = "Зависимость выполняется. Выпадающие точки"
         self.porosity_interval_accepted = "Все данные лежат в интервале от 0 до 47.6"
         self.porosity_interval_wrong = "Данные не лежат в интервале от 0 до 47.6"
+        self.vp_vs_accepted = "Все данные лежат в интервале от 0.3 до 10 км/с"
+        self.vp_vs_wrong = "Данные не лежат в интервале от 0.3 до 10 км/с"
         self.kp_open = "Кп_откр"
         self.kp_tbu = "Кп_откр_TBU"
         self.kp_abs = "Кп_абс"

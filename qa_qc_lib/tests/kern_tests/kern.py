@@ -19,7 +19,6 @@ class QA_QC_kern(QA_QC_main):
         self.file_name = file_path.split('/')[-1]
         self.data_kern = DataKern(data_file_path)
         self.consts = KernConsts()
-        self.porosity_abs = porosity_abs
 
     def __generate_report(self, text, status, get_report):
         """
@@ -194,6 +193,40 @@ class QA_QC_kern(QA_QC_main):
         else:
             return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
                                                 test_name, [poro_name])
+
+    def __check_vp_vs(self, vp_or_vs_param, test_name, get_report, filters):
+        """
+        Функция для проверки нахождения данных в интервале от 0.3 до 10
+
+        Args:
+            vp_or_vs_param (np.ndarray[int/float]): массив со скоростью для проверки
+            test_name: название теста, где вызван метод
+            get_report: флаг для получения отчета
+            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
+                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[vp_or_vs_param], filters=filters)
+        vp_or_vs = np.array(clear_df[vp_or_vs_param])
+        check_result, wrong, check_text = self.__check_data(vp_or_vs, get_report)
+
+        if check_result:
+            result_mask = (vp_or_vs >= 10) | (vp_or_vs <= 0.3)
+            result = sum(result_mask) == 0
+            text = self.consts.vp_vs_accepted if result else self.consts.vp_vs_wrong
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(vp_or_vs_param, test_name, text, result_mask, index)
+
+            return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
+                                                test_name, [vp_or_vs])
+        else:
+            self.data_kern.mark_errors(vp_or_vs_param, test_name, check_text, wrong, index)
+            return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
+                                                test_name, [vp_or_vs])
 
     def test_monotony(self, get_report=True) -> dict:
         """
@@ -600,6 +633,42 @@ class QA_QC_kern(QA_QC_main):
                         "param_name": "Sw",
                         "error_decr": check_text
                     }}
+
+    def test_vp(self, get_report=True, filters=None):
+        """
+            Тест предназначен для проверки физичности данных.
+            В данном тесте проверяется соответствие интервалу 0.3<Vp<10 км/с.
+
+            Required data:
+                Скорость_продольной_волны(Vp)
+
+            Args:
+                Скорость_продольной_волны(Vp) (np.ndarray[int/float]): массив со скоростью продольной волны(Vp) для проверки
+
+            Returns:
+                dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__check_vp_vs(self.consts.vp, "test_vp", get_report, filters)
+
+    def test_vs(self, get_report=True, filters=None):
+        """
+            Тест предназначен для проверки физичности данных.
+            В данном тесте проверяется соответствие интервалу 0.3<Vp<10 км/с.
+
+            Required data:
+                Скорость_поперечной_волны(Vs)
+
+            Args:
+                Скорость_поперечной_волны(Vs) (np.ndarray[int/float]): массив со скоростью поперечной волны(Vs) для проверки
+
+            Returns:
+                dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__check_vp_vs(self.consts.vs, "test_vs", get_report, filters)
 
     def test_general_dependency_checking(self, x, y, get_report=True):
         """
