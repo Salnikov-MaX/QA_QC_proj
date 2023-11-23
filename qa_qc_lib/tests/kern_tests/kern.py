@@ -212,8 +212,8 @@ class QA_QC_kern(QA_QC_main):
                       MD - массив с глубинами
         """
         clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[param_name], filters=filters)
-        porosity_open = np.array(clear_df[param_name])
-        check_result, wrong, check_text = self.__check_data(porosity_open, get_report)
+        param = np.array(clear_df[param_name])
+        check_result, wrong, check_text = self.__check_data(param, get_report)
 
         if check_result:
             result_mask, result = self.__zero_one_interval_check(param_name)
