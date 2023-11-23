@@ -68,7 +68,7 @@ class DataPreprocessing:
         """
             Проходится по файлам и из каждого файла берет нужный столбец. Собирает единую таблицу.
         Args:
-            columns_mapping: {string:string} -словарь формата путь до файла->расшифровка параметра
+            columns_mapping (dic[string:string]): -словарь формата путь до файла->расшифровка параметра
 
         Returns:
             excel: таблица с собранными параметрами
@@ -105,5 +105,5 @@ class DataPreprocessing:
         self.save_to_excel()
 
     def save_to_excel(self):
-        self.df_result.to_excel("..\\..\\data\\post_test_table.xlsx",
+        self.df_result.to_excel("..\\..\\..\\data\\post_test_table.xlsx",
                                 sheet_name='Sheet1', index=False)
