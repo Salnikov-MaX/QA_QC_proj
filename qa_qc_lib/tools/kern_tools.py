@@ -154,8 +154,8 @@ def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, te
     line2, = plt.plot(x_in_up, y_in_up, marker='o', label='inner_up', color='C2')
     plt.legend(handler_map={line1: HandlerLine2D(numpoints=2), line2: HandlerLine2D(numpoints=2)})
     equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
-    plt.text(np.min(x), np.mean(y), equation)
-    plt.savefig(f"data\\{test_name}")
+    plt.text(np.min(x), np.max(y), equation)
+    plt.savefig(f"..\\..\\data\\{test_name}")
     if get_report:
         plt.show()
     plt.close()
