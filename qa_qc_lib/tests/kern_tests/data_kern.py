@@ -7,15 +7,14 @@ class DataKern:
     def __init__(self, file_path):
         self.consts = KernConsts()
         self.file_path = file_path
-        self.test_column = 43
 
     def __color_cells(self, df, error_indices, column, color='red'):
         """
         Args:
-            df: dataframe - для выделения выпадающих значений
-            error_indices: индексы с ошибками
-            column: название колонки
-            color: цвет, в который покрасить значения
+            df(dataframe): dataframe - для выделения выпадающих значений
+            error_indices(np.ndarray[int]): индексы с ошибками
+            column(string): название колонки
+            color(string): цвет, в который покрасить значения
 
         Returns:
 
@@ -29,21 +28,15 @@ class DataKern:
         """
         Метод для получения массивов переданных параметров
         Args:
-            column_names: массив с названиями параметров, которы необходимо получить
-            filters: filters: применяемые фильтры в формате [{"name":str,"value":str||int,
-            "operation":[= || != || > || < || >= || <=]}]
+            column_names(array[string]): массив с названиями параметров, которы необходимо получить
+            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
+                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
 
         Returns:
             filtered_df: dataframe с требуемыми параметрами и примененными фильтрами
         """
         filters = filters or {}
-        # Читаем файл post_test_table.xlsx
-        try:
-            post_test_df = pd.read_excel(self.file_path)
-        except FileNotFoundError:
-            print(f"Файл {self.file_path} не найден.")
-            return None
-
+        post_test_df = pd.read_excel(self.file_path, usecols=column_names)
         for filter_item in filters:
             column_name = filter_item.get('name')
             value = filter_item.get('value')
@@ -71,21 +64,17 @@ class DataKern:
         """
         Метод для окрашивания аномальных значений
         Args:
-            column_name: название колонки
-            test_name: название теста
-            error_description: описание ошибки
-            error_mask: маска с результатом
-            md: массив с глубиной
+            column_name(array[string]): название колонки
+            test_name(string): название теста
+            error_description(string): описание ошибки
+            error_mask(np.ndarray[int]): маска с результатом
+            md(np.ndarray[float/int]): массив с глубиной
 
         Returns:
 
         """
-        try:
-            post_test_df = pd.read_excel(self.file_path)
-        except FileNotFoundError:
-            print(f"Файл {self.file_path} не найден.")
-            return None
 
+        post_test_df = pd.read_excel(self.file_path)
         error_indices = md[error_mask == 1]
         post_test_df[test_name] = np.nan
         post_test_df[test_name] = post_test_df[test_name].astype(object)

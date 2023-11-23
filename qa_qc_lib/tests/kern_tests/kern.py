@@ -38,14 +38,14 @@ class QA_QC_kern(QA_QC_main):
                                 md, test_name, param_name) -> dict:
         """
         Args:
-            data_availability: наличие данных
-            result: результат теста
-            result_mask: маска с результатом
-            error_decr: опсиание ошибки
-            well_name: название скважины
-            md: массив с глубинами
-            test_name: название теста
-            param_name: массив с названиями параметров
+            data_availability(bool): наличие данных
+            result(bool): результат теста
+            result_mask(np.ndarray[bool]): маска с результатом
+            error_decr(string): описание ошибки
+            well_name(string): название скважины
+            md(np.ndarray[int/float]): массив с глубинами
+            test_name(string): название теста
+            param_name(array[string]): массив с названиями параметров
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
@@ -73,15 +73,15 @@ class QA_QC_kern(QA_QC_main):
         """
         Метод для получение данных через data_kern
         Args:
-            param: массив с названиями параметров, которые необходимо получить
-            filters: применяемые фильтры в формате [{"name":str,"value":str||int,
-            "operation":[= || != || > || < || >= || <=]}]
+            param(array[string]): массив с названиями параметров, которые необходимо получить
+            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
+                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
 
         Returns:
-            clear_df: dataframe с требуемыми параметрами очищенный от nan
-            index: индексы данных по глубине после удаления nan
-            well_name: название скважины
-            md: массив с глубинами для которых взяты данные
+            clear_df(dataframe): dataframe с требуемыми параметрами очищенный от nan
+            index(np.ndarray(int): индексы данных по глубине после удаления nan
+            well_name(string): название скважины
+            md(np.ndarray(int): массив с глубинами для которых взяты данные
         """
         columns = [self.consts.well, self.consts.md] + param
         df = self.data_kern.get_attributes(column_names=columns, filters=filters)
@@ -133,7 +133,7 @@ class QA_QC_kern(QA_QC_main):
         Функция для проверки нахождения данных в интервале от 0 до 0.476.
 
         Args:
-            porosity (array[int/float]): массив с пористостью для проверки
+            porosity (np.ndarray[int/float]): массив с пористостью для проверки
 
         Returns:
             result_mask(np.ndarray[bool]): маска с выпадающими за интервал значениями
@@ -152,8 +152,8 @@ class QA_QC_kern(QA_QC_main):
             poro_name: название передаваемой пористости
             test_name: название теста, где вызван метод
             get_report: флаг для получения отчета
-            filters: применяемые фильтры в формате [{"name":str,"value":str||int,
-            "operation":[= || != || > || < || >= || <=]}]
+            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
+                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
@@ -228,7 +228,7 @@ class QA_QC_kern(QA_QC_main):
             Кп_откр
 
         Args:
-            Кп_откр (array[int/float]): массив с кп_откр для проверки из переданной таблицы
+            Кп_откр (np.ndarray[int/float]): массив с кп_откр для проверки из переданной таблицы
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
@@ -246,7 +246,7 @@ class QA_QC_kern(QA_QC_main):
             Кп_абс
 
         Args:
-            Кп_абс (array[int/float]): массив с кп_дин для проверки из переданной таблицы
+            Кп_абс (np.ndarray[int/float]): массив с кп_дин для проверки из переданной таблицы
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
@@ -265,7 +265,7 @@ class QA_QC_kern(QA_QC_main):
             Кп_дин
 
         Args:
-            Кп_дин (array[int/float]): массив с кп_дин для проверки из переданной таблицы
+            Кп_дин (np.ndarray[int/float]): массив с кп_дин для проверки из переданной таблицы
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
@@ -281,10 +281,10 @@ class QA_QC_kern(QA_QC_main):
         В данном тесте проверяется соответствие интервалу (0 ; 47,6]
 
         Required data:
-            Кп_дин
+            Кп_эфф
 
         Args:
-            self.porosity_eff (array[int/float]): массив с кп_откр_TBU для проверки
+            Кп_эфф (np.ndarray[int/float]): массив с кп_эфф для проверки из переданной таблицы
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
@@ -308,8 +308,8 @@ class QA_QC_kern(QA_QC_main):
                 0.7, и удалено менее 10% точек, то тест пройден, иначе - нет.
 
                     Args:
-                        x (array[int/float]): массив с данными для проверки
-                        y (array[int/float]): массив с данными для проверки
+                        x (np.ndarray[int/float]): массив с данными для проверки
+                        y (np.ndarray[int/float]): массив с данными для проверки
 
                     Returns:
                         dict: Словарь с результатом теста, коэффициентом r2
