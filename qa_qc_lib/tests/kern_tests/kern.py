@@ -19,7 +19,7 @@ class QA_QC_kern(QA_QC_main):
         self.file_name = file_path.split('/')[-1]
         self.data_kern = DataKern(data_file_path)
         self.consts = KernConsts()
-        self.porosity_abs = porosity_abs
+        # self.porosity_abs = porosity_abs
 
     def __generate_report(self, text, status, get_report):
         """
@@ -60,7 +60,7 @@ class QA_QC_kern(QA_QC_main):
             "result_mask": result_mask.tolist(),
             "test_name": test_name,
             "error_decr": error_decr,
-            "well_name": well_name,
+            "well_name": str(well_name),
             "MD": md.tolist()
         }
         for index, param in enumerate(param_name):
@@ -69,7 +69,7 @@ class QA_QC_kern(QA_QC_main):
 
         return {
             "data_availability": data_availability,
-            "result": result,
+            "result": bool(result),
             "specification": specification
         }
 
@@ -363,7 +363,7 @@ class QA_QC_kern(QA_QC_main):
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
                       param_name - название параметра ,error_decr -краткое описание ошибки
-            """
+        """
 
         check_result, wrong, check_text = self.__check_data(self.sowcr, get_report)
 
@@ -606,7 +606,7 @@ class QA_QC_kern(QA_QC_main):
             Тест предназначен для оценки дисперсии входных данных.
             Он проводится по следующему алгоритму: изначально,
             используя статистические методы, детектируются и удаляются
-            выбросные точки, затем полученное облако точек  аппроксимируется
+            выбросные точки, затем полученное облако точек аппроксимируется
             и считается коэффициент детерминации R2. Если его значение больше
             0.7, то тест считается пройденным. Если значение меньше 0.7, то
             точки сортируются по удаленности от линии тренда, и запускается
