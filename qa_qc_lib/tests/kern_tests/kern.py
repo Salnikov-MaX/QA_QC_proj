@@ -10,7 +10,7 @@ from qa_qc_lib.tools.kern_tools import dropdown_search
 
 
 class QA_QC_kern(QA_QC_main):
-    def __init__(self, file_path: str, data_file_path=r"..\..\..\data\post_test_table.xlsx") -> None:
+    def __init__(self, file_path: str, data_file_path=r"..\..\data\post_test_table.xlsx") -> None:
         super().__init__()
         self.upper_limit_poro = 0.476
         self.lower_limit_poro = 0
@@ -38,7 +38,7 @@ class QA_QC_kern(QA_QC_main):
             print(report_text)
 
     def __generate_returns_dict(self, data_availability, result, result_mask, error_decr, well_name,
-                                md, test_name, param_name) -> dict:
+                                md, test_name, param_name, r2=None) -> dict:
         """
         Args:
             data_availability(bool): наличие данных
@@ -65,7 +65,8 @@ class QA_QC_kern(QA_QC_main):
         for index, param in enumerate(param_name):
             key_name = f"param_name_{index + 1}"
             specification[key_name] = param
-
+        if r2 is not None:
+            specification["r2"] = r2
         return {
             "data_availability": data_availability,
             "result": result,
@@ -104,7 +105,7 @@ class QA_QC_kern(QA_QC_main):
 
             Returns:
                 result_mask(np.ndarray[bool]): маска с выпадающими за интервал значениями
-                result(bool):наличие ошибок в данныз
+                result(bool):наличие ошибок в данных
         """
         result_mask = (array > 1) | (array <= 0)
         result = np.sum(result_mask) == 0
@@ -165,7 +166,7 @@ class QA_QC_kern(QA_QC_main):
 
     def __main_porosity_test(self, poro_name, test_name, get_report, filters):
         """
-        Главный класс для проверки на физичность любого вида пористости.
+        Главный метод для проверки на физичность любого вида пористости.
         Args:
             poro_name: название передаваемой пористости
             test_name: название теста, где вызван метод
@@ -191,10 +192,93 @@ class QA_QC_kern(QA_QC_main):
             return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
                                                 test_name, [poro_name])
         else:
+            self.data_kern.mark_errors(poro_name, test_name, check_text, wrong, index)
             return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
                                                 test_name, [poro_name])
 
-    def test_monotony(self, get_report=True) -> dict:
+    def __main_zero_to_one_interval_test(self, param_name, test_name, get_report, filters):
+        """
+        Главный класс для проверки на физичность любого вида пористости.
+        Args:
+            param_name: название передаваемого параметра
+            test_name: название теста, где вызван метод
+            get_report: флаг для получения отчета
+            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
+                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[param_name], filters=filters)
+        param = np.array(clear_df[param_name])
+        check_result, wrong, check_text = self.__check_data(param, get_report)
+
+        if check_result:
+            result_mask, result = self.__zero_one_interval_check(param_name)
+            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(param_name, test_name, text, result_mask, index)
+
+            return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
+                                                test_name, [param_name])
+        else:
+            self.data_kern.mark_errors(param_name, test_name, check_text, wrong, index)
+            return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
+                                                test_name, [param_name])
+
+    def __main_poro_vs_param(self, poro_name, param_name, filters, test_name, get_report):
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[poro_name, param_name], filters=filters)
+        porosity = np.array(clear_df[poro_name])
+        param = np.array(clear_df[param_name])
+        check_result_for_first_param, wrong_for_first_param, check_text_for_first_param = self.__check_data(
+            porosity, get_report)
+        check_result_for_second_param, wrong_for_second_param, check_text_for_second_param = self.__check_data(
+            param, get_report)
+
+        if check_result_for_first_param and check_result_for_second_param:
+            r2 = self.test_general_dependency_checking(porosity, param)["specification"]["r2"]
+            result = True
+            a, b = linear_dependence_function(porosity, param)
+            if a >= 0 or r2 < 0.7:
+                result = False
+
+            wrong_values = dropdown_search(porosity,
+                                           param,
+                                           a, b)
+            linear_function_visualization(porosity,
+                                          param,
+                                          a, b,
+                                          r2,
+                                          get_report,
+                                          poro_name,
+                                          param_name,
+                                          test_name,
+                                          wrong_values)
+            wrong_values = np.where(wrong_values, 1, result)
+
+            text = self.consts.dependency_accepted + str(wrong_values) if result \
+                else self.consts.dependency_wrong + str(wrong_values)
+
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(poro_name, test_name, text, wrong_values, index)
+
+            return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, result,
+                                                wrong_values, text, well_name, md,
+                                                test_name, [poro_name, param_name], r2=r2)
+        else:
+            self.data_kern.mark_errors(param_name, test_name, wrong_for_first_param + " " + check_text_for_second_param,
+                                       check_result_for_first_param if len(check_result_for_second_param) != 0
+                                       else check_result_for_second_param, index)
+            return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, False,
+                                                check_result_for_first_param if len(check_result_for_second_param) != 0
+                                                else check_result_for_second_param,
+                                                wrong_for_first_param + " " + check_text_for_second_param, well_name,
+                                                md,
+                                                test_name, [poro_name, param_name])
+
+    def test_monotony(self, get_report=True, filters=None) -> dict:
         """
         Тест предназначен для проверки монотонности возрастания значения глубины
 
@@ -202,40 +286,33 @@ class QA_QC_kern(QA_QC_main):
             Глубина отбора, м
 
         Args:
-            self.depth (array[int/float]): массив с местом отбора для проверки
+            Глубина отбора, м (np.ndarray[int/float]): массив с местом отбора для проверки из переданной таблицы
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                  param_name - название параметра ,error_decr -краткое описание ошибки
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
         """
 
-        check_result, wrong, check_text = self.__check_data(self.depth, get_report)
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[], filters=filters)
+        depth = np.array(clear_df[self.consts.md])
+        check_result, wrong, check_text = self.__check_data(depth, get_report)
 
         if check_result:
-            result_mask = np.diff(self.depth) <= 0
+            result_mask = np.diff(depth) <= 0
             result_mask = np.insert(result_mask, 0, False)
             result = sum(result_mask) == 0
             text = self.consts.monotony_accepted if result else self.consts.monotony_wrong
             self.__generate_report(text, result, get_report)
 
-            return {"data_availability": check_result,
-                    "result": result,
-                    "specification": {
-                        "result_mask": result_mask,
-                        "test_name": "test_monotony",
-                        "param_name": "Глубина отбора, м",
-                        "error_decr": text
-                    }}
+            self.data_kern.mark_errors(self.consts.md, "test_monotony", text, result_mask, index)
+            return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
+                                                "test_monotony", [self.consts.md])
 
         else:
-            return {"data_availability": check_result,
-                    "result": False,
-                    "specification": {
-                        "result_mask": wrong,
-                        "test_name": "test_monotony",
-                        "param_name": "Глубина отбора, м",
-                        "error_decr": check_text
-                    }}
+            self.data_kern.mark_errors(self.consts.md, "test_monotony", check_text, wrong, index)
+            return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
+                                                "test_monotony", [self.consts.md])
 
     def test_porosity_open(self, get_report=True, filters=None) -> dict:
         """
@@ -252,7 +329,8 @@ class QA_QC_kern(QA_QC_main):
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
                       param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
                       MD - массив с глубинами
-            """
+        """
+
         return self.__main_porosity_test(self.consts.kp_open, "test_porosity_open", get_report, filters)
 
     def test_porosity_abs(self, get_report=True, filters=None) -> dict:
@@ -270,7 +348,7 @@ class QA_QC_kern(QA_QC_main):
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
                       param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
                       MD - массив с глубинами
-            """
+        """
 
         return self.__main_porosity_test(self.consts.kp_abs, "test_porosity_open", get_report, filters)
 
@@ -289,7 +367,7 @@ class QA_QC_kern(QA_QC_main):
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
                       param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
                       MD - массив с глубинами
-            """
+        """
 
         return self.__main_porosity_test(self.consts.kp_din, "test_porosity_din", get_report, filters)
 
@@ -308,89 +386,52 @@ class QA_QC_kern(QA_QC_main):
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
                       param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
                       MD - массив с глубинами
-            """
+        """
 
         return self.__main_porosity_test(self.consts.kp_din, "test_porosity_din", get_report, filters)
 
-    def test_sw_residual(self, get_report=True) -> dict:
+    def test_sw_residual(self, get_report=True, filters=None) -> dict:
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
+
         Required data:
             Кво
+
         Args:
-            self.sw_residual (array[int/float]): массив с коэффициентом остаточной водонасыщенности для проверки
+            Кво (np.ndarray[int/float]): массив с коэффициентом остаточной водонасыщенности
+                                        для проверки из переданной таблицы
+
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки
-            """
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
 
-        check_result, wrong, check_text = self.__check_data(self.sw_residual, get_report)
+        return self.__main_porosity_test(self.consts.kvo, "test_sw_residual", get_report, filters)
 
-        if check_result:
-            result_mask, result = self.__zero_one_interval_check(self.sw_residual)
-            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
-            self.__generate_report(text, result, get_report)
-
-            return {"data_availability": check_result,
-                    "result": result,
-                    "specification": {
-                        "result_mask": result_mask,
-                        "test_name": "test_sw_residual",
-                        "param_name": "Кво",
-                        "error_decr": text
-                    }}
-
-        else:
-            return {"data_availability": check_result,
-                    "result": False,
-                    "specification": {
-                        "result_mask": wrong,
-                        "test_name": "test_sw_residual",
-                        "param_name": "Кво",
-                        "error_decr": check_text
-                    }}
-
-    def test_sowcr(self, get_report=True) -> dict:
+    def test_sowcr(self, get_report=True, filters=None) -> dict:
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
+
         Required data:
             Кно
+
         Args:
-            self.sowcr (array[int/float]): массив с коэффициентом нефтенасыщенности для проверки
+
+            Кно (np.ndarray[int/float]): массив с коэффициентом нефтенасыщенности
+                                        для проверки из переданной таблицы
+
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки
-            """
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
 
-        check_result, wrong, check_text = self.__check_data(self.sowcr, get_report)
+        return self.__main_porosity_test(self.consts.kno, "test_sowcr", get_report, filters)
 
-        if check_result:
-            result_mask, result = self.__zero_one_interval_check(self.sowcr)
-            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
-            self.__generate_report(text, result, get_report)
-
-            return {"data_availability": check_result,
-                    "result": result,
-                    "specification": {
-                        "result_mask": result_mask,
-                        "test_name": "test_sowcr",
-                        "param_name": "Кно",
-                        "error_decr": text
-                    }}
-
-        else:
-            return {"data_availability": check_result,
-                    "result": False,
-                    "specification": {
-                        "result_mask": wrong,
-                        "test_name": "test_sowcr",
-                        "param_name": "Кно",
-                        "error_decr": check_text
-                    }}
-
-    def test_sg(self, get_report=True) -> dict:
+    def test_sg(self, get_report=True, filters=None):
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
@@ -399,40 +440,18 @@ class QA_QC_kern(QA_QC_main):
             Sg
 
         Args:
-            self.sg (array[int/float]): массив с остаточной водонасыщенностью для проверки
+            Sg (np.ndarray[int/float]): массив с остаточной водонасыщенностью
+                                        для проверки из переданной таблицы
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки
-            """
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
 
-        check_result, wrong, check_text = self.__check_data(self.sg, get_report)
+        return self.__main_porosity_test(self.consts.sg, "test_sg", get_report, filters)
 
-        if check_result:
-            result_mask, result = self.__zero_one_interval_check(self.sg)
-            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
-            self.__generate_report(text, result, get_report)
-
-            return {"data_availability": check_result,
-                    "result": result,
-                    "specification": {
-                        "result_mask": result_mask,
-                        "test_name": "test_sg",
-                        "param_name": "Sg",
-                        "error_decr": text
-                    }}
-
-        else:
-            return {"data_availability": check_result,
-                    "result": False,
-                    "specification": {
-                        "result_mask": wrong,
-                        "test_name": "test_sg",
-                        "param_name": "Sg",
-                        "error_decr": check_text
-                    }}
-
-    def test_sgl(self, get_report=True) -> dict:
+    def test_sgl(self, get_report=True, filters=None):
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
@@ -441,40 +460,18 @@ class QA_QC_kern(QA_QC_main):
             Sgl
 
         Args:
-            self.sgl (array[int/float]): массив с связанной газонасыщенностью для проверки
+            Sgl (np.ndarray[int/float]): массив с связанной газонасыщенностью
+                                            для проверки из переданной таблицы
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки
-            """
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
 
-        check_result, wrong, check_text = self.__check_data(self.sgl, get_report)
+        return self.__main_porosity_test(self.consts.sgl, "test_sgl", get_report, filters)
 
-        if check_result:
-            result_mask, result = self.__zero_one_interval_check(self.sgl)
-            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
-            self.__generate_report(text, result, get_report)
-
-            return {"data_availability": check_result,
-                    "result": result,
-                    "specification": {
-                        "result_mask": result_mask,
-                        "test_name": "test_sgl",
-                        "param_name": "Sgl",
-                        "error_decr": text
-                    }}
-
-        else:
-            return {"data_availability": check_result,
-                    "result": False,
-                    "specification": {
-                        "result_mask": wrong,
-                        "test_name": "test_sgl",
-                        "param_name": "Sgl",
-                        "error_decr": check_text
-                    }}
-
-    def test_so(self, get_report=True) -> dict:
+    def test_so(self, get_report=True, filters=None):
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
@@ -483,40 +480,17 @@ class QA_QC_kern(QA_QC_main):
             So
 
         Args:
-            self.so (array[int/float]): массив с остаточной водонасыщенностью для проверки
+            So (np.ndarray[int/float]): массив с остаточной водонасыщенностью для проверки
 
         Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки
-            """
+           dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
 
-        check_result, wrong, check_text = self.__check_data(self.so, get_report)
+        return self.__main_porosity_test(self.consts.so, "test_so", get_report, filters)
 
-        if check_result:
-            result_mask, result = self.__zero_one_interval_check(self.so)
-            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
-            self.__generate_report(text, result, get_report)
-
-            return {"data_availability": check_result,
-                    "result": result,
-                    "specification": {
-                        "result_mask": result_mask,
-                        "test_name": "test_so",
-                        "param_name": "So",
-                        "error_decr": text
-                    }}
-
-        else:
-            return {"data_availability": check_result,
-                    "result": False,
-                    "specification": {
-                        "result_mask": wrong,
-                        "test_name": "test_so",
-                        "param_name": "So",
-                        "error_decr": check_text
-                    }}
-
-    def test_sogcr(self, get_report=True) -> dict:
+    def test_sogcr(self, get_report=True, filters=None):
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
@@ -525,40 +499,18 @@ class QA_QC_kern(QA_QC_main):
             Sogcr
 
         Args:
-            self.sogcr (array[int/float]): массив с критической нефтенасыщенностью для проверки
+            Sogcr (np.ndarray[int/float]): массив с критической нефтенасыщенностью
+                                        для проверки из переданной таблицы
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки
-            """
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
 
-        check_result, wrong, check_text = self.__check_data(self.sogcr, get_report)
+        return self.__main_porosity_test(self.consts.sogcr, "test_sogcr", get_report, filters)
 
-        if check_result:
-            result_mask, result = self.__zero_one_interval_check(self.sogcr)
-            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
-            self.__generate_report(text, result, get_report)
-
-            return {"data_availability": check_result,
-                    "result": result,
-                    "specification": {
-                        "result_mask": result_mask,
-                        "test_name": "test_sogcr",
-                        "param_name": "Sogcr",
-                        "error_decr": text
-                    }}
-
-        else:
-            return {"data_availability": check_result,
-                    "result": False,
-                    "specification": {
-                        "result_mask": wrong,
-                        "test_name": "test_sogcr",
-                        "param_name": "Sogcr",
-                        "error_decr": check_text
-                    }}
-
-    def test_sw(self, get_report=True) -> dict:
+    def test_sw(self, get_report=True, filters=None):
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
@@ -567,59 +519,38 @@ class QA_QC_kern(QA_QC_main):
             Sw
 
         Args:
-            self.sw (array[int/float]): массив с водонасыщенностью для проверки
+            Sw (np.ndarray[int/float]): массив с водонасыщенностью
+                                            для проверки из переданной таблицы
 
         Returns:
             dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки
-            """
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
 
-        check_result, wrong, check_text = self.__check_data(self.sw, get_report)
-
-        if check_result:
-            result_mask, result = self.__zero_one_interval_check(self.sw)
-            text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
-            self.__generate_report(text, result, get_report)
-
-            return {"data_availability": check_result,
-                    "result": result,
-                    "specification": {
-                        "result_mask": result_mask,
-                        "test_name": "test_sw",
-                        "param_name": "Sw",
-                        "error_decr": text
-                    }}
-
-        else:
-            return {"data_availability": check_result,
-                    "result": False,
-                    "specification": {
-                        "result_mask": wrong,
-                        "test_name": "test_sw",
-                        "param_name": "Sw",
-                        "error_decr": check_text
-                    }}
+        return self.__main_porosity_test(self.consts.sw, "test_sw", get_report, filters)
 
     def test_general_dependency_checking(self, x, y, get_report=True):
         """
-                Тест предназначен для оценки дисперсии входных данных.
-                Он проводится по следующему алгоритму: изначально,
-                используя статистические методы, детектируются и удаляются
-                выбросные точки, затем полученное облако точек аппроксимируется
-                и считается коэффициент детерминации R2. Если его значение больше
-                0.7, то тест считается пройденным. Если значение меньше 0.7, то
-                точки сортируются по удаленности от линии тренда, и запускается
-                цикл, за одну итерацию которого удаляется самая отдаленная от
-                линии аппроксимации точка, и считается R2, если значение больше
-                0.7, и удалено менее 10% точек, то тест пройден, иначе - нет.
+            Тест предназначен для оценки дисперсии входных данных.
+            Он проводится по следующему алгоритму: изначально,
+            используя статистические методы, детектируются и удаляются
+            выбросные точки, затем полученное облако точек аппроксимируется
+            и считается коэффициент детерминации R2. Если его значение больше
+            0.7, то тест считается пройденным. Если значение меньше 0.7, то
+            точки сортируются по удаленности от линии тренда, и запускается
+            цикл, за одну итерацию которого удаляется самая отдаленная от
+            линии аппроксимации точка, и считается R2, если значение больше
+            0.7, и удалено менее 10% точек, то тест пройден, иначе - нет.
 
-                    Args:
-                        x (np.ndarray[int/float]): массив с данными для проверки
-                        y (np.ndarray[int/float]): массив с данными для проверки
+            Args:
+                x (np.ndarray[int/float]): массив с данными для проверки
+                y (np.ndarray[int/float]): массив с данными для проверки
 
-                    Returns:
-                        dict: Словарь с результатом теста, коэффициентом r2
-                """
+            Returns:
+                dic: Словарь с результатом теста, коэффициентом r2
+        """
+
         result = False
 
         n = len(x)
@@ -679,7 +610,7 @@ class QA_QC_kern(QA_QC_main):
                 "r2": r2
             }}
 
-    def test_porosity_open_vs_swl(self, get_report=True):
+    def test_porosity_open_vs_swl(self, get_report=True, filters=None):
         """
         Тест предназначен для оценки соответствия типовой
         для данного кроссплота и полученной аппроксимации.
@@ -687,68 +618,41 @@ class QA_QC_kern(QA_QC_main):
         y=a*x+b, при этом a<0
 
         Required data:
-            Кво; Кп откр
+            Кво; Кп_откр
 
         Args:
-            self.sw_residual (array[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
-            self.porosity_open (array[int/float]): массив с данными Кп откр для проверки
+            Кво (np.ndarray[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
+            Кп_откр (np.ndarray[int/float]): массив с данными Кп откр для проверки
 
         Returns:
-            dic: cловарь, result_mask - маска с результатом, test_name - название теста,
-            x_param_name- название параметра переданного в качесте X,
-            y_param_name- название параметра переданного в качесте Y,
-            error_decr- описание ошибки
+            Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - названия параметров ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
         """
-        check_result_for_first_param, wrong_for_first_param, check_text_for_first_param = self.__check_data(
-            self.porosity_open, get_report)
-        check_result_for_second_param, wrong_for_second_param, check_text_for_second_param = self.__check_data(
-            self.sw_residual, get_report)
-        if check_result_for_first_param and check_result_for_second_param:
-            r2 = self.test_general_dependency_checking(self.porosity_open, self.sw_residual)["specification"]["r2"]
-            result = True
-            a, b = linear_dependence_function(self.porosity_open, self.sw_residual)
-            if a >= 0 or r2 < 0.7:
-                result = False
+        return self.__main_poro_vs_param(self.consts.kp_open, self.consts.kvo, filters, "test_porosity_open_vs_swl",
+                                         get_report)
 
-            wrong_values = dropdown_search(self.porosity_open,
-                                           self.sw_residual,
-                                           a, b)
-            linear_function_visualization(self.porosity_open,
-                                          self.sw_residual,
-                                          a, b,
-                                          r2,
-                                          get_report,
-                                          "Porosity open",
-                                          "Swl",
-                                          "test_porosity_open_vs_swl",
-                                          wrong_values)
-            wrong_values = np.where(wrong_values, 1, result)
+    def test_kp_abs_vs_swl(self, get_report=True, filters=None):
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость линейная по функции
+        y=a*x+b, при этом a<0
 
-            text = self.consts.dependency_accepted + str(wrong_values) if result \
-                else self.consts.dependency_wrong + str(wrong_values)
+        Required data:
+            Кво; Кп_абс
 
-            self.__generate_report(text, result, get_report)
+        Args:
+            Кво (np.ndarray[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
+            Кп_абс (np.ndarray[int/float]): массив с данными Кп абс для проверки
 
-            return {"data_availability": True,
-                    "result": result,
-                    "specification": {
-                        "result_mask": wrong_values,
-                        "test_name": "test_porosity_open_vs_swl",
-                        "x_param_name": "Porosity open",
-                        "y_param_name": "Swl",
-                        "error_decr": text
-                    }}
-        else:
-            return {"data_availability": False,
-                    "result": check_result_for_first_param * check_result_for_second_param,
-                    "specification": {
-                        "result_mask": wrong_for_first_param + " " + wrong_for_second_param,
-                        "test_name": "test_porosity_open_vs_swl",
-                        "x_param_name": "Porosity open",
-                        "y_param_name": "Swl",
-                        "error_decr": check_text_for_first_param + " " + check_text_for_second_param
-                    }}
-
+        Returns:
+            Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - названия параметров ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_param(self.consts.kp_abs, self.consts.kvo, filters, "test_kp_abs_vs_swl",
+                                         get_report)
     def __greater_than_zero_check(self, array):
         """
         Функция для проверки, что данные больше 0,
@@ -903,3 +807,95 @@ class QA_QC_kern(QA_QC_main):
         """
 
         return self.__main_greater_than_zero(self.consts.kpr_eff, "test_kpr_eff", get_report, filters)
+
+    def test_kp_open_vs_density_dry(self, get_report=True, filters=None):
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость линейная по функции
+        y=a*x+b, при этом a<0
+
+        Required data:
+            Кп_откр; Плотность_абсолютно_сухого_образца
+
+        Args:
+            Кп_откр (np.ndarray[int/float]): массив с данными открытая пористость для проверки
+            Плотность_абсолютно_сухого_образца (np.ndarray[int/float]): массив с данными
+                                                                        плотность_абсолютно_сухого_образца для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_param(self.consts.kp_open, self.consts.ads_density, filters,
+                                         "test_kp_open_vs_density_dry", get_report)
+
+    def test_kp_open_vs_density_wet(self, get_report=True, filters=None):
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость линейная по функции
+        y=a*x+b, при этом a<0
+
+        Required data:
+            Кп_откр; Плотность_максимально_увлажненного_образца
+
+        Args:
+            Кп_откр (np.ndarray[int/float]): массив с данными открытая пористость для проверки
+            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными
+                                                                                плотность_максимально_увлажненного_образца для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_param(self.consts.kp_open, self.consts.mms_density, filters,
+                                         "test_kp_open_vs_density_wet", get_report)
+
+    def test_kp_abs_vs_density_dry(self, get_report=True, filters=None):
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость линейная по функции
+        y=a*x+b, при этом a<0
+
+        Required data:
+            Кп_абс; Плотность_абсолютно_сухого_образца
+
+        Args:
+            Кп_абс (np.ndarray[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
+            Плотность_абсолютно_сухого_образца (np.ndarray[int/float]): массив с данными
+                                                                        плотность_абсолютно_сухого_образца для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_param(self.consts.kp_abs, self.consts.ads_density, filters,
+                                         "test_kp_abs_vs_density_dry", get_report)
+
+    def test_kp_abs_vs_density_wet(self, get_report=True, filters=None):
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость линейная по функции
+        y=a*x+b, при этом a<0
+
+        Required data:
+            Кп_абс; Плотность_максимально_увлажненного_образца
+
+        Args:
+            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
+            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными
+                                                                                плотность_максимально_увлажненного_образца для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_param(self.consts.kp_abs, self.consts.mms_density, filters,
+                                         "test_kp_abs_vs_density_wet", get_report)
