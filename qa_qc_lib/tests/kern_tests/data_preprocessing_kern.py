@@ -64,10 +64,11 @@ class DataPreprocessing:
             self.consts.md
         ]
 
-    def process_data(self, columns_mapping):
+    def process_data(self, columns_mapping,path_to_save="..\\..\\data\\post_test_table.xlsx"):
         """
             Проходится по файлам и из каждого файла берет нужный столбец. Собирает единую таблицу.
         Args:
+            path_to_save(string):путь для сохранения файла
             columns_mapping (dic[string:string]): -словарь формата путь до файла->расшифровка параметра
 
         Returns:
@@ -102,8 +103,8 @@ class DataPreprocessing:
         for col in self.df_result.columns:
             if self.df_result[col].notna().any():
                 columns_with_data.append(col)
-        self.save_to_excel()
+        self.save_to_excel(path_to_save)
 
-    def save_to_excel(self):
-        self.df_result.to_excel("..\\..\\..\\data\\post_test_table.xlsx",
+    def save_to_excel(self,path_save):
+        self.df_result.to_excel(path_save,
                                 sheet_name='Sheet1', index=False)
