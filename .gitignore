@@ -35,3 +35,8 @@ report
 
 
 # секция кубы
+
+# секция скважины
+qa_qc_lib/tools/ECDF.py
+well_tests.ipynb
+

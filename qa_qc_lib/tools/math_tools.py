@@ -18,6 +18,22 @@ def compute_variance(arr) -> float:
     variance = np.mean((arr - mean_val) ** 2)
     return variance
 
+def sameSign(x: float, y: float):
+    """ Функция сравнивает знаки двух чисел
+
+            Args:
+                x (float): первое число \n
+                y (float): второе число \n
+            Returns:
+                bool: True - знаки одинаковые \n
+                      False - знаки разные
+                
+        """
+    if (x*y > 0):
+        return True
+    else:
+        return False 
+
 
 #########################################################################################################
 #######################################| ПРОЕКТ "АНОМАЛИИ" |#############################################
@@ -238,14 +254,15 @@ class Anomaly_Search_Stat_Methods():
             # Извлекаем данные внутри текущего окна
             window_data = data[start:start + current_window_size]
 
-            # Вычисляем первый и третий квартили для текущего окна
-            Q1 = np.percentile(window_data, 25)
-            Q3 = np.percentile(window_data, 75)
-            IQR = Q3 - Q1  # Вычисляем интерквартильный размах
+            if len(window_data)>0:
+                # Вычисляем первый и третий квартили для текущего окна
+                Q1 = np.percentile(window_data, 25)
+                Q3 = np.percentile(window_data, 75)
+                IQR = Q3 - Q1  # Вычисляем интерквартильный размах
 
-            # Определяем верхний и нижний пороги для обнаружения аномалий
-            upper_bound = Q3 + 1.5 * IQR
-            lower_bound = Q1 - 1.5 * IQR
+                # Определяем верхний и нижний пороги для обнаружения аномалий
+                upper_bound = Q3 + 1.5 * IQR
+                lower_bound = Q1 - 1.5 * IQR
 
             # Проходим через данные окна для определения аномалий
             for j, value in enumerate(window_data):
