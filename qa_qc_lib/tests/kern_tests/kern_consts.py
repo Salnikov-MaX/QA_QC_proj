@@ -16,6 +16,8 @@ class KernConsts:
         self.porosity_interval_wrong = "Данные не лежат в интервале от 0 до 47.6"
         self.greater_than_zero_accepted = "Все данные больше 0"
         self.greater_than_zero_wrong = "Данные меньше 0"
+        self.vp_vs_accepted = "Все данные лежат в интервале от 0.3 до 10 км/с"
+        self.vp_vs_wrong = "Данные не лежат в интервале от 0.3 до 10 км/с"
         self.kp_open = "Кп_откр"
         self.kp_tbu = "Кп_откр_TBU"
         self.kp_abs = "Кп_абс"
