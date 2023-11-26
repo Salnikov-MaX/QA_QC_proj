@@ -14,44 +14,44 @@ class DataFilter:
 
 
 @dataclass
-class KernDataMap:
+class KernPathInfo:
     data_key: str
     data_column: str
-    filters: Optional[List[DataFilter]]
-    group: Optional[str]
+    sheet_name: Optional[str]
 
 
 @dataclass
 class KernFileMap:
     data_path: str
-    md: str
-    well: str
-    map: List[KernDataMap]
+    map: List[KernPathInfo]
 
     def __post_init__(self):
         if not os.path.isfile(self.data_path):
             raise Exception(f"Файла по указанному пути не существует: \'{self.data_path}\'")
+        if not any([item for item in self.map if item.data_key == 'MD']):
+            raise Exception(f"Вы не указали путь до MD!")
+
+
+@dataclass
+class KernData:
+    group_by_columns: Optional[List[str]]
+    filters: Optional[List[DataFilter]]
+    files: List[KernFileMap]
 
 
 @dataclass
 class MapSettings:
-    show_tests_not_ready_for_launch: bool
-    main_dir: Optional[str]
-    default_group: Optional[str]
-    default_filter: Optional[DataFilter]
+    only_ready_for_launch_test: bool
 
     def __post_init__(self):
-        if self.show_tests_not_ready_for_launch is None:
-            self.show_tests_not_ready_for_launch = False
-
-        if self.main_dir is None:
-            pass
+        if self.only_ready_for_launch_test is None:
+            self.only_ready_for_launch_test = False
 
 
 @dataclass
 class DataMap:
     settings: MapSettings
-    kern_files: List[KernFileMap]
+    kern: KernData
 
 
 def read_map(path: str) -> DataMap:

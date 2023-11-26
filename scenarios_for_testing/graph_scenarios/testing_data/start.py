@@ -1,4 +1,4 @@
-from qa_qc_lib.graph.launch_test import LaunchTest
+from qa_qc_lib.graph.test_launcher.launch_tests import LaunchTest
 from qa_qc_lib.graph.test_config import read_main_test_config
 from qa_qc_lib.graph.tools.graph import Graph
 

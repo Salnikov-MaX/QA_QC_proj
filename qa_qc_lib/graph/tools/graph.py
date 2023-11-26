@@ -2,6 +2,7 @@ import json
 from dataclasses import dataclass
 from enum import Enum
 from typing import List
+from itertools import product
 
 import dacite
 import pandas as pd
@@ -60,7 +61,7 @@ class Graph:
             "гис/": EnumQAQCClass.Gis,
         }
 
-        dfs = [pd.read_csv(csv_path, delimiter=';') for csv_path in csv_paths]
+        dfs = [pd.read_csv(csv_path, delimiter=',') for csv_path in csv_paths]
         df = pd.concat(dfs)
         df = df[df['FLAG'].astype(float) >= 1]
         df['test_code_name'] = df['Источник данных'].astype(str) + df['№'].astype(int).astype(str)
@@ -69,15 +70,20 @@ class Graph:
         all_data = list()
 
         for _, row in df.iterrows():
+
             inner_data = row['Входные данные'].split(',')
-            code_tests = row['Название теста в коде'].split(',')
+            inner_data = [i_d.split('/') for i_d in inner_data]
+            if len(inner_data) != sum([len(arr) for arr in inner_data]):
+                inner_data = [combination for combination in product(*inner_data)]
+
+            code_tests = [code_test.strip() for code_test in row['Название теста в коде'].split(',')]
             test_group = test_groups_map[row['Источник данных'].lower()]
 
             if test_groups_map.get(row['Источник данных'].lower()) is None:
                 raise Exception(f'Указана не существующая группа данных: {row["Источник данных"].lower()}')
 
             for code_test, data in zip(code_tests, inner_data):
-                node = GraphNode(row['test_code_name'], code_test, test_group, [data])
+                node = GraphNode(row['test_code_name'], code_test, test_group, data)
                 all_data.append(node)
 
                 keys += node.required_data

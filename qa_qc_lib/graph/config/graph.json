@@ -1,5 +1,102 @@
 [
   {
+    "test_key": "Керн/14",
+    "test_name_code": "test_kp_abs_vs_swl",
+    "test_group": "Kern",
+    "required_data": [
+      "Кво|txt(xlsx)|Керн|",
+      "Кп_абс|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/14",
+    "test_name_code": "test_porosity_open_vs_swl",
+    "test_group": "Kern",
+    "required_data": [
+      "Кво|txt(xlsx)|Керн|",
+      "Кп_откр|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/15",
+    "test_name_code": "test_kp_open_vs_density_dry",
+    "test_group": "Kern",
+    "required_data": [
+      "Кп_откр|txt(xlsx)|Керн|",
+      "Плотность_абсолютно_сухого_образца|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/15",
+    "test_name_code": "test_kp_open_vs_density_wet",
+    "test_group": "Kern",
+    "required_data": [
+      "Кп_откр|txt(xlsx)|Керн|",
+      "Плотность_максимально_увлажненного_образца|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/15",
+    "test_name_code": "test_kp_abs_vs_density_dry",
+    "test_group": "Kern",
+    "required_data": [
+      "Кп_абс|txt(xlsx)|Керн|",
+      "Плотность_абсолютно_сухого_образца|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/15",
+    "test_name_code": "test_kp_abs_vs_density_wet",
+    "test_group": "Kern",
+    "required_data": [
+      "Кп_абс|txt(xlsx)|Керн|",
+      "Плотность_максимально_увлажненного_образца|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/16",
+    "test_name_code": "test_general_dependency_checking",
+    "test_group": "Kern",
+    "required_data": [
+      "Для тестов"
+    ]
+  },
+  {
+    "test_key": "Керн/18",
+    "test_name_code": "test_poro_abs_vs_volume_density",
+    "test_group": "Kern",
+    "required_data": [
+      "Объемная_плотность|txt(xlsx)|Керн|",
+      "Кп_абс|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/19",
+    "test_name_code": "test_poro_abs_vs_mineral_density",
+    "test_group": "Kern",
+    "required_data": [
+      "Минералогическая_плотность|txt(xlsx)|Керн|",
+      "Кп_абс|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/61",
+    "test_name_code": "test_dependence_kpr_kp",
+    "test_group": "Kern",
+    "required_data": [
+      "Кп_абс|txt(xlsx)|Керн|",
+      "Кпр_абс|txt(xlsx)|Керн| "
+    ]
+  },
+  {
+    "test_key": "Керн/63",
+    "test_name_code": "test_dependence_kvo_kpr",
+    "test_group": "Kern",
+    "required_data": [
+      "Кво|txt(xlsx)|Керн|"
+    ]
+  },
+  {
     "test_key": "Керн/1",
     "test_name_code": "test_porosity_open",
     "test_group": "Kern",
@@ -85,6 +182,54 @@
     "test_group": "Kern",
     "required_data": [
       "Sogcr|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/8",
+    "test_name_code": "test_kpr_abs",
+    "test_group": "Kern",
+    "required_data": [
+      "Кпр_абс|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/8",
+    "test_name_code": "test_kpr_abs_Y",
+    "test_group": "Kern",
+    "required_data": [
+      "Кпр_абс_Y|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/8",
+    "test_name_code": "test_kpr_abs_Z",
+    "test_group": "Kern",
+    "required_data": [
+      "Кпр_абс_Z|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/8",
+    "test_name_code": "test_kpr_rel",
+    "test_group": "Kern",
+    "required_data": [
+      "Кпр_отн|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/8",
+    "test_name_code": "test_kpr_phase",
+    "test_group": "Kern",
+    "required_data": [
+      " Кпр_фазовая|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/8",
+    "test_name_code": "test_kpr_eff",
+    "test_group": "Kern",
+    "required_data": [
+      "Кпр_эфф|txt(xlsx)|Керн|"
     ]
   }
 ]
