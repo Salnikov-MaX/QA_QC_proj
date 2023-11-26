@@ -1,0 +1,90 @@
+[
+  {
+    "test_key": "Керн/1",
+    "test_name_code": "test_porosity_open",
+    "test_group": "Kern",
+    "required_data": [
+      "Кп_откр|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/1",
+    "test_name_code": "test_porosity_abs",
+    "test_group": "Kern",
+    "required_data": [
+      "Кп_абс|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/1",
+    "test_name_code": "test_porosity_din",
+    "test_group": "Kern",
+    "required_data": [
+      "Кп_дин|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/1",
+    "test_name_code": "test_porosity_eff",
+    "test_group": "Kern",
+    "required_data": [
+      "Кп_эфф|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/13",
+    "test_name_code": "test_monotony",
+    "test_group": "Kern",
+    "required_data": [
+      "Место_отбора_(ниже_кровли)м|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/6",
+    "test_name_code": "test_sw_residual",
+    "test_group": "Kern",
+    "required_data": [
+      "Кво|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/6",
+    "test_name_code": "test_sowcr",
+    "test_group": "Kern",
+    "required_data": [
+      "Кно(Sowcr)|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/68",
+    "test_name_code": "test_sg",
+    "test_group": "Kern",
+    "required_data": [
+      "Sg|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/68",
+    "test_name_code": "test_sgl",
+    "test_group": "Kern",
+    "required_data": [
+      "Sgl|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/68",
+    "test_name_code": "test_so",
+    "test_group": "Kern",
+    "required_data": [
+      "So|txt(xlsx)|Керн|"
+    ]
+  },
+  {
+    "test_key": "Керн/68",
+    "test_name_code": "test_sogcr",
+    "test_group": "Kern",
+    "required_data": [
+      "Sogcr|txt(xlsx)|Керн|"
+    ]
+  }
+]

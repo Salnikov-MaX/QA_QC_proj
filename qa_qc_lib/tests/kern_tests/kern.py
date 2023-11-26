@@ -19,6 +19,8 @@ class QA_QC_kern(QA_QC_main):
         self.file_name = file_path.split('/')[-1]
         self.data_kern = DataKern(data_file_path)
         self.consts = KernConsts()
+        # self.porosity_abs = porosity_abs
+
 
     def __generate_report(self, text, status, get_report):
         """
@@ -59,7 +61,7 @@ class QA_QC_kern(QA_QC_main):
             "result_mask": result_mask.tolist(),
             "test_name": test_name,
             "error_decr": error_decr,
-            "well_name": well_name,
+            "well_name": str(well_name),
             "MD": md.tolist()
         }
         for index, param in enumerate(param_name):
@@ -69,7 +71,7 @@ class QA_QC_kern(QA_QC_main):
             specification["r2"] = r2
         return {
             "data_availability": data_availability,
-            "result": result,
+            "result": bool(result),
             "specification": specification
         }
 
@@ -417,6 +419,13 @@ class QA_QC_kern(QA_QC_main):
 
         Required data:
             Кно
+        Args:
+            self.sowcr (array[int/float]): массив с коэффициентом нефтенасыщенности для проверки
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки
+        """
+
 
         Args:
 

@@ -1,9 +1,10 @@
 import argparse
-import os
-import pathlib
-from typing import Optional
 
 parser = argparse.ArgumentParser()
+
+parser.add_argument("--map_path",
+                    type=str,
+                    help="Путь до файла сопоставления")
 
 parser.add_argument("--config_path",
                     type=str,
@@ -18,5 +19,5 @@ parser.add_argument("--config_path",
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    x = str(args.config_path)
-    print()
+    map_path = str(args.map_path).strip('\'').strip('\"')
+
