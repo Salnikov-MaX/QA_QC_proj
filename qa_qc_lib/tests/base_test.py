@@ -1,6 +1,7 @@
 import datetime
 import inspect
 import os
+from typing import List, Optional
 
 
 class QA_QC_main():
@@ -35,7 +36,7 @@ class QA_QC_main():
         else:
             return "Метод не найден."
 
-    def start_tests(self, list_of_tests: list, get_report=True) -> dict:
+    def start_tests(self, list_of_tests: List[str], get_report=True) -> dict:
         """
         Метод который запускает все тесты, которые переданы в виде списка list_of_tests
 
@@ -50,6 +51,30 @@ class QA_QC_main():
         for method_name in list_of_tests:
             method = getattr(self, method_name)
             results[method_name] = method(get_report=get_report)
+        return results
+
+    def start_tests_with_filters(self, list_of_tests: List[tuple[str, Optional[List[dict]]]], get_report=True) \
+            -> List[dict]:
+        """
+        Метод который запускает все тесты вместе с фильтрами, которые переданы в виде списка list_of_tests
+        List[tuple[str- (имя теста), List[dict] - фильтры теста]]
+
+        Args:
+            list_of_tests (list): список названий тестов которые должны быть проведены
+            get_report (bool, optional): _description_. Defaults to True.
+
+        Returns:
+            dict: результаты выбранных тестов
+        """
+        results: List[dict] = []
+        for method_name, filters in list_of_tests:
+            method = getattr(self, method_name)
+            try:
+                results.append({"test": method(get_report=get_report, filters=filters), "filters": filters})
+            except Exception as e:
+                results.append({"test_name": method_name, "filters": filters, 'error': str(e)})
+                print(e)
+
         return results
 
     def generate_test_report(self, file_name='test_report', file_path='report', data_name=None):
