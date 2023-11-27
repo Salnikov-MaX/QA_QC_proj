@@ -1,4 +1,5 @@
 import numpy as np
+from pandas import DataFrame
 from scipy.stats import t
 from sklearn.metrics import r2_score
 from qa_qc_lib.tests.base_test import QA_QC_main
@@ -21,7 +22,6 @@ class QA_QC_kern(QA_QC_main):
         self.consts = KernConsts()
         # self.porosity_abs = porosity_abs
 
-
     def __generate_report(self, text, status, get_report):
         """
         Метод группирующий основные операции по генерации отчета
@@ -38,6 +38,21 @@ class QA_QC_kern(QA_QC_main):
         self.update_report(report_text)
         if get_report:
             print(report_text)
+
+    def __greater_than_zero_check(self, array) -> tuple[np.array, bool]:
+        """
+        Функция для проверки, что данные больше 0,
+
+        Args:
+            self.array (np.ndarray[int/float]): массив с данными для проверки
+
+        Returns:
+            result_mask(np.ndarray[bool]): маска с выпадающими за интервал значениями
+            result(bool):наличие ошибок в данных
+        """
+        result_mask = (array <= 0)
+        result = np.sum(result_mask) == 0
+        return result_mask, result
 
     def __generate_returns_dict(self, data_availability, result, result_mask, error_decr, well_name,
                                 md, test_name, param_name, r2=None) -> dict:
@@ -75,7 +90,7 @@ class QA_QC_kern(QA_QC_main):
             "specification": specification
         }
 
-    def __get_data_from_data_kern(self, param, filters):
+    def __get_data_from_data_kern(self, param, filters) -> tuple[DataFrame, np.array, str, np.array]:
         """
         Метод для получение данных через data_kern
         Args:
@@ -98,7 +113,7 @@ class QA_QC_kern(QA_QC_main):
         md = clear_df[self.consts.md]
         return clear_df, index, well_name, md
 
-    def __zero_one_interval_check(self, array):
+    def __zero_one_interval_check(self, array) -> tuple[np.array, bool]:
         """
         Функция для проверки нахождения данных в интервале либо от 0 до 1,
 
@@ -113,7 +128,7 @@ class QA_QC_kern(QA_QC_main):
         result = np.sum(result_mask) == 0
         return result_mask, result
 
-    def __check_data(self, array, get_report=True):
+    def __check_data(self, array, get_report=True) -> tuple[bool, np.array, str]:
         """
         Тест предназначен для проверки условия - все элементы массива должны быть числовыми.
 
@@ -122,6 +137,8 @@ class QA_QC_kern(QA_QC_main):
 
             Returns:
                 bool: результат выполнения теста
+                np.array: маска с ошибочными значениями
+                str: описание ошибки
         """
 
         if not isinstance(array, np.ndarray):
@@ -149,7 +166,7 @@ class QA_QC_kern(QA_QC_main):
                 return False, result_array, self.consts.check_data_has_nan_wrong
         return True, [], ""
 
-    def __check_poro_intervals(self, porosity):
+    def __check_poro_intervals(self, porosity) -> tuple[np.array, bool]:
         """
         Функция для проверки нахождения данных в интервале от 0 до 0.476.
 
@@ -166,7 +183,7 @@ class QA_QC_kern(QA_QC_main):
         result = sum(result_mask) == 0
         return result_mask, result
 
-    def __main_porosity_test(self, poro_name, test_name, get_report, filters):
+    def __main_porosity_test(self, poro_name, test_name, get_report, filters) -> dict:
         """
         Главный метод для проверки на физичность любого вида пористости.
         Args:
@@ -198,7 +215,7 @@ class QA_QC_kern(QA_QC_main):
             return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
                                                 test_name, [poro_name])
 
-    def __main_zero_to_one_interval_test(self, param_name, test_name, get_report, filters):
+    def __main_zero_to_one_interval_test(self, param_name, test_name, get_report, filters) -> dict:
         """
         Главный класс для проверки на физичность любого вида пористости.
         Args:
@@ -230,55 +247,71 @@ class QA_QC_kern(QA_QC_main):
             return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
                                                 test_name, [param_name])
 
-    def __main_poro_vs_param(self, poro_name, param_name, filters, test_name, get_report):
-        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[poro_name, param_name], filters=filters)
-        porosity = np.array(clear_df[poro_name])
+    def __main_greater_than_zero(self, param_name, test_name, get_report, filters) -> dict:
+        """
+        Главный метод для проверки, что все значения переданного параметра больше 0.
+
+        Args:
+            param_name(string): название параметра для проверки
+            test_name(string): название теста, где вызван метод
+            get_report(bool): флаг для получения отчета
+            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
+                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[param_name], filters=filters)
         param = np.array(clear_df[param_name])
-        check_result_for_first_param, wrong_for_first_param, check_text_for_first_param = self.__check_data(
-            porosity, get_report)
-        check_result_for_second_param, wrong_for_second_param, check_text_for_second_param = self.__check_data(
-            param, get_report)
+        check_result, wrong, check_text = self.__check_data(param, get_report)
 
-        if check_result_for_first_param and check_result_for_second_param:
-            r2 = self.test_general_dependency_checking(porosity, param)["specification"]["r2"]
-            result = True
-            a, b = linear_dependence_function(porosity, param)
-            if a >= 0 or r2 < 0.7:
-                result = False
-
-            wrong_values = dropdown_search(porosity,
-                                           param,
-                                           a, b)
-            linear_function_visualization(porosity,
-                                          param,
-                                          a, b,
-                                          r2,
-                                          get_report,
-                                          poro_name,
-                                          param_name,
-                                          test_name,
-                                          wrong_values)
-            wrong_values = np.where(wrong_values, 1, result)
-
-            text = self.consts.dependency_accepted + str(wrong_values) if result \
-                else self.consts.dependency_wrong + str(wrong_values)
-
+        if check_result:
+            result_mask, result = self.__greater_than_zero_check(param)
+            text = self.consts.greater_than_zero_accepted if result else self.consts.greater_than_zero_wrong
             self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(poro_name, test_name, text, wrong_values, index)
+            self.data_kern.mark_errors(param_name, test_name, text, result_mask, index)
 
-            return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, result,
-                                                wrong_values, text, well_name, md,
-                                                test_name, [poro_name, param_name], r2=r2)
+            return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
+                                                test_name, [param_name])
         else:
-            self.data_kern.mark_errors(param_name, test_name, wrong_for_first_param + " " + check_text_for_second_param,
-                                       check_result_for_first_param if len(check_result_for_second_param) != 0
-                                       else check_result_for_second_param, index)
-            return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, False,
-                                                check_result_for_first_param if len(check_result_for_second_param) != 0
-                                                else check_result_for_second_param,
-                                                wrong_for_first_param + " " + check_text_for_second_param, well_name,
-                                                md,
-                                                test_name, [poro_name, param_name])
+            return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
+                                                test_name, [param_name])
+
+    def __check_vp_vs(self, vp_or_vs_param, test_name, get_report, filters) -> dict:
+        """
+        Функция для проверки нахождения данных в интервале от 0.3 до 10
+
+        Args:
+            vp_or_vs_param (np.ndarray[int/float]): массив со скоростью для проверки
+            test_name: название теста, где вызван метод
+            get_report: флаг для получения отчета
+            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
+                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[vp_or_vs_param], filters=filters)
+        vp_or_vs = np.array(clear_df[vp_or_vs_param])
+        check_result, wrong, check_text = self.__check_data(vp_or_vs, get_report)
+
+        if check_result:
+            result_mask = (vp_or_vs >= 10) | (vp_or_vs <= 0.3)
+            result = sum(result_mask) == 0
+            text = self.consts.vp_vs_accepted if result else self.consts.vp_vs_wrong
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(vp_or_vs_param, test_name, text, result_mask, index)
+
+            return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
+                                                test_name, [vp_or_vs])
+        else:
+            self.data_kern.mark_errors(vp_or_vs_param, test_name, check_text, wrong, index)
+            return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
+                                                test_name, [vp_or_vs])
 
     def test_monotony(self, get_report=True, filters=None) -> dict:
         """
@@ -315,6 +348,42 @@ class QA_QC_kern(QA_QC_main):
             self.data_kern.mark_errors(self.consts.md, "test_monotony", check_text, wrong, index)
             return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
                                                 "test_monotony", [self.consts.md])
+
+    def test_vp(self, get_report=True, filters=None) -> dict:
+        """
+            Тест предназначен для проверки физичности данных.
+            В данном тесте проверяется соответствие интервалу 0.3<Vp<10 км/с.
+
+            Required data:
+                Скорость_продольной_волны(Vp)
+
+            Args:
+                Скорость_продольной_волны(Vp) (np.ndarray[int/float]): массив со скоростью продольной волны(Vp) для проверки
+
+            Returns:
+                dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__check_vp_vs(self.consts.vp, "test_vp", get_report, filters)
+
+    def test_vs(self, get_report=True, filters=None) -> dict:
+        """
+            Тест предназначен для проверки физичности данных.
+            В данном тесте проверяется соответствие интервалу 0.3<Vp<10 км/с.
+
+            Required data:
+                Скорость_поперечной_волны(Vs)
+
+            Args:
+                Скорость_поперечной_волны(Vs) (np.ndarray[int/float]): массив со скоростью поперечной волны(Vs) для проверки
+
+            Returns:
+                dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__check_vp_vs(self.consts.vs, "test_vs", get_report, filters)
 
     def test_porosity_open(self, get_report=True, filters=None) -> dict:
         """
@@ -390,7 +459,7 @@ class QA_QC_kern(QA_QC_main):
                       MD - массив с глубинами
         """
 
-        return self.__main_porosity_test(self.consts.kp_din, "test_porosity_din", get_report, filters)
+        return self.__main_porosity_test(self.consts.kp_eff, "test_porosity_eff", get_report, filters)
 
     def test_sw_residual(self, get_report=True, filters=None) -> dict:
         """
@@ -426,21 +495,9 @@ class QA_QC_kern(QA_QC_main):
                       param_name - название параметра ,error_decr -краткое описание ошибки
         """
 
-
-        Args:
-
-            Кно (np.ndarray[int/float]): массив с коэффициентом нефтенасыщенности
-                                        для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
         return self.__main_porosity_test(self.consts.kno, "test_sowcr", get_report, filters)
 
-    def test_sg(self, get_report=True, filters=None):
+    def test_sg(self, get_report=True, filters=None) -> dict:
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
@@ -460,7 +517,7 @@ class QA_QC_kern(QA_QC_main):
 
         return self.__main_porosity_test(self.consts.sg, "test_sg", get_report, filters)
 
-    def test_sgl(self, get_report=True, filters=None):
+    def test_sgl(self, get_report=True, filters=None) -> dict:
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
@@ -480,7 +537,7 @@ class QA_QC_kern(QA_QC_main):
 
         return self.__main_porosity_test(self.consts.sgl, "test_sgl", get_report, filters)
 
-    def test_so(self, get_report=True, filters=None):
+    def test_so(self, get_report=True, filters=None) -> dict:
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
@@ -499,7 +556,7 @@ class QA_QC_kern(QA_QC_main):
 
         return self.__main_porosity_test(self.consts.so, "test_so", get_report, filters)
 
-    def test_sogcr(self, get_report=True, filters=None):
+    def test_sogcr(self, get_report=True, filters=None) -> dict:
         """
         Тест предназначен для проверки физичности данных.
         В данном тесте проверяется соответствие интервалу (0 ; 1]
@@ -538,6 +595,166 @@ class QA_QC_kern(QA_QC_main):
         """
 
         return self.__main_porosity_test(self.consts.sw, "test_sw", get_report, filters)
+
+    def test_kpr_abs(self, get_report=True, filters=None) -> dict:
+        """
+        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
+
+        Required data:
+            Кпр_абс
+
+        Args:
+            Кпр_абс (np.ndarray[int/float]): массив с абсолютной проницаемостью для проверки из переданной таблицы
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+
+        return self.__main_greater_than_zero(self.consts.kpr_abs, "test_kpr_abs", get_report, filters)
+
+    def test_kpr_abs_Y(self, get_report=True, filters=None) -> dict:
+        """
+        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
+
+        Required data:
+            Кпр_абс_Y
+
+        Args:
+            Кпр_абс_Y (np.ndarray[int/float]): массив с абсолютной проницаемостью по Y для проверки из переданной таблицы
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+
+        return self.__main_greater_than_zero(self.consts.kpr_abs_Y, "test_kpr_abs_Y", get_report, filters)
+
+    def test_kpr_abs_Z(self, get_report=True, filters=None) -> dict:
+        """
+        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
+
+        Required data:
+            Кпр_абс_Z
+
+        Args:
+            Кпр_абс_Z (np.ndarray[int/float]): массив с абсолютной проницаемостью по Z для проверки из переданной таблицы
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+
+        return self.__main_greater_than_zero(self.consts.kpr_abs_Z, "test_kpr_abs_Z", get_report, filters)
+
+    def test_kpr_rel(self, get_report=True, filters=None) -> dict:
+        """
+        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
+
+        Required data:
+            Кпр_отн
+
+        Args:
+            Кпр_отн (np.ndarray[int/float]): массив с относительной проницаемостью для проверки из переданной таблицы
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+
+        return self.__main_greater_than_zero(self.consts.kpr_rel, "test_kpr_rel", get_report, filters)
+
+    def test_kpr_phase(self, get_report=True, filters=None) -> dict:
+        """
+        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
+
+        Required data:
+            Кпр_фазовая
+
+        Args:
+            Кпр_фазовая (np.ndarray[int/float]): массив с фазовой проницаемостью для проверки из переданной таблицы
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+
+        return self.__main_greater_than_zero(self.consts.kpr_phase, "test_kpr_phase", get_report, filters)
+
+    def test_kpr_eff(self, get_report=True, filters=None) -> dict:
+        """
+        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
+
+        Required data:
+            Кпр_эфф
+
+        Args:
+            Кпр_эфф (np.ndarray[int/float]): массив с эффективной проницаемостью для проверки из переданной таблицы
+
+        Returns:
+            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
+                      MD - массив с глубинами
+        """
+
+        return self.__main_greater_than_zero(self.consts.kpr_eff, "test_kpr_eff", get_report, filters)
+
+    def __main_poro_vs_param(self, poro_name, param_name, filters, test_name, get_report):
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[poro_name, param_name], filters=filters)
+        porosity = np.array(clear_df[poro_name])
+        param = np.array(clear_df[param_name])
+        check_result_for_first_param, wrong_for_first_param, check_text_for_first_param = self.__check_data(
+            porosity, get_report)
+        check_result_for_second_param, wrong_for_second_param, check_text_for_second_param = self.__check_data(
+            param, get_report)
+
+        if check_result_for_first_param and check_result_for_second_param:
+            r2 = self.test_general_dependency_checking(porosity, param)["specification"]["r2"]
+            result = True
+            a, b = linear_dependence_function(porosity, param)
+            if a >= 0 or r2 < 0.7:
+                result = False
+
+            wrong_values = dropdown_search(porosity,
+                                           param,
+                                           a, b)
+            linear_function_visualization(porosity,
+                                          param,
+                                          a, b,
+                                          r2,
+                                          get_report,
+                                          poro_name,
+                                          param_name,
+                                          test_name,
+                                          wrong_values)
+            wrong_values = np.where(wrong_values, 1, result)
+
+            text = self.consts.dependency_accepted + str(wrong_values) if result \
+                else self.consts.dependency_wrong + str(wrong_values)
+
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(poro_name, test_name, text, wrong_values, index)
+
+            return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, result,
+                                                wrong_values, text, well_name, md,
+                                                test_name, [poro_name, param_name], r2=r2)
+        else:
+            self.data_kern.mark_errors(param_name, test_name,
+                                       check_text_for_first_param + " " + check_text_for_second_param,
+                                       wrong_for_first_param if len(wrong_for_first_param) != 0
+                                       else wrong_for_second_param, index)
+            return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, False,
+                                                wrong_for_first_param if len(wrong_for_first_param) != 0
+                                                else wrong_for_second_param,
+                                                check_text_for_first_param + " " + check_text_for_second_param,
+                                                well_name,
+                                                md,
+                                                test_name, [poro_name, param_name])
 
     def test_general_dependency_checking(self, x, y, get_report=True):
         """
@@ -659,386 +876,9 @@ class QA_QC_kern(QA_QC_main):
                       param_name - названия параметров ,error_decr -краткое описание ошибки,well_name- название скважины,
                       MD - массив с глубинами
         """
-       return self.__main_poro_vs_param(self.consts.kp_abs, self.consts.kvo, filters, "test_kp_abs_vs_swl",
+
+        return self.__main_poro_vs_param(self.consts.kp_abs, self.consts.kvo, filters, "test_kp_abs_vs_swl",
                                          get_report)
-    def __greater_than_zero_check(self, array):
-        """
-        Функция для проверки, что данные больше 0,
-
-        Args:
-            self.array (np.nsarray[int/float]): массив с данными для проверки
-
-        Returns:
-            result_mask(np.ndarray[bool]): маска с выпадающими за интервал значениями
-            result(bool):наличие ошибок в данных
-        """
-        result_mask = (array <= 0)
-        result = np.sum(result_mask) == 0
-        return result_mask, result
-
-    def __main_greater_than_zero(self, param_name, test_name, get_report, filters):
-        """
-        Главный метод для проверки, что все значения переданного параметра больше 0.
-
-        Args:
-            param_name(string): название параметра для проверки
-            test_name(string): название теста, где вызван метод
-            get_report(bool): флаг для получения отчета
-            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
-                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[param_name], filters=filters)
-        param = np.array(clear_df[param_name])
-        check_result, wrong, check_text = self.__check_data(param, get_report)
-
-        if check_result:
-            result_mask, result = self.__greater_than_zero_check(param)
-            text = self.consts.greater_than_zero_accepted if result else self.consts.greater_than_zero_wrong
-            self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(param_name, test_name, text, result_mask, index)
-
-            return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
-                                                test_name, [param_name])
-        else:
-            return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
-                                                test_name, [param_name])
-
-    def test_kpr_abs(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_абс
-
-        Args:
-            Кпр_абс (np.ndarray[int/float]): массив с абсолютной проницаемостью для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_abs, "test_kpr_abs", get_report, filters)
-
-    def test_kpr_abs_Y(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_абс_Y
-
-        Args:
-            Кпр_абс_Y (np.ndarray[int/float]): массив с абсолютной проницаемостью по Y для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_abs_Y, "test_kpr_abs_Y", get_report, filters)
-
-    def test_kpr_abs_Z(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_абс_Z
-
-        Args:
-            Кпр_абс_Z (np.ndarray[int/float]): массив с абсолютной проницаемостью по Z для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_abs_Z, "test_kpr_abs_Z", get_report, filters)
-
-    def test_kpr_rel(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_отн
-
-        Args:
-            Кпр_отн (np.ndarray[int/float]): массив с относительной проницаемостью для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_rel, "test_kpr_rel", get_report, filters)
-
-    def test_kpr_phase(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_фазовая
-
-        Args:
-            Кпр_фазовая (np.ndarray[int/float]): массив с фазовой проницаемостью для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_phase, "test_kpr_phase", get_report, filters)
-
-    def test_kpr_eff(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_эфф
-
-        Args:
-            Кпр_эфф (np.ndarray[int/float]): массив с эффективной проницаемостью для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_eff, "test_kpr_eff", get_report, filters)
-
-    def __greater_than_zero_check(self, array):
-        """
-        Функция для проверки, что данные больше 0,
-
-        Args:
-            self.array (np.nsarray[int/float]): массив с данными для проверки
-
-        Returns:
-            result_mask(np.ndarray[bool]): маска с выпадающими за интервал значениями
-            result(bool):наличие ошибок в данных
-        """
-        result_mask = (array <= 0)
-        result = np.sum(result_mask) == 0
-        return result_mask, result
-
-    def __main_greater_than_zero(self, param_name, test_name, get_report, filters):
-        """
-        Главный метод для проверки, что все значения переданного параметра больше 0.
-
-        Args:
-            param_name(string): название параметра для проверки
-            test_name(string): название теста, где вызван метод
-            get_report(bool): флаг для получения отчета
-            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
-                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[param_name], filters=filters)
-        param = np.array(clear_df[param_name])
-        check_result, wrong, check_text = self.__check_data(param, get_report)
-
-        if check_result:
-            result_mask, result = self.__greater_than_zero_check(param)
-            text = self.consts.greater_than_zero_accepted if result else self.consts.greater_than_zero_wrong
-            self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(param_name, test_name, text, result_mask, index)
-
-            return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
-                                                test_name, [param_name])
-        else:
-            return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
-                                                test_name, [param_name])
-
-    def test_kpr_abs(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_абс
-
-        Args:
-            Кпр_абс (np.ndarray[int/float]): массив с абсолютной проницаемостью для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_abs, "test_kpr_abs", get_report, filters)
-
-    def test_kpr_abs_Y(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_абс_Y
-
-        Args:
-            Кпр_абс_Y (np.ndarray[int/float]): массив с абсолютной проницаемостью по Y для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_abs_Y, "test_kpr_abs_Y", get_report, filters)
-
-    def test_kpr_abs_Z(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_абс_Z
-
-        Args:
-            Кпр_абс_Z (np.ndarray[int/float]): массив с абсолютной проницаемостью по Z для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_abs_Z, "test_kpr_abs_Z", get_report, filters)
-
-    def test_kpr_rel(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_отн
-
-        Args:
-            Кпр_отн (np.ndarray[int/float]): массив с относительной проницаемостью для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_rel, "test_kpr_rel", get_report, filters)
-
-    def test_kpr_phase(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_фазовая
-
-        Args:
-            Кпр_фазовая (np.ndarray[int/float]): массив с фазовой проницаемостью для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_phase, "test_kpr_phase", get_report, filters)
-
-    def test_kpr_eff(self, get_report=True, filters=None):
-        """
-        Тест предназначен для проверки физичности данных. Значение должно быть больше 0.
-
-        Required data:
-            Кпр_эфф
-
-        Args:
-            Кпр_эфф (np.ndarray[int/float]): массив с эффективной проницаемостью для проверки из переданной таблицы
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-
-        return self.__main_greater_than_zero(self.consts.kpr_eff, "test_kpr_eff", get_report, filters)
-    def __check_vp_vs(self, vp_or_vs_param, test_name, get_report, filters):
-        """
-        Функция для проверки нахождения данных в интервале от 0.3 до 10
-
-        Args:
-            vp_or_vs_param (np.ndarray[int/float]): массив со скоростью для проверки
-            test_name: название теста, где вызван метод
-            get_report: флаг для получения отчета
-            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
-                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
-
-        Returns:
-            dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[vp_or_vs_param], filters=filters)
-        vp_or_vs = np.array(clear_df[vp_or_vs_param])
-        check_result, wrong, check_text = self.__check_data(vp_or_vs, get_report)
-
-        if check_result:
-            result_mask = (vp_or_vs >= 10) | (vp_or_vs <= 0.3)
-            result = sum(result_mask) == 0
-            text = self.consts.vp_vs_accepted if result else self.consts.vp_vs_wrong
-            self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(vp_or_vs_param, test_name, text, result_mask, index)
-
-            return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
-                                                test_name, [vp_or_vs])
-        else:
-            self.data_kern.mark_errors(vp_or_vs_param, test_name, check_text, wrong, index)
-            return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
-                                                test_name, [vp_or_vs])
-    def test_vp(self, get_report=True, filters=None):
-        """
-            Тест предназначен для проверки физичности данных.
-            В данном тесте проверяется соответствие интервалу 0.3<Vp<10 км/с.
-
-            Required data:
-                Скорость_продольной_волны(Vp)
-
-            Args:
-                Скорость_продольной_волны(Vp) (np.ndarray[int/float]): массив со скоростью продольной волны(Vp) для проверки
-
-            Returns:
-                dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-        return self.__check_vp_vs(self.consts.vp, "test_vp", get_report, filters)
-
-    def test_vs(self, get_report=True, filters=None):
-        """
-            Тест предназначен для проверки физичности данных.
-            В данном тесте проверяется соответствие интервалу 0.3<Vp<10 км/с.
-
-            Required data:
-                Скорость_поперечной_волны(Vs)
-
-            Args:
-                Скорость_поперечной_волны(Vs) (np.ndarray[int/float]): массив со скоростью поперечной волны(Vs) для проверки
-
-            Returns:
-                dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
-                      param_name - название параметра ,error_decr -краткое описание ошибки,well_name- название скважины,
-                      MD - массив с глубинами
-        """
-        return self.__check_vp_vs(self.consts.vs, "test_vs", get_report, filters)
-        
 
     def test_kp_open_vs_density_dry(self, get_report=True, filters=None):
         """
