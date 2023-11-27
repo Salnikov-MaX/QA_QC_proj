@@ -64,7 +64,7 @@ class DataPreprocessing:
             self.consts.md
         ]
 
-    def process_data(self, columns_mapping,path_to_save="..\\..\\data\\post_test_table.xlsx"):
+    def process_data(self, columns_mapping, path_to_save="..\\..\\data\\post_test_table.xlsx"):
         """
             Проходится по файлам и из каждого файла берет нужный столбец. Собирает единую таблицу.
         Args:
@@ -77,21 +77,21 @@ class DataPreprocessing:
         self.df_result = pd.DataFrame(columns=self.headers)
         # получаем название столбца и путь, откуда его брать
         for col_name, file_col in columns_mapping.items():
-            # делим путь до файла и название колонки в файлах пользователя
-            # for file_col in file_col_list:
-            file_path, col_name_in_file = file_col.split("->")
+            file_items = file_col.split("->")
+            file_path = file_items[0]
+            col_name_in_file = file_items[-1]
             if not os.path.exists(file_path):
                 print(f"Предупреждение: Файл {file_path} не найден. Пропуск.")
                 continue
             if file_path.endswith(".xlsx") or file_path.endswith(".xls"):
-                data = pd.read_excel(file_path)
+                sheet_name = file_items[1] if len(file_items) == 3 else 0
+                data = pd.read_excel(file_path, sheet_name=sheet_name)
             elif file_path.endswith(".txt"):
                 data = pd.read_csv(file_path, delimiter="\t")
             else:
                 print(f"Предупреждение: Неизвестный формат файла {file_path}. Пропуск.")
                 continue
-            self.df_result.loc[:, col_name] = data[col_name_in_file]
-
+            self.df_result[col_name] = data[col_name_in_file]
         # сортируем df так, чтобы все пустые колонки были справа
         column_order = np.concatenate(
             [self.df_result.columns[~self.df_result.isna().all(axis=0)],
@@ -106,6 +106,6 @@ class DataPreprocessing:
 
         self.save_to_excel(path_to_save)
 
-    def save_to_excel(self,path_save):
+    def save_to_excel(self, path_save):
         self.df_result.to_excel(path_save,
                                 sheet_name='Sheet1', index=False)
