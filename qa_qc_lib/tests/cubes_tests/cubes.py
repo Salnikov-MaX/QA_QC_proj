@@ -1,3 +1,4 @@
+import copy
 import inspect
 import sys
 
@@ -75,6 +76,9 @@ class QA_QC_cubes(QA_QC_main):
             'Литотип': self.litatype_file_path,
         }
 
+        self.actnum = self.grid_model.get_grid().get_actnum().get_npvalues3d()
+        self.grid_head = CubesTools().find_head(f"{directory_path}/{grid_name}_ACTNUM.GRDECL")
+
         attributes = locals()
         for key in attributes.keys():
             if 'file' in key and attributes[key] is not None:
@@ -127,37 +131,30 @@ class QA_QC_cubes(QA_QC_main):
         _, key = CubesTools().find_key(file_path)
         prop = self.grid_model.get_grid().get_prop_by_name(key)
         value = self.grid_model.get_prop_value(prop, flag_d3)
-        value[np.isnan(value)] = 0
         return value
 
-    def __test_range_data(self, _array: np.array, lambda_list: list[any], f) -> tuple[
+    def __test_range_data(self, _array, lambda_list: list[any], f) -> tuple[
         bool,
         np.array or None]:
-
         """
-        Абистрактная функция для проверки N условия для np.array
+        Функция для проверки данных в диапазоне
 
-        Args:
-            _array (np.array): Данные которые надо проверить
-            lambda_list: Массив условий в виде лямдо функций
-            f: метод наложения результатов
+            Args:
+               array: список с тестируемыми данными
+               lambda_list: list[any]: список с вырожениями для проверки
 
-        Returns:
-            tuple[
-                bool: Выполняются ли все условия,
-                np.array or None: Данные которые не прошли условие
-            ]
+            Returns:
+                bool: результат тестирования
+                np.array or None: массив со значениями для wrong actnum
         """
-
-        mask_array = (f([func(_array) for func in lambda_list])).astype(dtype=bool)
-        mask_array = mask_array + (_array == -1)
+        mask_array = (f([func(_array[self.actnum == 1]) for func in lambda_list])).astype(dtype=bool)
         if np.all(mask_array):
             return True, None
         else:
-            if mask_array.ndim == 1:
-                return False, mask_array == False
-            else:
-                return False, CubesTools().conver_n3d_to_n1d(mask_array == False)
+            copy_actnum = copy.deepcopy(self.grid_model.get_grid().get_actnum())
+            copy_actnum.values[np.where(self.actnum == 1)] = (mask_array == False)
+            return False, copy_actnum
+
 
     def __test_value_conditions(self, prop_name: str, lambda_list: list[any], f) -> tuple[
         bool, np.array or None
@@ -772,7 +769,7 @@ class QA_QC_cubes(QA_QC_main):
         flag, wrong_data = self.__test_range_data(
             sgcr_value,
             [lambda x: x >= sgl_value[self.actnum == 1], lambda x: x <= 1],
-            self.muc_np_arrays
+            self.__muc_np_arrays
         )
 
         if flag:
@@ -844,7 +841,7 @@ class QA_QC_cubes(QA_QC_main):
             self.update_report(self.generate_report_text("Данные SWATINIT отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
 
-        swl_value = self.__get_value_grid_prop(self.swl_file_path)
+        swl_value = self.__get_value_grid_prop(self.swl_file_path, False)
         _, key = CubesTools().find_key(self.sw_file_path)
         flag, wrong_data = self.__test_value_conditions(
             key,

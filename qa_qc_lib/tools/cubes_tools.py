@@ -9,19 +9,7 @@ class CubesTools:
     def __init__(self):
         pass
 
-    def __remove_comment_lines(self, data: str, commenter: str = '--') -> str:
-        """
-        Функция для удаления строк комментариев из текстового документа
-
-        Args:
-            data (string): текстовый документ , переведенный в строку
-            commenter (string): ключ с которого начинается строка-комментарий
-
-        Returns:
-            str: Обработанная строка
-        """
-
-
+    def __remove_comment_lines(self, data, commenter='--') -> str:
         data_lines = data.strip().split('\n')
         newdata = []
         for line in data_lines:
@@ -37,17 +25,6 @@ class CubesTools:
         return '\n'.join(newdata)
 
     def find_key(self, file_path: str) -> [bool, str]:
-        """
-        Функция для поиска ключей в файлах GRDECL
-
-        Args:
-            file_path (str): путь к файлу
-
-        Returns:
-            bool: имеется ли ключ
-            str: значение ключа
-        """
-
         with open(file_path, 'r') as f:
             contents = f.read()
             contents = self.__remove_comment_lines(contents, commenter='--')
@@ -59,18 +36,26 @@ class CubesTools:
             else:
                 return True, contents_in_block[NumKeywords - 1].split()[0]
 
-    def generate_wrong_actnum(self,wrong_list: np.array, save_path: str = '.', name: str = "QA/QC"):
-        """
-        Функция для генерации GRDECL файла из массива (для генерации акнтуном которые моказывают ошибочные точки)
+    def find_head(self, file_path:str) -> str:
+        head = ""
+        with open(file_path, 'r') as f:
+            contants = f.readlines()
+            readflag = False
+            for line in contants:
+                if '[' in line:
+                    readflag = True
 
-        Args:
-            wrong_list (np.array): массив со значением точек
-            save_path (string): Путь куда созранить файл
-            name (string): Название файла
-        """
+                if readflag:
+                    head += f"{line.strip()}\n"
 
+                if ']' in line:
+                    break
+
+        return head
+
+    def generate_wrong_actnum(self,wrong_list: np.array, head: str = "",save_path: str = '.', func_name:str = "QA/QC"):
         wrong_data = wrong_list.astype(dtype=int)
-        result_data = "-- Generated QA/QC\nACTNUM\n"
+        result_data = f"{head}\n-- Generated QA/QC\nACTNUM\n"
         counter = 0
         for index in range(len(wrong_data) - 2):
             if wrong_data[index] == wrong_data[index + 1]:
@@ -92,7 +77,7 @@ class CubesTools:
                 s += f"{counter + 1}*{wrong_data[len(wrong_data) - 2]}"
             result_data += f"{s} {wrong_data[len(wrong_data) - 1]} \\"
 
-        with open(f"{save_path}/{name}_WRONG_ACTNUM.GRDECL", 'w') as f:
+        with open(f"{save_path}/{func_name}_WRONG_ACTNUM.GRDECL", 'w') as f:
             f.write(result_data)
             f.close()
 
@@ -104,13 +89,13 @@ class CubesTools:
             value: data2[np.where(lit_data == value)] for value in litatype_unique_data}
 
     def conver_n3d_to_n1d(self, cube):
-        return np.ravel(cube, order='F').reshape((1, -1))[0]
+        return np.ravel(cube, order='C').reshape((1, -1))[0]
 
     def conver_n1d_to_n3d(self, grid, vector):
         i_max = grid.ncol
         j_max = grid.nrow
         k_max = grid.nlay
-        return np.reshape(vector, (i_max, j_max, k_max), order='F')
+        return np.reshape(vector, (i_max, j_max, k_max), order='C')
 
 
 
