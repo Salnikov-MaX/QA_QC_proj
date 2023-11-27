@@ -4,6 +4,8 @@ from qa_qc_lib.tools.cubes_tools import CubesTools
 
 from matplotlib import pyplot as plt
 from qa_qc_lib.tests.base_test import QA_QC_main
+
+
 class Connector_kern_cubes(QA_QC_main):
 
     def __init__(
@@ -68,11 +70,11 @@ class Connector_kern_cubes(QA_QC_main):
         expected_y = m * x3 + b
         return _lambda(y3, expected_y)
 
-    def draw_plot(self, name, points_true,points_false,points_core, line_up, line_down,x_l, y_l):
+    def draw_plot(self, name, points_true, points_false, points_core, line_up, line_down, x_l, y_l):
         plt.title(f"Cопоставление измеренного и модельного распределений")
-        plt.scatter(x=points_false[0], y=points_false[1],s=3,marker='o', color='r', label="cubes_points_false")
-        plt.scatter(x=points_true[0], y=points_true[1],s=3,marker='o', color='g', label="cubes_points_true")
-        plt.scatter(x=points_core[0], y=points_core[1],s=3,marker='o', color='b', label="core_data_points")
+        plt.scatter(x=points_false[0], y=points_false[1], s=3, marker='o', color='r', label="cubes_points_false")
+        plt.scatter(x=points_true[0], y=points_true[1], s=3, marker='o', color='g', label="cubes_points_true")
+        plt.scatter(x=points_core[0], y=points_core[1], s=3, marker='o', color='b', label="core_data_points")
         plt.plot(line_down[0], line_down[1], label='mean + 3σ, mean - 3σ', color='b')
         plt.plot(line_up[0], line_up[1], color='b')
         plt.xlabel(x_l)
@@ -81,9 +83,9 @@ class Connector_kern_cubes(QA_QC_main):
         plt.show()
         plt.close()
 
-    def check_data_point(self, data_x_1, data_y_1, data_x_2, data_y_2,key,x_l,y_l):
+    def check_data_point(self, data_x_1, data_y_1, data_x_2, data_y_2, key, x_l, y_l):
         _, hallway_kern_down, hallway_kern_up = self.borders_initializer(data_x_1, data_y_1)
-        _float, _,_ = self.borders_initializer(data_x_2, data_y_2)
+        _float, _, _ = self.borders_initializer(data_x_2, data_y_2)
         result_array = []
         for index in range(len(data_x_2)):
             result_array.append(
@@ -96,12 +98,14 @@ class Connector_kern_cubes(QA_QC_main):
                 self.is_point_line(
                     hallway_kern_up[0],
                     hallway_kern_up[1],
-                    (data_x_2[index],  data_y_2[index]),
+                    (data_x_2[index], data_y_2[index]),
                     lambda x, y: x <= y))
 
         result = np.array(result_array)
 
-        self.draw_plot(key, [data_x_2[result], data_y_2[result]],[data_x_2[result == False], data_y_2[result == False]],[data_x_1, data_y_1], hallway_kern_up, hallway_kern_down,x_l, y_l)
+        self.draw_plot(key, [data_x_2[result], data_y_2[result]],
+                       [data_x_2[result == False], data_y_2[result == False]], [data_x_1, data_y_1], hallway_kern_up,
+                       hallway_kern_down, x_l, y_l)
         if all(result):
             return True, None
         else:
@@ -111,7 +115,7 @@ class Connector_kern_cubes(QA_QC_main):
             self,
             data1,
             data2,
-            kern_func):
+            kern_func) -> dict:
         lit_data = self.__get_value_grid_prop(
             self.litatype_file_path,
             flag_d3=False
@@ -121,6 +125,7 @@ class Connector_kern_cubes(QA_QC_main):
 
         mas_flag = []
         mas_wrong_data = []
+        wrong_data = None
         for cluster_key in group_data_1.keys():
             flag, wrong_data = kern_func(
                 group_data_1[cluster_key],
@@ -131,7 +136,6 @@ class Connector_kern_cubes(QA_QC_main):
             if flag:
                 self.update_report(
                     self.generate_report_text(f"Скважина {cluster_key} прошла тест", 1))
-                print(f"Скважина {cluster_key} прошла тест")
             else:
                 r_text = ""
                 if wrong_data is None:
@@ -139,24 +143,24 @@ class Connector_kern_cubes(QA_QC_main):
                 self.update_report(
                     self.generate_report_text(f"{r_text} Скважина {cluster_key} не прошла тест",
                                               0))
-                print(f"Скважина {cluster_key} не прошла тест")
 
         if all(mas_flag):
-            print("Тест пройден!!!")
             self.update_report(self.generate_report_text("", 1))
+            return self.QA_QC_cubes.__generate_returns_dict(True, True, None)
         else:
-            print("Тест не пройден!!!")
             self.update_report(self.generate_report_text(
                 f"Зависимость по кубам не входит в кордиор вариации по керну",
-               0))
+                0))
+            return self.QA_QC_cubes.__generate_returns_dict(True, False, wrong_data)
+
     def __kern_test_dependence(self,
                                cube_group_data_1: np.array,
                                cube_group_data_2: np.array,
                                kern_group_data_1: np.array,
                                kern_group_data_2: np.array,
                                cluster_key: str,
-                               x_l = "data1",
-                               y_l = "data2") -> (bool, np.array or None):
+                               x_l="data1",
+                               y_l="data2") -> (bool, np.array or None):
 
         kern_group_data_1[np.isnan(kern_group_data_1)] = 0
         kern_group_data_2[np.isnan(kern_group_data_2)] = 0
@@ -220,6 +224,7 @@ class Connector_kern_cubes(QA_QC_main):
             cluster_key,
             "Пористость,  v/v",
             "Проницаемость, мД")
+
     def test_kern_data_dependence_kpr_kp(self):
         self.__abstract_kern_data_dependence(
             data1=self.QA_QC_cubes.__get_value_grid_prop(
@@ -231,6 +236,3 @@ class Connector_kern_cubes(QA_QC_main):
                 flag_d3=False),
             kern_func=self.__kern_test_dependence_kpr_kp,
         )
-
-
-
