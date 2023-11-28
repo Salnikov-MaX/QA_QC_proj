@@ -53,7 +53,7 @@ class CubesTools:
 
         return head
 
-    def generate_wrong_actnum(self,wrong_list: np.array, head: str = "",save_path: str = '.', func_name:str = "QA/QC"):
+    def generate_wrong_actnum(self,wrong_list: np.array, head: str = "",save_path: str = '.', func_name:str = "QA-QC"):
         wrong_data = wrong_list.astype(dtype=int)
         result_data = f"{head}\n-- Generated QA/QC\nACTNUM\n"
         counter = 0
@@ -83,6 +83,17 @@ class CubesTools:
 
         print(f"Файл WRONG_ACTNUM сохранён по пути: {save_path}")
 
+    def generate_wrong_map(self,wrong_list: np.array, head: str = "",save_path: str = '.', func_name:str = "QA-QC"):
+        wrong_data = wrong_list.astype(dtype=int)
+        result_data = f"{head}\n# Generated QA/QC\n"
+        for index in wrong_data:
+            result_data += "0 0 " + str(index) + " 0 0\n"
+
+        with open(f"{save_path}/{func_name}_WRONG_MAP.txt", 'w') as f:
+            f.write(result_data)
+            f.close()
+
+        print(f"Файл WRONG_MAP сохранён по пути: {save_path}")
     def get_cluster_dates(self, data1, data2, lit_data):
         litatype_unique_data = np.unique(lit_data)
         return {value: data1[np.where(lit_data == value)] for value in litatype_unique_data}, {
@@ -96,6 +107,4 @@ class CubesTools:
         j_max = grid.nrow
         k_max = grid.nlay
         return np.reshape(vector, (i_max, j_max, k_max), order='C')
-
-
 
