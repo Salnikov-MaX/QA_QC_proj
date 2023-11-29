@@ -2,8 +2,9 @@ from typing import Optional, List
 
 from qa_qc_lib.graph.test_config import KernTestConfig
 from qa_qc_lib.graph.test_launcher.BaseLauncher import BaseLauncher
-from qa_qc_lib.graph.tools.data_map import KernPathInfo, KernData, DataFilter
-from qa_qc_lib.graph.tools.graph import Graph
+from qa_qc_lib.graph.data_map.DataMap import KernData
+from qa_qc_lib.graph.data_map.KernMap import KernPathInfo, DataFilter
+from qa_qc_lib.graph.graph import Graph
 from qa_qc_lib.tests.kern_tests.data_kern import DataKern
 from qa_qc_lib.tests.kern_tests.data_preprocessing_kern import DataPreprocessing
 from qa_qc_lib.tests.kern_tests.kern import QA_QC_kern
@@ -23,14 +24,14 @@ class KernLauncher(BaseLauncher):
     @staticmethod
     def init_kern(kern_data: KernData) -> QA_QC_kern:
         data_pre = DataPreprocessing()
-        data_file_path = 'results/data_file.xlsx'
+        data_file_path = 'data/data_file.xlsx'
         for kern_data in kern_data.files:
             columns_map = {m.data_key.split('|')[0]: KernLauncher.kern_data_path_generate(kern_data.data_path, m) for m
                            in kern_data.map}
 
             data_pre.process_data(columns_map, data_file_path)
 
-        return QA_QC_kern('results', data_file_path=data_file_path)
+        return QA_QC_kern('data', data_file_path=data_file_path)
 
     @staticmethod
     def get_filters(groups: List[str], qa_qc_data_kern: DataKern) -> List[List[DataFilter]]:
@@ -50,8 +51,8 @@ class KernLauncher(BaseLauncher):
         kern_qa_qc = self.init_kern(self.kern_data)
 
         test_names: List[str] = []
-        for tests in self.kern_config.tests:
-            test_names += [t_info.test_name_code for t_info in tests.tests if t_info.ready_for_launch]
+        for tests in self.kern_config.group_test:
+            test_names += [t_info.test_name_code for t_info in tests.group_test if t_info.ready_for_launch]
 
         if not self.kern_data.group_by_columns:
             kern_report_data = kern_qa_qc.start_tests(test_names)

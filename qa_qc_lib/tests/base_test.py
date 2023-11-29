@@ -36,7 +36,7 @@ class QA_QC_main():
         else:
             return "Метод не найден."
 
-    def start_tests(self, list_of_tests: List[str], get_report=True) -> dict:
+    def start_tests(self, list_of_tests: List[str], get_report=True) -> List[dict]:
         """
         Метод который запускает все тесты, которые переданы в виде списка list_of_tests
 
@@ -47,10 +47,36 @@ class QA_QC_main():
         Returns:
             dict: результаты выбранных тестов
         """
-        results = {}
+        results = []
+        for method_name in list_of_tests:
+
+            try:
+                method = getattr(self, method_name)
+
+                try:
+                    report = method(get_report=get_report)
+                except TypeError as _:
+                    report = method()
+                results.append({**report, 'test_name': method_name})
+
+            except Exception as e:
+                results.append({"test_name": method_name, 'error': str(e)})
+                print(method_name, e)
+
+        return results
+
+    def start_tests_debug(self, list_of_tests: List[str], get_report=True) -> List[dict]:
+        results = []
+
         for method_name in list_of_tests:
             method = getattr(self, method_name)
-            results[method_name] = method(get_report=get_report)
+
+            try:
+                report = method(get_report=get_report)
+            except TypeError as _:
+                report = method()
+
+            results.append(report)
         return results
 
     def start_tests_with_filters(self, list_of_tests: List[tuple[str, Optional[List[dict]]]], get_report=True) \
@@ -68,8 +94,8 @@ class QA_QC_main():
         """
         results: List[dict] = []
         for method_name, filters in list_of_tests:
-            method = getattr(self, method_name)
             try:
+                method = getattr(self, method_name)
                 results.append({"test": method(get_report=get_report, filters=filters), "filters": filters})
             except Exception as e:
                 results.append({"test_name": method_name, "filters": filters, 'error': str(e)})
