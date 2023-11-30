@@ -88,6 +88,8 @@ class QA_QC_cubes(QA_QC_main):
             'Литотип': self.litatype_file_path,
         }
 
+        #Активирует все ячейки грида - mock для проверки
+        self.grid_model.get_grid().activate_all()
         self.actnum = self.grid_model.get_grid().get_actnum().get_npvalues3d()
         self.grid_head = CubesTools().find_head(f"{directory_path}/{grid_name}_ACTNUM.GRDECL")
 
@@ -98,12 +100,12 @@ class QA_QC_cubes(QA_QC_main):
                 if flag:
                     self.grid_model.add_prop(attributes[key], prop_name)
 
-    def __generate_report_tests(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        CubesTools().generate_wrong_actnum(returns_dict["specification"]["wrong_data"], save_path, name)
+    def generate_report_tests(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        CubesTools().generate_wrong_actnum(np.array(returns_dict["specification"]["wrong_data"]),self.grid_head, save_path, name)
 
     def __generate_returns_dict(self, data_availability: bool, result: bool or None,
                                 wrong_data: np.array or None) -> dict:
-        wrong_list = None if wrong_data is None else wrong_data.tolist()
+        wrong_list = None if wrong_data is None else CubesTools().conver_n3d_to_n1d(wrong_data).tolist()
         return {
             "data_availability": data_availability,
             "result": result,
@@ -202,8 +204,8 @@ class QA_QC_cubes(QA_QC_main):
     Тесты первого порядка
     """
 
-    def generate_report_tests_open_porosity(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_tests_open_porosity(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_open_porosity(self) -> dict:
         """
@@ -223,9 +225,9 @@ class QA_QC_cubes(QA_QC_main):
         if self.open_porosity_file_path is None:
             self.update_report(self.generate_report_text("Данные Porosity отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
-        _, key = CubesTools().find_key(self.open_porosity_file_path)
-        flag, wrong_data = self.__test_value_conditions(
-            prop_name=key,
+        open_porosity = self.__get_value_grid_prop(self.open_porosity_file_path)
+        flag, wrong_data = self.__test_range_data(
+            _array=open_porosity,
             lambda_list=[lambda x: x >= 0, lambda x: x <= 0.476],
             f=self.__muc_np_arrays
         )
@@ -273,8 +275,8 @@ class QA_QC_cubes(QA_QC_main):
             return self.__generate_returns_dict(True, False, wrong_data)
 
     def generate_report_tests_permeability_permX(self, returns_dict: dict, save_path: str = '.',
-                                                 name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_permeability_permX(self) -> dict:
         """
@@ -291,8 +293,8 @@ class QA_QC_cubes(QA_QC_main):
         return self.__abstract_test_permeability(file_path=self.open_perm_x_file_path)
 
     def generate_report_tests_permeability_permY(self, returns_dict: dict, save_path: str = '.',
-                                                 name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_permeability_permY(self) -> dict:
         """
@@ -310,8 +312,8 @@ class QA_QC_cubes(QA_QC_main):
         return self.__abstract_test_permeability(file_path=self.open_perm_y_file_path)
 
     def generate_report_tests_permeability_permZ(self, returns_dict: dict, save_path: str = '.',
-                                                 name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_permeability_permZ(self) -> dict:
         """
@@ -358,8 +360,8 @@ class QA_QC_cubes(QA_QC_main):
                 0))
             return self.__generate_returns_dict(True, False, wrong_data)
 
-    def generate_report_tests_range_data_sgcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_tests_range_data_sgcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_sgcr(self) -> dict:
         """
@@ -378,8 +380,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.sgcr_file_path)
 
-    def generate_report_range_data_sgl(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_sgl(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_sgl(self) -> dict:
         """
@@ -398,8 +400,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.sgl_file_path)
 
-    def generate_report_range_data_sogcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_sogcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_sogcr(self) -> dict:
         """
@@ -418,8 +420,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.sogcr_file_path)
 
-    def generate_report_range_data_sowcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_sowcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_sowcr(self) -> dict:
         """
@@ -438,8 +440,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.sowcr_file_path)
 
-    def generate_report_range_data_swatinit(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_swatinit(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_swatinit(self) -> dict:
         """
@@ -458,8 +460,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.sw_file_path)
 
-    def generate_report_range_data_sgu(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_sgu(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_sgu(self) -> dict:
         """
@@ -478,8 +480,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.sgu_file_path)
 
-    def generate_report_range_data_swl(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_swl(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_swl(self) -> dict:
         """
@@ -498,8 +500,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.swl_file_path)
 
-    def generate_report_range_data_swcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_swcr(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_swcr(self) -> dict:
         """
@@ -518,8 +520,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.swcr_file_path)
 
-    def generate_report_range_data_swu(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_swu(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_swu(self) -> dict:
         """
@@ -538,8 +540,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.swu_file_path)
 
-    def generate_report_range_data_ntg(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_ntg(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_ntg(self) -> dict:
         """
@@ -558,8 +560,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.ntg_file_path)
 
-    def generate_report_range_data_so(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_so(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_so(self) -> dict:
         """
@@ -578,8 +580,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.so_file_path)
 
-    def generate_report_range_data_sg(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_range_data_sg(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_range_data_sg(self) -> dict:
         """
@@ -598,8 +600,8 @@ class QA_QC_cubes(QA_QC_main):
 
         return self.__abstract_test_range_data(file_path=self.sg_file_path)
 
-    def generate_report_right_actnum(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_right_actnum(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_right_actnum(self) -> dict:
         """
@@ -633,8 +635,8 @@ class QA_QC_cubes(QA_QC_main):
 
             return self.__generate_returns_dict(True, False, wrong_data)
 
-    def generate_report_litatype(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_litatype(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_litatype(self) -> dict:
         """
@@ -667,8 +669,8 @@ class QA_QC_cubes(QA_QC_main):
                 0))
             return self.__generate_returns_dict(True, False, wrong_data)
 
-    def generate_report_bulk(self, returns_dict: dict, save_path: str = '.', name: str = "QA/QC"):
-        self.__generate_report_tests(returns_dict, save_path, name)
+    def generate_report_bulk(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
 
     def test_bulk(self):
         """
@@ -700,6 +702,8 @@ class QA_QC_cubes(QA_QC_main):
     """
     Тесты второго порядка
     """
+    def generate_report_sum(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
     def test_sum_cubes(self):
         """
         Функция для проверки того что сумма кубов = 1

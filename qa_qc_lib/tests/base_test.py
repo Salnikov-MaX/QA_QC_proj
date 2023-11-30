@@ -65,7 +65,7 @@ class QA_QC_main():
         if not os.path.isdir(file_path):
             os.mkdir(file_path)
 
-        data_name = self.file_name if not data_name else data_name
+        data_name = file_name if not data_name else data_name
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
         report = f"Отчет о тестировании от {timestamp}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
         with open(f"{file_path}/{file_name}.txt", "w") as file:

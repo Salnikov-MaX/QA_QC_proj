@@ -54,7 +54,7 @@ class CubesTools:
         return head
 
     def generate_wrong_actnum(self,wrong_list: np.array, head: str = "",save_path: str = '.', func_name:str = "QA-QC"):
-        wrong_data = wrong_list.astype(dtype=int)
+        wrong_data = wrong_list
         result_data = f"{head}\n-- Generated QA/QC\nACTNUM\n"
         counter = 0
         for index in range(len(wrong_data) - 2):
@@ -100,11 +100,11 @@ class CubesTools:
             value: data2[np.where(lit_data == value)] for value in litatype_unique_data}
 
     def conver_n3d_to_n1d(self, cube):
-        return np.ravel(cube, order='C').reshape((1, -1))[0]
+        return np.ravel(cube, order='F').reshape((1, -1))[0]
 
     def conver_n1d_to_n3d(self, grid, vector):
         i_max = grid.ncol
         j_max = grid.nrow
         k_max = grid.nlay
-        return np.reshape(vector, (i_max, j_max, k_max), order='C')
+        return np.reshape(vector, (i_max, j_max, k_max), order='F')
 
