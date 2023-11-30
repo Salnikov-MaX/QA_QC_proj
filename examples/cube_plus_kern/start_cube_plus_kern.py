@@ -9,7 +9,8 @@ if __name__ == '__main__':
 
     # main_test_config.kern_config.tests.pop(0)
     for g in main_test_config.cubes_config.group_test:
-        g.tests = [t for t in g.tests if t.test_name_code.__contains__('porosity')]
+        # g.tests = [t for t in g.tests if t.test_name_code.__contains__('test_swl_sw')]
+        g.tests = [t for t in g.tests if t.test_name_code.__contains__('test_sum')]
 
     main_test_config.cubes_config.group_test.pop(0)
 

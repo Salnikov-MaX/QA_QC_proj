@@ -44,6 +44,9 @@
         "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Sowcr.GRDECL.grdecl"
       },
       {
+        "data_key": "SWATINIT|GRDECL|ПЕТРОФИЗИКА|",
+        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Sw.GRDECL.grdecl"
+      }, {
         "data_key": "Sw|GRDECL|ПЕТРОФИЗИКА|",
         "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Sw.GRDECL.grdecl"
       },
