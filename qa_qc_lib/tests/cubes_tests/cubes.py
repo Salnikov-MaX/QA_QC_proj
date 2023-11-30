@@ -1,8 +1,11 @@
-import numpy as np
+import inspect
+import sys
 
 from qa_qc_lib.readers.data_reader import QA_QC_grdecl_parser
 from qa_qc_lib.tests.base_test import QA_QC_main
 from qa_qc_lib.tools.cubes_tools import CubesTools
+import numpy as np
+import datetime
 
 
 class QA_QC_cubes(QA_QC_main):
@@ -127,8 +130,10 @@ class QA_QC_cubes(QA_QC_main):
         value[np.isnan(value)] = 0
         return value
 
-    def __test_range_data(self, _array: np.array, lambda_list: list[any], f) \
-            -> tuple[bool, np.array or None]:
+    def __test_range_data(self, _array: np.array, lambda_list: list[any], f) -> tuple[
+        bool,
+        np.array or None]:
+
         """
         Абистрактная функция для проверки N условия для np.array
 
@@ -171,10 +176,13 @@ class QA_QC_cubes(QA_QC_main):
             ]
         """
 
-        array_value = self.grid_model.get_grid().get_prop_by_name(prop_name)
-        array_range = self.grid_model.get_prop_value(array_value, False)
-
-        flag, wrong_data = self.__test_range_data(array_range, lambda_list=lambda_list, f=f)
+        flag, wrong_data = self.__test_range_data(
+            self.grid_model.get_prop_value(
+                self.grid_model.get_grid().get_prop_by_name(prop_name),
+                False
+            ),
+            lambda_list=lambda_list,
+            f=f)
 
         if flag:
             return True, None
@@ -199,24 +207,32 @@ class QA_QC_cubes(QA_QC_main):
                 prop_name: str: ключ
 
             Returns:
-                 dict: Словарь, specification словарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
 
         }
         """
         if self.open_porosity_file_path is None:
             self.update_report(self.generate_report_text("Данные Porosity отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
-
         _, key = CubesTools().find_key(self.open_porosity_file_path)
+        flag, wrong_data = self.__test_value_conditions(
+            prop_name=key,
+            lambda_list=[lambda x: x >= 0, lambda x: x <= 0.476],
+            f=self.__muc_np_arrays
+        )
 
-        flag, wrong_data = self.__test_value_conditions(prop_name=key,
-                                                        lambda_list=[lambda x: x >= 0, lambda x: x <= 0.476],
-                                                        f=self.__muc_np_arrays)
+        if flag:
+            r_text = f"Данные лежат в интервале от 0 до 47,6"
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict(True, True, None)
+        else:
+            r_text = f"Данные лежат не в интервале от 0 до 47,6"
+            self.update_report(
+                self.generate_report_text(
+                    r_text,
+                    0))
 
-        r_text = f"Данные лежат в интервале от 0 до 47,6" if flag else f"Данные лежат не в интервале от 0 до 47,6"
-
-        self.update_report(self.generate_report_text(r_text, flag))
-        return self.__generate_returns_dict(True, flag, wrong_data)
+            return self.__generate_returns_dict(True, False, wrong_data)
 
     def __abstract_test_permeability(self, file_path: str) -> dict:
         """
@@ -226,7 +242,7 @@ class QA_QC_cubes(QA_QC_main):
                 file_path: str: путь к файлу
 
             Returns:
-                 dict: Словарь, specification словарь где, wrong_data - список ячеек куба которые не прошли тестирование
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
         """
         _, key = CubesTools().find_key(file_path)
         flag, wrong_data = self.__test_value_conditions(
@@ -675,7 +691,6 @@ class QA_QC_cubes(QA_QC_main):
     """
     Тесты второго порядка
     """
-
     def test_sum_cubes(self):
         """
         Функция для проверки того что сумма кубов = 1
@@ -807,7 +822,7 @@ class QA_QC_cubes(QA_QC_main):
             r_text = f"Данные < SWL "
             self.update_report(self.generate_report_text(
                 r_text,
-                0))
+               0))
 
             return self.__generate_returns_dict(True, False, wrong_data)
 
