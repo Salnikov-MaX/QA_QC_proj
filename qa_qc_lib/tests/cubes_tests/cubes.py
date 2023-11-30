@@ -744,8 +744,8 @@ class QA_QC_cubes(QA_QC_main):
 
         flag, wrong_data = self.__test_range_data(
             sum(data_mas),
-            [lambda x: x == 1],
-            sum
+            [lambda x: x >= 1-0.02, lambda x: x <= 1],
+            self.__muc_np_arrays
         )
 
         if flag:
