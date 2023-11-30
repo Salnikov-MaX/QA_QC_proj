@@ -28,13 +28,33 @@ class QA_QC_grdecl_parser(object):
 
     def get_prop_value(self, prop: xtgeo.GridProperty, flag_d3: bool = True) -> np.array:
         if flag_d3:
-            data = prop.get_npvalues3d(fill_value=-1.0)
+            data = prop.get_npvalues3d()
         else:
-            data = prop.get_npvalues1d(fill_value=-1.0)
+            data = prop.get_npvalues1d()
 
         return data
     def get_grid(self) -> xtgeo.Grid:
         return self.grid
+
+class QA_QC_asciigrid_parser(object):
+    def __init__(self):
+        pass
+
+    def parse_to_nparray(self, filepath: str):
+        head = ""
+        array = []
+        with open(filepath, 'r') as f:
+            content = f.readlines()
+            for line in content:
+                if '#' in line:
+                    head += line
+                    continue
+                l = line.split(' ')
+                array.append(float(l[2]))
+
+        return np.array(array), head
+
+
 
 def test():
     test = QA_QC_grdecl_parser("../data/grdecl_data","GRID")
@@ -43,3 +63,8 @@ def test():
     test.add_prop(poro_file, key)
     prop_value = test.get_prop_value(test.get_grid().get_prop_by_name(key),False)
     print(prop_value)
+
+def ascii_test():
+    a,head = QA_QC_asciigrid_parser().parse_to_nparray("../../data/grdecl_data/asciigrid/GOC_NP4.txt")
+    print(len(a))
+    print(head)
