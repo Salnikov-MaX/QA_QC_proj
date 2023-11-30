@@ -89,7 +89,7 @@ class QA_QC_cubes(QA_QC_main):
         }
 
         #Активирует все ячейки грида - mock для проверки
-        self.grid_model.get_grid().activate_all()
+        #self.grid_model.get_grid().activate_all()
         self.actnum = self.grid_model.get_grid().get_actnum().get_npvalues3d()
         self.grid_head = CubesTools().find_head(f"{directory_path}/{grid_name}_ACTNUM.GRDECL")
 
@@ -760,7 +760,7 @@ class QA_QC_cubes(QA_QC_main):
                 0))
             return self.__generate_returns_dict(True, False, wrong_data)
 
-    def test_affiliation_sqcr(self):
+    def test_affiliation_sgcr(self):
         """
         Функция для проверки того что SGCR Є [SGL:1]
 
