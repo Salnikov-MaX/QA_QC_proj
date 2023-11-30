@@ -5,7 +5,7 @@ from sklearn.metrics import r2_score
 from qa_qc_lib.tests.base_test import QA_QC_main
 from qa_qc_lib.tests.kern_tests.data_kern import DataKern
 from qa_qc_lib.tests.kern_tests.kern_consts import KernConsts
-from qa_qc_lib.tools.math_tools import linear_dependence_function
+from qa_qc_lib.tools.math_tools import linear_dependence_function, exponential_function
 from qa_qc_lib.tools.kern_tools import linear_function_visualization
 from qa_qc_lib.tools.kern_tools import dropdown_search
 
@@ -971,3 +971,115 @@ class QA_QC_kern(QA_QC_main):
         """
         return self.__main_poro_vs_param(self.consts.kp_abs, self.consts.mms_density, filters,
                                          "test_kp_abs_vs_density_wet", get_report)
+
+    def __main_poro_vs_perm_abs(self, poro_name, filters, test_name, get_report):
+        """
+        Тест применяется для сравнения двух аппроксимаций:
+        характерной (эталонной для выбранного набора данных)
+        и текущей.  Характерной зависимостью является
+        линейная по функции y=a*exp(b*x) при этом b>0
+
+        Args:
+            poro_name (string): название пористости
+            test_name(string): название теста
+            filters(array[dic]): применяемые фильтры в формате [{"name":str,"value":str||int,
+                                                                "operation"(np.ndarray[string]):[=, !=, >, <, >=, <=]}]
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+            param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+            MD - массив с глубинами
+        """
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[poro_name, self.consts.kpr_abs],
+                                                                        filters=filters)
+        porosity = np.array(clear_df[poro_name])
+        perm = np.array(clear_df[self.consts.kpr_abs])
+        check_result_for_first_param, wrong_for_first_param, check_text_for_first_param = self.__check_data(
+            porosity, get_report)
+        check_result_for_second_param, wrong_for_second_param, check_text_for_second_param = self.__check_data(
+            perm, get_report)
+
+        if check_result_for_first_param and check_result_for_second_param:
+            r2 = self.test_general_dependency_checking(porosity, np.log(perm))["specification"]["r2"]
+            result = True
+            a, b = exponential_function(porosity, perm)
+            if b <= 0 or r2 < 0.7:
+                result = False
+
+            wrong_values = dropdown_search(porosity,
+                                           np.log(perm),
+                                           a, b)
+            linear_function_visualization(porosity,
+                                          np.log(perm),
+                                          a, b,
+                                          r2,
+                                          get_report,
+                                          poro_name,
+                                          self.consts.kpr_abs,
+                                          test_name,
+                                          wrong_values)
+            wrong_values = np.where(wrong_values, 1, result)
+
+            text = self.consts.dependency_accepted + str(wrong_values) if result \
+                else self.consts.dependency_wrong + str(wrong_values)
+
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(poro_name, test_name, text, wrong_values, index)
+
+            return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, result,
+                                                wrong_values, text, well_name, md,
+                                                test_name, [poro_name, perm], r2=r2)
+        else:
+            self.data_kern.mark_errors(perm, test_name,
+                                       check_text_for_first_param + " " + check_text_for_second_param,
+                                       wrong_for_first_param if len(wrong_for_first_param) != 0
+                                       else wrong_for_second_param, index)
+            return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, False,
+                                                wrong_for_first_param if len(wrong_for_first_param) != 0
+                                                else wrong_for_second_param,
+                                                check_text_for_first_param + " " + check_text_for_second_param,
+                                                well_name,
+                                                md,
+                                                test_name, [poro_name, perm])
+
+    def test_kpr_abs_vs_kp_open(self, get_report=True, filters=None):
+        """
+        Тест применяется для сравнения двух аппроксимаций:
+        характерной (эталонной для выбранного набора данных)
+        и текущей.  Характерной зависимостью является
+        линейная по функции y=a*exp(b*x) при этом b>0
+
+        Required data:
+            Кпр_абс; Кп_откр
+
+        Args:
+            Кпр_абс (np.ndarray[int/float]): массив с данными абсолютной проницаемости для проверки
+            Кп_откр (np.ndarray[int/float]): массив с данными открытой пористости для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+            param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+            MD - массив с глубинами
+        """
+        return self.__main_poro_vs_perm_abs(self.consts.kp_open, filters, "perm_abs_vs_kp_open", get_report)
+
+    def test_kpr_abs_vs_kp_abs(self, get_report=True, filters=None):
+        """
+        Тест применяется для сравнения двух аппроксимаций:
+        характерной (эталонной для выбранного набора данных)
+        и текущей.  Характерной зависимостью является
+        линейная по функции y=a*exp(b*x) при этом b>0
+
+        Required data:
+            Кпр_абс; Кп_абс
+
+        Args:
+            Кпр_абс (np.ndarray[int/float]): массив с данными абсолютной проницаемости для проверки
+            Кп_абс(np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+            param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+            MD - массив с глубинами
+        """
+        return self.__main_poro_vs_perm_abs(self.consts.kp_abs, filters, "test_kpr_abs_vs_kp_abs", get_report)
