@@ -20,7 +20,13 @@ class QA_QC_kern(QA_QC_main):
         self.file_name = file_path.split('/')[-1]
         self.data_kern = DataKern(data_file_path)
         self.consts = KernConsts()
-        # self.porosity_abs = porosity_abs
+        self.parameters_to_compare = {
+            self.consts.kpr_abs: self.consts.kp_open,
+            self.consts.poro_param: self.consts.kp_open,
+            self.consts.kvo: self.consts.kp_open,
+            self.consts.ads_density: self.consts.kp_open,
+            self.consts.mms_density: self.consts.kp_open
+        }
 
     def __generate_report(self, text, status, get_report):
         """
@@ -54,7 +60,7 @@ class QA_QC_kern(QA_QC_main):
         result = np.sum(result_mask) == 0
         return result_mask, result
 
-    def __generate_returns_dict(self, data_availability, result, result_mask, error_decr, well_name,
+    def __generate_returns_dict(self, data_availability, result, result_masks, error_decr, well_name,
                                 md, test_name, param_name, r2=None) -> dict:
         """
         Args:
@@ -73,7 +79,6 @@ class QA_QC_kern(QA_QC_main):
 
         """
         specification = {
-            "result_mask": result_mask.tolist(),
             "test_name": test_name,
             "error_decr": error_decr,
             "well_name": str(well_name),
@@ -82,6 +87,8 @@ class QA_QC_kern(QA_QC_main):
         for index, param in enumerate(param_name):
             key_name = f"param_name_{index + 1}"
             specification[key_name] = param
+
+        specification["result_masks"] = result_masks
         if r2 is not None:
             specification["r2"] = r2
         return {
@@ -1083,3 +1090,136 @@ class QA_QC_kern(QA_QC_main):
             MD - массив с глубинами
         """
         return self.__main_poro_vs_perm_abs(self.consts.kp_abs, filters, "test_kpr_abs_vs_kp_abs", get_report)
+
+    def __find_duplicate_indices(self, arr) -> list[tuple]:
+        """
+        Находит индексы попарно одинаковых значений в массиве
+
+        Args:
+            arr (np.ndarray[int/float]): входной массив
+
+        Returns:
+            array[tuple]: список кортежей с индексами попарно одинаковых значений
+        """
+        # Создаем словарь для хранения индексов
+        index_dict = {value: [] for value in arr}
+
+        # Заполняем словарь индексами
+        for i, value in enumerate(arr):
+            index_dict[value].append(i)
+
+        # Формируем список кортежей с индексами попарно одинаковых значений
+        duplicate_indices = [(idx1, idx2) for indices in index_dict.values() for idx1, idx2 in
+                             zip(indices, indices[1:])]
+
+        return duplicate_indices
+
+    def __find_difference_in_duplicate_indices(self, duplicate_indices1, duplicate_indices2) -> list[tuple]:
+
+        """
+        Находит различия между двумя списками duplicate_indices и возвращает отличающиеся пары
+
+        Args:
+            duplicate_indices1 (array[tuple]): первый список кортежей с индексами
+            duplicate_indices2 (array[tuple]): второй список кортежей с индексами
+
+        Returns:
+             array[tuple]: отличающиеся пары индексов
+        """
+        set1 = set(duplicate_indices1)
+        set2 = set(duplicate_indices2)
+
+        difference = (set1 | set2) - (set1 & set2)
+        return list(difference)
+
+    def __create_mask(self, array, diff) -> np.ndarray:
+
+        """
+        Создает маску, где 1 помечены пары значений, которые не совпадают
+
+        Args:
+            array (np.ndarray[int/float]): массив для пометки совпадений
+            diff (array[tuple]): список кортежей с индексами повторяющихся значений
+
+        Returns:
+            mask(np.ndarray[int]): маска для array
+
+        """
+
+        mask = np.zeros_like(array)
+
+        for indices in diff:
+            mask[indices[0]] = 1
+            mask[indices[1]] = 1
+        return mask
+
+    def __main_data_tampering(self, first_param_name: str, second_param_name: str,
+                              filters) -> tuple[bool, np.ndarray, np.ndarray, str, np.ndarray]:
+
+        """
+        Основной тест для проверки подлога данных
+
+        Args:
+            first_param_name(string): название первого параметра
+            second_param_name(string): название второго параметра
+
+        Returns:
+            result(bool): результат проверки
+            mask(np.ndarray(int): маска с результатом
+            index(np.ndarray(int): индексы данных по глубине после удаления nan
+            well_name(string): название скважины
+            md(np.ndarray(int): массив с глубинами для которых взяты данные
+        """
+
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(
+            param=[first_param_name, second_param_name],
+            filters=filters)
+        first_param = np.array(clear_df[first_param_name])
+        second_param = np.array(clear_df[second_param_name])
+        duplicate_indices_first_param = self.__find_duplicate_indices(first_param)
+        duplicate_indices_second_param = self.__find_duplicate_indices(second_param)
+        diff = self.__find_difference_in_duplicate_indices(duplicate_indices_first_param,
+                                                           duplicate_indices_second_param)
+        mask = self.__create_mask(first_param, diff)
+        result = np.sum(mask) == 0
+        return result, mask, index, well_name, md
+
+    def test_data_tampering(self, get_report=True, filters=None):
+        """
+        Required data:
+            Кпр_абс; Кп_откр; Кво; Параметр_пористости(F); Параметр_насыщенности(RI); Плотность_абсолютно_сухого_образца;
+            Плотность_максимально_увлажненного_образца
+
+        Args:
+            Кпр_абс(np.ndarray[int/float]): массив с данными абсолютной проницаемости для проверки
+            Кп_откр(np.ndarray[int/float]): массив с данными открытой пористости для проверки
+            Кво(np.ndarray[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
+            Параметр_пористости(F)(np.ndarray[int/float]): массив с данными параметра пористости для проверки
+            Параметр_насыщенности(RI)(np.ndarray[int/float]): массив с данными параметра насыщенности для проверки
+            Плотность_абсолютно_сухого_образца(np.ndarray[int/float]): массив с данными плотности абсолютно сухого образца
+            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными максимально увлажненного образца
+
+        Returns:
+            Словарь, specification словарь где, result_mask - словарь с результатом
+            {"название параметра/пары параметров":маска с результатом}, test_name - название теста,
+            param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+            MD - массив с глубинами
+        """
+        result_masks = {}
+        final_result = True
+        well_name, md = "", []
+
+        for key, value in self.parameters_to_compare.items():
+            result, mask, index, well_name, md = self.__main_data_tampering(key, value, filters)
+            result_masks[key + " and " + value] = mask.tolist()
+            final_result *= result
+            text = self.consts.data_tampering_accepted if result else self.consts.data_tampering_wrong
+            self.data_kern.mark_errors(key, "test_data_tampering", text, mask, index)
+            self.data_kern.mark_errors(value, "test_data_tampering", text, mask, index)
+
+        final_text = self.consts.data_tampering_accepted if final_result else self.consts.data_tampering_wrong
+
+        self.__generate_report(final_text, final_result, get_report)
+        return self.__generate_returns_dict(True, final_result,
+                                            result_masks, final_text, well_name, md,
+                                            "test_data_tampering", [list(self.parameters_to_compare.keys())])
