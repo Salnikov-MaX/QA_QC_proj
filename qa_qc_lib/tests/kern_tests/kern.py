@@ -971,3 +971,222 @@ class QA_QC_kern(QA_QC_main):
         """
         return self.__main_poro_vs_param(self.consts.kp_abs, self.consts.mms_density, filters,
                                          "test_kp_abs_vs_density_wet", get_report)
+    def __generate_dependency_result(self, first_param, second_param, a, b, r2, get_report, first_name,
+                                     second_name, test_name, result):
+        wrong_values = dropdown_search(first_param,
+                                       second_param,
+                                       a, b)
+        linear_function_visualization(first_param,
+                                      second_param,
+                                      a, b,
+                                      r2,
+                                      get_report,
+                                      first_name,
+                                      second_name,
+                                      test_name,
+                                      wrong_values)
+        wrong_values = np.where(wrong_values, 1, result)
+        return wrong_values
+
+    def __main_poro_vs_density(self, mineral_porosity:str, volume_porosity:str, test_name:str, get_report=True, filters=None):
+        """
+        Тест предназначен для проверки связи между двумя кросс плотами - Обплнас-Кп и Минпл-Кп.
+        Данная взаимосвязь описывается линией тренда : y=a1*x+b1, при этом a1<a2,
+        где а2 - коэффициент из зависимости Минпл-Кп
+
+        Args:
+            mineral_porosity (string): название пористости для зависимости Минпл-Кп
+            volume_porosity(string): название пористости для зависимости Обплнас-Кп
+            test_name (string):
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        clear_df_kp_mineral, index, well_name, md = self.__get_data_from_data_kern(param=[mineral_porosity,
+                                                                                          self.consts.mineral_density],
+                                                                                   filters=filters)
+        clear_df_kp_volume, index, well_name, md = self.__get_data_from_data_kern(param=[volume_porosity,
+                                                                                         self.consts.volume_density],
+                                                                                  filters=filters)
+
+        poro_mineral = np.array(clear_df_kp_mineral[mineral_porosity])
+        poro_volume = np.array(clear_df_kp_volume[volume_porosity])
+        volume_density = np.array(clear_df_kp_volume[self.consts.volume_density])
+        mineral_density = np.array(clear_df_kp_mineral[self.consts.mineral_density])
+        check_result_for_poro_mineral, wrong_for_poro_mineral, check_text_for_poro_mineral = self.__check_data(
+            poro_mineral, get_report)
+        check_result_for_poro_volume, wrong_for_poro_volume, check_text_for_poro_volume = self.__check_data(
+            poro_volume, get_report)
+        check_result_for_volume_density, wrong_for_volume_density, check_text_for_volume_density = self.__check_data(
+            volume_density, get_report)
+        check_result_for_mineral_density, wrong_for_mineral_density, check_text_for_mineral_density = self.__check_data(
+            mineral_density, get_report)
+        check_result = check_result_for_poro_mineral and check_result_for_poro_volume and check_result_for_volume_density and check_result_for_mineral_density
+        if check_result:
+            a_poro_vs_volume, b_poro_vs_volume = linear_dependence_function(volume_density, poro_volume)
+            a_poro_vs_mineral, b_poro_vs_mineral = linear_dependence_function(mineral_density, poro_mineral)
+            r2_volume = self.test_general_dependency_checking(poro_volume, volume_density)["specification"]["r2"]
+            r2_mineral = self.test_general_dependency_checking(poro_mineral, mineral_density)["specification"]["r2"]
+
+            result = True
+
+            if a_poro_vs_mineral >= a_poro_vs_volume or r2_volume < 0.7 or r2_mineral < 0.7:
+                result = False
+
+            wrong_values_volume = self.__generate_dependency_result(volume_density,
+                                                                    poro_volume,
+                                                                    a_poro_vs_volume,
+                                                                    b_poro_vs_volume,
+                                                                    r2_volume,
+                                                                    get_report,
+                                                                    self.consts.volume_density,
+                                                                    volume_porosity,
+                                                                    test_name,
+                                                                    result)
+
+
+            wrong_values_mineral = self.__generate_dependency_result(mineral_density,
+                                                                     poro_mineral,
+                                                                     a_poro_vs_mineral,
+                                                                     b_poro_vs_mineral,
+                                                                     r2_mineral,
+                                                                     get_report,
+                                                                     self.consts.mineral_density,
+                                                                     mineral_porosity,
+                                                                     test_name,
+                                                                     result)
+
+            text = self.consts.dependency_accepted + str(wrong_values_volume)+" "+str(wrong_values_mineral) if result \
+                else self.consts.dependency_wrong + str(wrong_values_volume)+" "+str(wrong_values_mineral)
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(volume_porosity, test_name, text, wrong_values_volume, index)
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(mineral_porosity, test_name, text, wrong_values_mineral, index)
+
+            return self.__generate_returns_dict(check_result, result,
+                                                wrong_values_volume + wrong_values_mineral,
+                                                text, well_name, md,
+                                                test_name, [poro_mineral, poro_volume,
+                                                            self.consts.volume_density,
+                                                            self.consts.mineral_density],
+                                                r2=str(r2_volume) + " " + str(r2_mineral))
+        else:
+            if len(wrong_for_poro_mineral) != 0:
+                check_text = check_text_for_poro_mineral
+                param_name = mineral_porosity
+                wrong_values = wrong_for_poro_mineral
+            elif len(wrong_for_poro_volume) != 0:
+                check_text = check_text_for_poro_volume
+                param_name = volume_porosity
+                wrong_values = wrong_for_poro_mineral
+            elif len(wrong_for_volume_density) != 0:
+                check_text = check_text_for_volume_density
+                param_name = self.consts.volume_density
+                wrong_values = wrong_for_volume_density
+            else:
+                check_text = check_text_for_mineral_density
+                param_name = self.consts.mineral_density
+                wrong_values = wrong_for_mineral_density
+
+            self.data_kern.mark_errors(param_name, test_name, check_text,
+                                       wrong_values, index)
+            return self.__generate_returns_dict(check_result, False,
+                                                wrong_values,
+                                                check_text, well_name, md,
+                                                test_name, [poro_mineral, poro_volume,
+                                                            self.consts.volume_density,
+                                                            self.consts.mineral_density])
+
+    def test_poro_abs_vs_density(self, get_report=True, filters=None):
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость линейная по функции
+        y=a*x+b, при этом a<0
+
+        Required data:
+            Кп_абс; Плотность_максимально_увлажненного_образца
+
+        Args:
+            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
+            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными
+                                                                                плотность_максимально_увлажненного_образца для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_density(self.consts.kp_abs, self.consts.kp_abs, "test_poro_abs_open_vs_density",
+                                           get_report, filters)
+
+    def test_poro_open_vs_density(self, get_report=True, filters=None):
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость линейная по функции
+        y=a*x+b, при этом a<0
+
+        Required data:
+            Кп_абс; Плотность_максимально_увлажненного_образца
+
+        Args:
+            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
+            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными
+                                                                                плотность_максимально_увлажненного_образца для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_density(self.consts.kp_open, self.consts.kp_open, "test_poro_open_vs_density",
+                                           get_report, filters)
+
+    def test_poro_abs_mineral_vs_poro_open_volume(self, get_report=True, filters=None):
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость линейная по функции
+        y=a*x+b, при этом a<0
+
+        Required data:
+            Кп_абс; Плотность_максимально_увлажненного_образца
+
+        Args:
+            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
+            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными
+                                                                                плотность_максимально_увлажненного_образца для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_density(self.consts.kp_abs, self.consts.kp_open,
+                                           "test_poro_abs_mineral_vs_poro_open_volume", get_report, filters)
+
+    def test_poro_open_mineral_vs_poro_abs_volume(self, get_report=True, filters=None):
+        """
+        Тест предназначен для оценки соответствия типовой
+        для данного кроссплота и полученной аппроксимации.
+        В данном случае зависимость линейная по функции
+        y=a*x+b, при этом a<0
+
+        Required data:
+            Кп_абс; Плотность_максимально_увлажненного_образца
+
+        Args:
+            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
+            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными
+                                                                                плотность_максимально_увлажненного_образца для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_density(self.consts.kp_open, self.consts.kp_abs,
+                                           "test_poro_open_mineral_vs_poro_abs_volume", get_report, filters)
