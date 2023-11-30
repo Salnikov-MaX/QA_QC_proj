@@ -971,8 +971,28 @@ class QA_QC_kern(QA_QC_main):
         """
         return self.__main_poro_vs_param(self.consts.kp_abs, self.consts.mms_density, filters,
                                          "test_kp_abs_vs_density_wet", get_report)
-    def __generate_dependency_result(self, first_param, second_param, a, b, r2, get_report, first_name,
-                                     second_name, test_name, result):
+
+    def __generate_dependency_result(self, first_param: np.array, second_param: np.array, a: int, b: int, r2: int,
+                                     get_report: bool, first_name: str,
+                                     second_name: str, test_name: str, result: bool) -> np.array:
+        """
+
+        Args:
+            first_param(np.ndarray[int/float]): значения по оси X
+            second_param(np.ndarray[int/float]): значения по оси Y
+            a(int): коэффициент наклона
+            b(int): коэффициент сдвига
+            r2(int): коэффициент r2
+            get_report(bool): флаг для отображения отчета
+            first_name(string): название параметра по оси X
+            second_name(string): название параметра по оси Y
+            test_name(string): название теста
+            result(bool): результат теста
+
+        Returns:
+            wrong_values(np.ndarray[int/float]):маска с выпадающими значениями
+        """
+
         wrong_values = dropdown_search(first_param,
                                        second_param,
                                        a, b)
@@ -988,7 +1008,8 @@ class QA_QC_kern(QA_QC_main):
         wrong_values = np.where(wrong_values, 1, result)
         return wrong_values
 
-    def __main_poro_vs_density(self, mineral_porosity:str, volume_porosity:str, test_name:str, get_report=True, filters=None):
+    def __main_poro_vs_density(self, mineral_porosity: str, volume_porosity: str, test_name: str, get_report=True,
+                               filters=None):
         """
         Тест предназначен для проверки связи между двумя кросс плотами - Обплнас-Кп и Минпл-Кп.
         Данная взаимосвязь описывается линией тренда : y=a1*x+b1, при этом a1<a2,
@@ -997,7 +1018,7 @@ class QA_QC_kern(QA_QC_main):
         Args:
             mineral_porosity (string): название пористости для зависимости Минпл-Кп
             volume_porosity(string): название пористости для зависимости Обплнас-Кп
-            test_name (string):
+            test_name (string): название теста
 
         Returns:
             Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
@@ -1046,7 +1067,6 @@ class QA_QC_kern(QA_QC_main):
                                                                     test_name,
                                                                     result)
 
-
             wrong_values_mineral = self.__generate_dependency_result(mineral_density,
                                                                      poro_mineral,
                                                                      a_poro_vs_mineral,
@@ -1058,8 +1078,9 @@ class QA_QC_kern(QA_QC_main):
                                                                      test_name,
                                                                      result)
 
-            text = self.consts.dependency_accepted + str(wrong_values_volume)+" "+str(wrong_values_mineral) if result \
-                else self.consts.dependency_wrong + str(wrong_values_volume)+" "+str(wrong_values_mineral)
+            text = self.consts.dependency_accepted + str(wrong_values_volume) + " " + str(
+                wrong_values_mineral) if result \
+                else self.consts.dependency_wrong + str(wrong_values_volume) + " " + str(wrong_values_mineral)
             self.__generate_report(text, result, get_report)
             self.data_kern.mark_errors(volume_porosity, test_name, text, wrong_values_volume, index)
             self.__generate_report(text, result, get_report)
@@ -1101,18 +1122,19 @@ class QA_QC_kern(QA_QC_main):
 
     def test_poro_abs_vs_density(self, get_report=True, filters=None):
         """
-        Тест предназначен для оценки соответствия типовой
-        для данного кроссплота и полученной аппроксимации.
-        В данном случае зависимость линейная по функции
-        y=a*x+b, при этом a<0
+        Тест предназначен для проверки физичности взаимосвязи
+        двух кросс-плотов - Обплнас-Кп и Минпл-Кп.
+        Пусть первый аппроксимируется линией тренда y=a1*x+b1,
+        а второй - y=a2*x+b2, при этом a1<a2
 
         Required data:
-            Кп_абс; Плотность_максимально_увлажненного_образца
+            Кп_абс; Минералогическая плотность, г/см3; Объемная плотность, г/см3
 
         Args:
             Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
-            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными
-                                                                                плотность_максимально_увлажненного_образца для проверки
+            Минералогическая плотность, г/см3(np.ndarray[int/float]): массив с данными
+                                                                                миниралогической плотности для проверки
+            Объемная плотность, г/см3(np.ndarray[int/float]): массив с данными объемной плотности для проверки
 
         Returns:
             Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
@@ -1124,18 +1146,19 @@ class QA_QC_kern(QA_QC_main):
 
     def test_poro_open_vs_density(self, get_report=True, filters=None):
         """
-        Тест предназначен для оценки соответствия типовой
-        для данного кроссплота и полученной аппроксимации.
-        В данном случае зависимость линейная по функции
-        y=a*x+b, при этом a<0
+        Тест предназначен для проверки физичности взаимосвязи
+        двух кросс-плотов - Обплнас-Кп и Минпл-Кп.
+        Пусть первый аппроксимируется линией тренда y=a1*x+b1,
+        а второй - y=a2*x+b2, при этом a1<a2
 
         Required data:
-            Кп_абс; Плотность_максимально_увлажненного_образца
+            Кп_откр; Минералогическая плотность, г/см3; Объемная плотность, г/см3
 
         Args:
-            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
-            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными
-                                                                                плотность_максимально_увлажненного_образца для проверки
+            Кп_откр (np.ndarray[int/float]): массив с данными открытой пористости для проверки
+            Минералогическая плотность, г/см3(np.ndarray[int/float]): массив с данными
+                                                                                миниралогической плотности для проверки
+            Объемная плотность, г/см3(np.ndarray[int/float]): массив с данными объемной плотности для проверки
 
         Returns:
             Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
@@ -1147,18 +1170,20 @@ class QA_QC_kern(QA_QC_main):
 
     def test_poro_abs_mineral_vs_poro_open_volume(self, get_report=True, filters=None):
         """
-        Тест предназначен для оценки соответствия типовой
-        для данного кроссплота и полученной аппроксимации.
-        В данном случае зависимость линейная по функции
-        y=a*x+b, при этом a<0
+        Тест предназначен для проверки физичности взаимосвязи
+        двух кросс-плотов - Обплнас-Кп и Минпл-Кп.
+        Пусть первый аппроксимируется линией тренда y=a1*x+b1,
+        а второй - y=a2*x+b2, при этом a1<a2
 
         Required data:
-            Кп_абс; Плотность_максимально_увлажненного_образца
+            Кп_откр; Кп_абс; Минералогическая плотность, г/см3; Объемная плотность, г/см3
 
         Args:
-            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
-            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными
-                                                                                плотность_максимально_увлажненного_образца для проверки
+            Кп_откр (np.ndarray[int/float]): массив с данными открытой пористости для связи Минпл-Кп
+            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для связи Обплнас-Кп
+            Минералогическая плотность, г/см3(np.ndarray[int/float]): массив с данными
+                                                                                миниралогической плотности для проверки
+            Объемная плотность, г/см3(np.ndarray[int/float]): массив с данными объемной плотности для проверки
 
         Returns:
             Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
@@ -1170,18 +1195,20 @@ class QA_QC_kern(QA_QC_main):
 
     def test_poro_open_mineral_vs_poro_abs_volume(self, get_report=True, filters=None):
         """
-        Тест предназначен для оценки соответствия типовой
-        для данного кроссплота и полученной аппроксимации.
-        В данном случае зависимость линейная по функции
-        y=a*x+b, при этом a<0
+        Тест предназначен для проверки физичности взаимосвязи
+        двух кросс-плотов - Обплнас-Кп и Минпл-Кп.
+        Пусть первый аппроксимируется линией тренда y=a1*x+b1,
+        а второй - y=a2*x+b2, при этом a1<a2
 
         Required data:
-            Кп_абс; Плотность_максимально_увлажненного_образца
+            Кп_откр; Кп_абс; Минералогическая плотность, г/см3; Объемная плотность, г/см3
 
         Args:
-            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
-            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными
-                                                                                плотность_максимально_увлажненного_образца для проверки
+            Кп_откр (np.ndarray[int/float]): массив с данными открытой пористости для связи Обплнас-Кп
+            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для связи Минпл-Кп
+            Минералогическая плотность, г/см3(np.ndarray[int/float]): массив с данными
+                                                                                миниралогической плотности для проверки
+            Объемная плотность, г/см3(np.ndarray[int/float]): массив с данными объемной плотности для проверки
 
         Returns:
             Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
