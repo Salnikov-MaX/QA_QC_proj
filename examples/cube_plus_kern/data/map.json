@@ -2,74 +2,11 @@
   "settings": {
     "only_ready_for_launch_test": true
   },
-
-  "cube": {
-    "grid_dir": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data",
-    "grid_name": "GRID",
-    "property_files": [
-      {
-        "data_key": "Литотип|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/litho.GRDECL.grdecl"
-      },
-      {
-        "data_key": "PermX|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Perm.GRDECL.grdecl"
-      },
-      {
-        "data_key": "Porosity|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Poro.GRDECL.grdecl"
-      },
-      {
-        "data_key": "Sg|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Sg.GRDECL.grdecl"
-      },
-      {
-        "data_key": "SGCR|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Sgcr.GRDECL.grdecl"
-      },
-      {
-        "data_key": "SGL|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Sgl.GRDECL.grdecl"
-      },
-      {
-        "data_key": "SGU|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Sgu.GRDECL.grdecl"
-      },
-      {
-        "data_key": "So|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/So.GRDECL.grdecl"
-      },
-      {
-        "data_key": "SOWCR|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Sowcr.GRDECL.grdecl"
-      },
-      {
-        "data_key": "SWATINIT|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Sw.GRDECL.grdecl"
-      }, {
-        "data_key": "Sw|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Sw.GRDECL.grdecl"
-      },
-      {
-        "data_key": "SWCR|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Swcr.GRDECL.grdecl"
-      },
-      {
-        "data_key": "SWL|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Swl.GRDECL.grdecl"
-      },
-      {
-        "data_key": "SWU|GRDECL|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Swu.GRDECL.grdecl"
-      },
-      {
-        "data_key": "ВНК|ASCIIGRID|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/ВНК.GRDECL.grdecl"
-      },
-      {
-        "data_key": "ГНК|ASCIIGRID|ПЕТРОФИЗИКА|",
-        "data_path": "C:/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/ГНК.GRDECL.grdecl"
-      }
+  "well": {
+    "well_dir": "/mnt/c/Projects/QAQC/QA_QC_proj/data/wells_data",
+    "well_files": [
+      "FULL_TNAV__626.SMSPEC",
+      "FULL_TNAV__626.UNSMRY"
     ]
   }
 }

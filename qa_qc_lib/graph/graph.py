@@ -15,6 +15,7 @@ class EnumQAQCClass(str, Enum):
     Seismic = "Seismic"
     Gis = "Gis"
     Cubes = "Cubes"
+    Wells = "Wells"
 
 
 @dataclass
@@ -74,9 +75,10 @@ class Graph:
 
         test_groups_map = {
             "керн/": EnumQAQCClass.Kern,
-            "cейсморазведка/": EnumQAQCClass.Seismic,
+            "сейсморазведка/": EnumQAQCClass.Seismic,
             "гис/": EnumQAQCClass.Gis,
             "геология/": EnumQAQCClass.Cubes,
+            "разработка/": EnumQAQCClass.Wells
         }
 
         dfs = [pd.read_csv(csv_path, delimiter=',') for csv_path in csv_paths]

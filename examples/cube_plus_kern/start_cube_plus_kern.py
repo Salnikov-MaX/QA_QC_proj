@@ -8,11 +8,11 @@ if __name__ == '__main__':
     main_test_config = MainTestConfig.create_main_test_config(data_map)
 
     # main_test_config.kern_config.tests.pop(0)
-    for g in main_test_config.cubes_config.group_test:
+    # for g in main_test_config.cubes_config.group_test:
         # g.tests = [t for t in g.tests if t.test_name_code.__contains__('test_swl_sw')]
-        g.tests = [t for t in g.tests if t.test_name_code.__contains__('test_sum')]
+        # g.tests = [t for t in g.tests if t.test_name_code.__contains__('test_sum')]
 
-    main_test_config.cubes_config.group_test.pop(0)
+    main_test_config.well_config.wells = main_test_config.well_config.wells[:2]
 
     launch_test = LaunchTest(main_test_config)
     launch_test.start_tests('reports')

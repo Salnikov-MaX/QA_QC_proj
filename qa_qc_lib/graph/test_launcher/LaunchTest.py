@@ -10,23 +10,25 @@ from qa_qc_lib.graph.test_launcher.BaseLauncher import BaseLauncher
 from qa_qc_lib.graph.test_launcher.CubesLauncher import CubeLauncher
 from qa_qc_lib.graph.test_launcher.KernLauncher import KernLauncher
 from qa_qc_lib.graph.graph import Graph
+from qa_qc_lib.graph.test_launcher.WellLauncher import WellLauncher
 
 
 class LaunchTest:
     def __init__(self, main_test_config: MainTestConfig, graph: Optional[Graph] = None):
         self.graph = graph or Graph()
-
         self.main_test_config = main_test_config
-        self.launchers: List[BaseLauncher] = self.get_launchers(graph, main_test_config)
 
     @staticmethod
-    def get_launchers(graph: Graph, main_test_config: MainTestConfig) -> List[BaseLauncher]:
+    def get_launchers(graph: Graph, main_test_config: MainTestConfig, report_dir:str) -> List[BaseLauncher]:
         launchers: List[BaseLauncher] = []
         if main_test_config.data.kern is not None:
             launchers.append(KernLauncher(graph, main_test_config.kern_config, main_test_config.data.kern))
 
         if main_test_config.data.cube is not None:
             launchers.append(CubeLauncher(graph, main_test_config.cubes_config, main_test_config.data.cube))
+
+        if main_test_config.data.well is not None:
+            launchers.append(WellLauncher(main_test_config.well_config, main_test_config.data.well, report_dir))
 
         return launchers
 
@@ -65,7 +67,9 @@ class LaunchTest:
         if not os.path.isdir(result_dir):
             os.mkdir(result_dir)
 
-        for launcher in self.launchers:
+        launchers: List[BaseLauncher] = self.get_launchers(self.graph, self.main_test_config, result_dir)
+
+        for launcher in launchers:
             launcher_report = launcher.start_qa_qc()
             report_name = f'report_{launcher.__class__.__name__.replace("Launcher", "")}'
             self.make_report(result_dir, launcher_report, report_name=report_name)
