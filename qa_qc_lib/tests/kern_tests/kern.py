@@ -20,7 +20,13 @@ class QA_QC_kern(QA_QC_main):
         self.file_name = file_path.split('/')[-1]
         self.data_kern = DataKern(data_file_path)
         self.consts = KernConsts()
-        # self.porosity_abs = porosity_abs
+        self.parameters_to_compare = {
+            self.consts.kpr_abs: self.consts.kp_open,
+            self.consts.poro_param: self.consts.kp_open,
+            self.consts.kvo: self.consts.kp_open,
+            self.consts.ads_density: self.consts.kp_open,
+            self.consts.mms_density: self.consts.kp_open
+        }
 
     def __generate_report(self, text, status, get_report):
         """
@@ -54,7 +60,7 @@ class QA_QC_kern(QA_QC_main):
         result = np.sum(result_mask) == 0
         return result_mask, result
 
-    def __generate_returns_dict(self, data_availability, result, result_mask, error_decr, well_name,
+    def __generate_returns_dict(self, data_availability, result, result_masks, error_decr, well_name,
                                 md, test_name, param_name, r2=None) -> dict:
         """
         Args:
@@ -73,7 +79,6 @@ class QA_QC_kern(QA_QC_main):
 
         """
         specification = {
-            "result_mask": result_mask.tolist(),
             "test_name": test_name,
             "error_decr": error_decr,
             "well_name": str(well_name),
@@ -82,6 +87,8 @@ class QA_QC_kern(QA_QC_main):
         for index, param in enumerate(param_name):
             key_name = f"param_name_{index + 1}"
             specification[key_name] = param
+
+        specification["result_masks"] = result_masks
         if r2 is not None:
             specification["r2"] = r2
         return {
@@ -972,6 +979,252 @@ class QA_QC_kern(QA_QC_main):
         return self.__main_poro_vs_param(self.consts.kp_abs, self.consts.mms_density, filters,
                                          "test_kp_abs_vs_density_wet", get_report)
 
+    def __generate_dependency_result(self, first_param: np.array, second_param: np.array, a: int, b: int, r2: int,
+                                     get_report: bool, first_name: str,
+                                     second_name: str, test_name: str, result: bool) -> np.array:
+        """
+
+        Args:
+            first_param(np.ndarray[int/float]): значения по оси X
+            second_param(np.ndarray[int/float]): значения по оси Y
+            a(int): коэффициент наклона
+            b(int): коэффициент сдвига
+            r2(int): коэффициент r2
+            get_report(bool): флаг для отображения отчета
+            first_name(string): название параметра по оси X
+            second_name(string): название параметра по оси Y
+            test_name(string): название теста
+            result(bool): результат теста
+
+        Returns:
+            wrong_values(np.ndarray[int/float]):маска с выпадающими значениями
+        """
+
+        wrong_values = dropdown_search(first_param,
+                                       second_param,
+                                       a, b)
+        linear_function_visualization(first_param,
+                                      second_param,
+                                      a, b,
+                                      r2,
+                                      get_report,
+                                      first_name,
+                                      second_name,
+                                      test_name,
+                                      wrong_values)
+        wrong_values = np.where(wrong_values, 1, result)
+        return wrong_values
+
+    def __main_poro_vs_density(self, mineral_porosity: str, volume_porosity: str, test_name: str, get_report=True,
+                               filters=None):
+        """
+        Тест предназначен для проверки связи между двумя кросс плотами - Обплнас-Кп и Минпл-Кп.
+        Данная взаимосвязь описывается линией тренда : y=a1*x+b1, при этом a1<a2,
+        где а2 - коэффициент из зависимости Минпл-Кп
+
+        Args:
+            mineral_porosity (string): название пористости для зависимости Минпл-Кп
+            volume_porosity(string): название пористости для зависимости Обплнас-Кп
+            test_name (string): название теста
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        clear_df_kp_mineral, index, well_name, md = self.__get_data_from_data_kern(param=[mineral_porosity,
+                                                                                          self.consts.mineral_density],
+                                                                                   filters=filters)
+        clear_df_kp_volume, index, well_name, md = self.__get_data_from_data_kern(param=[volume_porosity,
+                                                                                         self.consts.volume_density],
+                                                                                  filters=filters)
+
+        poro_mineral = np.array(clear_df_kp_mineral[mineral_porosity])
+        poro_volume = np.array(clear_df_kp_volume[volume_porosity])
+        volume_density = np.array(clear_df_kp_volume[self.consts.volume_density])
+        mineral_density = np.array(clear_df_kp_mineral[self.consts.mineral_density])
+        check_result_for_poro_mineral, wrong_for_poro_mineral, check_text_for_poro_mineral = self.__check_data(
+            poro_mineral, get_report)
+        check_result_for_poro_volume, wrong_for_poro_volume, check_text_for_poro_volume = self.__check_data(
+            poro_volume, get_report)
+        check_result_for_volume_density, wrong_for_volume_density, check_text_for_volume_density = self.__check_data(
+            volume_density, get_report)
+        check_result_for_mineral_density, wrong_for_mineral_density, check_text_for_mineral_density = self.__check_data(
+            mineral_density, get_report)
+        check_result = check_result_for_poro_mineral and check_result_for_poro_volume and check_result_for_volume_density and check_result_for_mineral_density
+        if check_result:
+            a_poro_vs_volume, b_poro_vs_volume = linear_dependence_function(volume_density, poro_volume)
+            a_poro_vs_mineral, b_poro_vs_mineral = linear_dependence_function(mineral_density, poro_mineral)
+            r2_volume = self.test_general_dependency_checking(poro_volume, volume_density)["specification"]["r2"]
+            r2_mineral = self.test_general_dependency_checking(poro_mineral, mineral_density)["specification"]["r2"]
+
+            result = True
+
+            if a_poro_vs_mineral >= a_poro_vs_volume or r2_volume < 0.7 or r2_mineral < 0.7:
+                result = False
+
+            wrong_values_volume = self.__generate_dependency_result(volume_density,
+                                                                    poro_volume,
+                                                                    a_poro_vs_volume,
+                                                                    b_poro_vs_volume,
+                                                                    r2_volume,
+                                                                    get_report,
+                                                                    self.consts.volume_density,
+                                                                    volume_porosity,
+                                                                    test_name,
+                                                                    result)
+
+            wrong_values_mineral = self.__generate_dependency_result(mineral_density,
+                                                                     poro_mineral,
+                                                                     a_poro_vs_mineral,
+                                                                     b_poro_vs_mineral,
+                                                                     r2_mineral,
+                                                                     get_report,
+                                                                     self.consts.mineral_density,
+                                                                     mineral_porosity,
+                                                                     test_name,
+                                                                     result)
+
+            text = self.consts.dependency_accepted + str(wrong_values_volume) + " " + str(
+                wrong_values_mineral) if result \
+                else self.consts.dependency_wrong + str(wrong_values_volume) + " " + str(wrong_values_mineral)
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(volume_porosity, test_name, text, wrong_values_volume, index)
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(mineral_porosity, test_name, text, wrong_values_mineral, index)
+
+            return self.__generate_returns_dict(check_result, result,
+                                                wrong_values_volume + wrong_values_mineral,
+                                                text, well_name, md,
+                                                test_name, [poro_mineral, poro_volume,
+                                                            self.consts.volume_density,
+                                                            self.consts.mineral_density],
+                                                r2=str(r2_volume) + " " + str(r2_mineral))
+        else:
+            if len(wrong_for_poro_mineral) != 0:
+                check_text = check_text_for_poro_mineral
+                param_name = mineral_porosity
+                wrong_values = wrong_for_poro_mineral
+            elif len(wrong_for_poro_volume) != 0:
+                check_text = check_text_for_poro_volume
+                param_name = volume_porosity
+                wrong_values = wrong_for_poro_mineral
+            elif len(wrong_for_volume_density) != 0:
+                check_text = check_text_for_volume_density
+                param_name = self.consts.volume_density
+                wrong_values = wrong_for_volume_density
+            else:
+                check_text = check_text_for_mineral_density
+                param_name = self.consts.mineral_density
+                wrong_values = wrong_for_mineral_density
+
+            self.data_kern.mark_errors(param_name, test_name, check_text,
+                                       wrong_values, index)
+            return self.__generate_returns_dict(check_result, False,
+                                                wrong_values,
+                                                check_text, well_name, md,
+                                                test_name, [poro_mineral, poro_volume,
+                                                            self.consts.volume_density,
+                                                            self.consts.mineral_density])
+
+    def test_poro_abs_vs_density(self, get_report=True, filters=None):
+        """
+        Тест предназначен для проверки физичности взаимосвязи
+        двух кросс-плотов - Обплнас-Кп и Минпл-Кп.
+        Пусть первый аппроксимируется линией тренда y=a1*x+b1,
+        а второй - y=a2*x+b2, при этом a1<a2
+
+        Required data:
+            Кп_абс; Минералогическая плотность, г/см3; Объемная плотность, г/см3
+
+        Args:
+            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для проверки
+            Минералогическая плотность, г/см3(np.ndarray[int/float]): массив с данными
+                                                                                миниралогической плотности для проверки
+            Объемная плотность, г/см3(np.ndarray[int/float]): массив с данными объемной плотности для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_density(self.consts.kp_abs, self.consts.kp_abs, "test_poro_abs_open_vs_density",
+                                           get_report, filters)
+
+    def test_poro_open_vs_density(self, get_report=True, filters=None):
+        """
+        Тест предназначен для проверки физичности взаимосвязи
+        двух кросс-плотов - Обплнас-Кп и Минпл-Кп.
+        Пусть первый аппроксимируется линией тренда y=a1*x+b1,
+        а второй - y=a2*x+b2, при этом a1<a2
+
+        Required data:
+            Кп_откр; Минералогическая плотность, г/см3; Объемная плотность, г/см3
+
+        Args:
+            Кп_откр (np.ndarray[int/float]): массив с данными открытой пористости для проверки
+            Минералогическая плотность, г/см3(np.ndarray[int/float]): массив с данными
+                                                                                миниралогической плотности для проверки
+            Объемная плотность, г/см3(np.ndarray[int/float]): массив с данными объемной плотности для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_density(self.consts.kp_open, self.consts.kp_open, "test_poro_open_vs_density",
+                                           get_report, filters)
+
+    def test_poro_abs_mineral_vs_poro_open_volume(self, get_report=True, filters=None):
+        """
+        Тест предназначен для проверки физичности взаимосвязи
+        двух кросс-плотов - Обплнас-Кп и Минпл-Кп.
+        Пусть первый аппроксимируется линией тренда y=a1*x+b1,
+        а второй - y=a2*x+b2, при этом a1<a2
+
+        Required data:
+            Кп_откр; Кп_абс; Минералогическая плотность, г/см3; Объемная плотность, г/см3
+
+        Args:
+            Кп_откр (np.ndarray[int/float]): массив с данными открытой пористости для связи Минпл-Кп
+            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для связи Обплнас-Кп
+            Минералогическая плотность, г/см3(np.ndarray[int/float]): массив с данными
+                                                                                миниралогической плотности для проверки
+            Объемная плотность, г/см3(np.ndarray[int/float]): массив с данными объемной плотности для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_density(self.consts.kp_abs, self.consts.kp_open,
+                                           "test_poro_abs_mineral_vs_poro_open_volume", get_report, filters)
+
+    def test_poro_open_mineral_vs_poro_abs_volume(self, get_report=True, filters=None):
+        """
+        Тест предназначен для проверки физичности взаимосвязи
+        двух кросс-плотов - Обплнас-Кп и Минпл-Кп.
+        Пусть первый аппроксимируется линией тренда y=a1*x+b1,
+        а второй - y=a2*x+b2, при этом a1<a2
+
+        Required data:
+            Кп_откр; Кп_абс; Минералогическая плотность, г/см3; Объемная плотность, г/см3
+
+        Args:
+            Кп_откр (np.ndarray[int/float]): массив с данными открытой пористости для связи Обплнас-Кп
+            Кп_абс (np.ndarray[int/float]): массив с данными абсолютной пористости для связи Минпл-Кп
+            Минералогическая плотность, г/см3(np.ndarray[int/float]): массив с данными
+                                                                                миниралогической плотности для проверки
+            Объемная плотность, г/см3(np.ndarray[int/float]): массив с данными объемной плотности для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - маска с результатом, test_name - название теста,
+                      param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+                      MD - массив с глубинами
+        """
+        return self.__main_poro_vs_density(self.consts.kp_open, self.consts.kp_abs,
+                                           "test_poro_open_mineral_vs_poro_abs_volume", get_report, filters)
+      
     def __main_poro_vs_perm_abs(self, poro_name, filters, test_name, get_report):
         """
         Тест применяется для сравнения двух аппроксимаций:
@@ -1083,3 +1336,136 @@ class QA_QC_kern(QA_QC_main):
             MD - массив с глубинами
         """
         return self.__main_poro_vs_perm_abs(self.consts.kp_abs, filters, "test_kpr_abs_vs_kp_abs", get_report)
+
+    def __find_duplicate_indices(self, arr) -> list[tuple]:
+        """
+        Находит индексы попарно одинаковых значений в массиве
+
+        Args:
+            arr (np.ndarray[int/float]): входной массив
+
+        Returns:
+            array[tuple]: список кортежей с индексами попарно одинаковых значений
+        """
+        # Создаем словарь для хранения индексов
+        index_dict = {value: [] for value in arr}
+
+        # Заполняем словарь индексами
+        for i, value in enumerate(arr):
+            index_dict[value].append(i)
+
+        # Формируем список кортежей с индексами попарно одинаковых значений
+        duplicate_indices = [(idx1, idx2) for indices in index_dict.values() for idx1, idx2 in
+                             zip(indices, indices[1:])]
+
+        return duplicate_indices
+
+    def __find_difference_in_duplicate_indices(self, duplicate_indices1, duplicate_indices2) -> list[tuple]:
+
+        """
+        Находит различия между двумя списками duplicate_indices и возвращает отличающиеся пары
+
+        Args:
+            duplicate_indices1 (array[tuple]): первый список кортежей с индексами
+            duplicate_indices2 (array[tuple]): второй список кортежей с индексами
+
+        Returns:
+             array[tuple]: отличающиеся пары индексов
+        """
+        set1 = set(duplicate_indices1)
+        set2 = set(duplicate_indices2)
+
+        difference = (set1 | set2) - (set1 & set2)
+        return list(difference)
+
+    def __create_mask(self, array, diff) -> np.ndarray:
+
+        """
+        Создает маску, где 1 помечены пары значений, которые не совпадают
+
+        Args:
+            array (np.ndarray[int/float]): массив для пометки совпадений
+            diff (array[tuple]): список кортежей с индексами повторяющихся значений
+
+        Returns:
+            mask(np.ndarray[int]): маска для array
+
+        """
+
+        mask = np.zeros_like(array)
+
+        for indices in diff:
+            mask[indices[0]] = 1
+            mask[indices[1]] = 1
+        return mask
+
+    def __main_data_tampering(self, first_param_name: str, second_param_name: str,
+                              filters) -> tuple[bool, np.ndarray, np.ndarray, str, np.ndarray]:
+
+        """
+        Основной тест для проверки подлога данных
+
+        Args:
+            first_param_name(string): название первого параметра
+            second_param_name(string): название второго параметра
+
+        Returns:
+            result(bool): результат проверки
+            mask(np.ndarray(int): маска с результатом
+            index(np.ndarray(int): индексы данных по глубине после удаления nan
+            well_name(string): название скважины
+            md(np.ndarray(int): массив с глубинами для которых взяты данные
+        """
+
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(
+            param=[first_param_name, second_param_name],
+            filters=filters)
+        first_param = np.array(clear_df[first_param_name])
+        second_param = np.array(clear_df[second_param_name])
+        duplicate_indices_first_param = self.__find_duplicate_indices(first_param)
+        duplicate_indices_second_param = self.__find_duplicate_indices(second_param)
+        diff = self.__find_difference_in_duplicate_indices(duplicate_indices_first_param,
+                                                           duplicate_indices_second_param)
+        mask = self.__create_mask(first_param, diff)
+        result = np.sum(mask) == 0
+        return result, mask, index, well_name, md
+
+    def test_data_tampering(self, get_report=True, filters=None):
+        """
+        Required data:
+            Кпр_абс; Кп_откр; Кво; Параметр_пористости(F); Параметр_насыщенности(RI); Плотность_абсолютно_сухого_образца;
+            Плотность_максимально_увлажненного_образца
+
+        Args:
+            Кпр_абс(np.ndarray[int/float]): массив с данными абсолютной проницаемости для проверки
+            Кп_откр(np.ndarray[int/float]): массив с данными открытой пористости для проверки
+            Кво(np.ndarray[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
+            Параметр_пористости(F)(np.ndarray[int/float]): массив с данными параметра пористости для проверки
+            Параметр_насыщенности(RI)(np.ndarray[int/float]): массив с данными параметра насыщенности для проверки
+            Плотность_абсолютно_сухого_образца(np.ndarray[int/float]): массив с данными плотности абсолютно сухого образца
+            Плотность_максимально_увлажненного_образца(np.ndarray[int/float]): массив с данными максимально увлажненного образца
+
+        Returns:
+            Словарь, specification словарь где, result_mask - словарь с результатом
+            {"название параметра/пары параметров":маска с результатом}, test_name - название теста,
+            param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+            MD - массив с глубинами
+        """
+        result_masks = {}
+        final_result = True
+        well_name, md = "", []
+
+        for key, value in self.parameters_to_compare.items():
+            result, mask, index, well_name, md = self.__main_data_tampering(key, value, filters)
+            result_masks[key + " and " + value] = mask.tolist()
+            final_result *= result
+            text = self.consts.data_tampering_accepted if result else self.consts.data_tampering_wrong
+            self.data_kern.mark_errors(key, "test_data_tampering", text, mask, index)
+            self.data_kern.mark_errors(value, "test_data_tampering", text, mask, index)
+
+        final_text = self.consts.data_tampering_accepted if final_result else self.consts.data_tampering_wrong
+
+        self.__generate_report(final_text, final_result, get_report)
+        return self.__generate_returns_dict(True, final_result,
+                                            result_masks, final_text, well_name, md,
+                                            "test_data_tampering", [list(self.parameters_to_compare.keys())])
