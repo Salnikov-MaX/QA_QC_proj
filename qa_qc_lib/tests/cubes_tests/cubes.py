@@ -2,7 +2,7 @@ import copy
 import inspect
 import sys
 
-from qa_qc_lib.readers.data_reader import QA_QC_grdecl_parser, QA_QC_asciigrid_parser
+from qa_qc_lib.readers.cube_reader import QA_QC_grdecl_parser, QA_QC_asciigrid_parser
 from qa_qc_lib.tests.base_test import QA_QC_main
 from qa_qc_lib.tools.cubes_tools import CubesTools
 import numpy as np
