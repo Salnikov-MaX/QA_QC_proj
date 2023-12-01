@@ -2,6 +2,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import xtgeo
 from qa_qc_lib.tools.cubes_tools import CubesTools
 
@@ -40,9 +41,11 @@ class QA_QC_asciigrid_parser(object):
     def __init__(self):
         pass
 
-    def parse_to_nparray(self, filepath: str):
+    def parse_to_dataframe(self, filepath: str):
         head = ""
-        array = []
+        xarray = []
+        yarray = []
+        zarray = []
         with open(filepath, 'r') as f:
             content = f.readlines()
             for line in content:
@@ -50,11 +53,15 @@ class QA_QC_asciigrid_parser(object):
                     head += line
                     continue
                 l = line.split(' ')
-                array.append(float(l[2]))
+                xarray.append(float(l[0]))
+                yarray.append(float(l[1]))
+                zarray.append(float(l[2]))
 
-        return np.array(array), head
+        df = pd.DataFrame({'x': xarray, 'y': yarray, 'z': zarray})
+        return df, head
 
-
+    def get_pologin(self, df: pd.DataFrame):
+        return xtgeo.Polygons(values=np.array(df))
 
 def test():
     test = QA_QC_grdecl_parser("../data/grdecl_data","GRID")
@@ -65,6 +72,6 @@ def test():
     print(prop_value)
 
 def ascii_test():
-    a,head = QA_QC_asciigrid_parser().parse_to_nparray("../../data/grdecl_data/asciigrid/GOC_NP4.txt")
-    print(len(a))
-    print(head)
+    df, head = QA_QC_asciigrid_parser().parse_to_dataframe("../../data/grdecl_data/asciigrid/ГНК_ASCIIGRID_ПЕТРОФИЗИКА_.txt")
+    pol = QA_QC_asciigrid_parser().get_pologin(df)
+    print(pol.dataframe)

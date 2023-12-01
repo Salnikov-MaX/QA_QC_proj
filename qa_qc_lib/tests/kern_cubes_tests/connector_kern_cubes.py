@@ -199,6 +199,30 @@ class Connector_kern_cubes(QA_QC_main):
             "Проницаемость, мД")
 
     def test_kern_data_dependence_quo_kp(self):
+        """
+        Проверка соответствия модельных данных (в кубах) данным, определенным по керну.
+        Базовые петрофизические зависимости задают диапазон неопределенности. Все модельные данные должны быть получены в измеренных диапазонах.
+
+
+            Required data:
+                SWL|GRDECL|ПЕТРОФИЗИКА|
+                Кво|txt(xlsx)|Керн|,Кп_абс|txt(xlsx)|
+                Керн|/Кп_откр|txt(xlsx)|
+                Керн|,Литотип|txt(xlsx)|
+                Керн|,Фации|txt(xlsx)|
+                Керн|,Porosity|GRDECL|
+                ПЕТРОФИЗИКА|,Литотип|GRDECL|
+                ПЕТРОФИЗИКА|,Фации|GRDECL|
+                ПЕТРОФИЗИКА|,Кп_абс|las|
+                ПЕТРОФИЗИКА|,Кп_октр|las|
+                ПЕТРОФИЗИКА|,Кво(SWL)|las|
+                ПЕТРОФИЗИКА|,Литотип|las|
+                ПЕТРОФИЗИКА|,Фации|las|
+                ПЕТРОФИЗИКА|,GRID_модели|GRDECL|Сейсмика|
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
         self.__abstract_kern_data_dependence(
             data1=self.QA_QC_cubes.__get_value_grid_prop(
                 self.QA_QC_cubes.open_porosity_file_path,
@@ -226,6 +250,31 @@ class Connector_kern_cubes(QA_QC_main):
             "Проницаемость, мД")
 
     def test_kern_data_dependence_kpr_kp(self):
+        """
+        Проверка соответствия модельных данных (в кубах) данным, определенным по керну.
+        Базовые петрофизические зависимости задают диапазон неопределенности. Все модельные данные должны быть получены в измеренных диапазонах.
+        Кубы должы соответствовать изначальной петрофизической зависимости.
+
+
+            Required data:
+                PermX|GRDECL|ПЕТРОФИЗИКА|
+                Кп_откр|txt(xlsx)|Керн|
+                Кп_абс|txt(xlsx)|Керн|
+                Кпр_абс|txt(xlsx)|Керн|
+                Литотип|txt(xlsx)|Керн|
+                Фации|txt(xlsx)|Керн|
+                Porosity|GRDECL|ПЕТРОФИЗИКА|
+                Литотип|GRDECL|ПЕТРОФИЗИКА|
+                Фации|GRDECL|ПЕТРОФИЗИКА|
+                Кпр_абс|las|ПЕТРОФИЗИКА|
+                Кп_октр|las|ПЕТРОФИЗИКА|
+                Кп_абс|las|ПЕТРОФИЗИКА|
+                Литотип|las|ПЕТРОФИЗИКА|
+                Фации|las|ПЕТРОФИЗИКА|
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
         self.__abstract_kern_data_dependence(
             data1=self.QA_QC_cubes.__get_value_grid_prop(
                 self.QA_QC_cubes.open_porosity_file_path,

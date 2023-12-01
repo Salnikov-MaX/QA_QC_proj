@@ -2,7 +2,7 @@ import copy
 import inspect
 import sys
 
-from qa_qc_lib.readers.data_reader import QA_QC_grdecl_parser, QA_QC_asciigrid_parser
+from qa_qc_lib.readers.cube_reader import QA_QC_grdecl_parser, QA_QC_asciigrid_parser
 from qa_qc_lib.tests.base_test import QA_QC_main
 from qa_qc_lib.tools.cubes_tools import CubesTools
 import numpy as np
@@ -744,8 +744,8 @@ class QA_QC_cubes(QA_QC_main):
 
         flag, wrong_data = self.__test_range_data(
             sum(data_mas),
-            [lambda x: x == 1],
-            sum
+            [lambda x: x >= 1-0.02, lambda x: x <= 1],
+            self.__muc_np_arrays
         )
 
         if flag:
@@ -899,12 +899,12 @@ class QA_QC_cubes(QA_QC_main):
             self.update_report(self.generate_report_text("Данные H_EFF отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
 
-        h_abs_data, head = QA_QC_asciigrid_parser().parse_to_nparray(self.h_abs_ascii_path)
-        h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_nparray(self.h_eff_ascii_path)
+        h_abs_data, head = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_abs_ascii_path)
+        h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_eff_ascii_path)
 
         flag, wrong_data = self.__test_range_data(
-            h_abs_data,
-            [lambda  x: x >= h_eff_data],
+            h_abs_data['z'],
+            [lambda  x: x >= h_eff_data['z']],
             sum
         )
 
@@ -943,13 +943,13 @@ class QA_QC_cubes(QA_QC_main):
             self.update_report(self.generate_report_text("Данные H_EFF отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
 
-        if self.heffo_ascii_path in None:
+        if self.heffo_ascii_path is None:
             self.update_report(self.generate_report_text("Данные HEFFO отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
 
-        h_abs_data, head = QA_QC_asciigrid_parser().parse_to_nparray(self.h_abs_ascii_path)
-        h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_nparray(self.h_eff_ascii_path)
-        heffo_data, _ = QA_QC_asciigrid_parser().parse_to_nparray(self.heffo_ascii_path)
+        h_abs_data, head = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_abs_ascii_path)
+        h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_eff_ascii_path)
+        heffo_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.heffo_ascii_path)
 
         flag, wrong_data = self.__test_range_data(
             h_abs_data,
@@ -959,8 +959,8 @@ class QA_QC_cubes(QA_QC_main):
 
         if flag:
             flag, wrong_data = self.__test_range_data(
-                h_eff_data,
-                [lambda x: x >= heffo_data],
+                h_eff_data['z'],
+                [lambda x: x >= heffo_data['z']],
                 sum
             )
 
@@ -1007,24 +1007,24 @@ class QA_QC_cubes(QA_QC_main):
             self.update_report(self.generate_report_text("Данные H_EFF отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
 
-        if self.heffg_ascii_path in None:
+        if self.heffg_ascii_path is None:
             self.update_report(self.generate_report_text("Данные HEFFG отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
 
-        h_abs_data, head = QA_QC_asciigrid_parser().parse_to_nparray(self.h_abs_ascii_path)
-        h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_nparray(self.h_eff_ascii_path)
-        heffg_data, _ = QA_QC_asciigrid_parser().parse_to_nparray(self.heffg_ascii_path)
+        h_abs_data, head = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_abs_ascii_path)
+        h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_eff_ascii_path)
+        heffg_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.heffg_ascii_path)
 
         flag, wrong_data = self.__test_range_data(
-            h_abs_data,
-            [lambda x: x >= h_eff_data],
+            h_abs_data['z'],
+            [lambda x: x >= h_eff_data['z']],
             sum
         )
 
         if flag:
             flag, wrong_data = self.__test_range_data(
-                h_eff_data,
-                [lambda x: x >= heffg_data],
+                h_eff_data['z'],
+                [lambda x: x >= heffg_data['z']],
                 sum
             )
 
@@ -1048,3 +1048,17 @@ class QA_QC_cubes(QA_QC_main):
                     0))
 
             return self.__generate_returns_dict(True, False, wrong_data)
+
+    def test_incorrect_values_sgu(self):
+
+
+        if self.gnk_ascii_path is None:
+            self.update_report(self.generate_report_text("Данные ГНК отсутствуют", 2))
+            return self.__generate_returns_dict(False, None, None)
+
+        #df,head = QA_QC_asciigrid_parser().parse_to_dataframe(self.gnk_ascii_path)
+        #pol = QA_QC_asciigrid_parser().get_pologin(df)
+        #self.grid_model.get_grid().activate_all()
+        #self.grid_model.get_grid().inactivate_outside(pol)
+        act = self.grid_model.get_grid().get_actnum().get_npvalues3d()
+        print(len(act[0]))
