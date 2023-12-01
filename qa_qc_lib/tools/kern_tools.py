@@ -117,13 +117,14 @@ def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, te
                                   wrong_values_indices):
     """
     Функция для визуализации линии тренда, отображения выпадающих точек и доверительного коридора
+    для линейной функции
 
     Args:
         x(np.array(int)): массив с X значениями
         y(np.array(int)): массив с Y значениями
-        a(int): коэффицент наклона
-        b(int): коэффицент сдвига от начала координат
-        r2(int): коэффицент детерминации r2
+        a(int): коэффициент наклона
+        b(int): коэффициент сдвига от начала координат
+        r2(int): коэффициент детерминации r2
         get_report(bool): флаг для отображения графика
         x_name(string): название оси X
         y_name(string): название оси Y
@@ -138,6 +139,55 @@ def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, te
 
     x_trend = np.linspace(np.min(x), np.max(x), 100)
     y_trend = a * x_trend + b
+
+    # Построение кроссплота
+    plt.title(test_name)
+    plt.scatter(x, y, color='b', label='Данные')
+    plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
+    plt.xlabel(x_name)
+    plt.ylabel(y_name)
+    plt.legend()
+
+    # Визуализация неправильных значений
+    plt.scatter(x[wrong_values_indices], y[wrong_values_indices], color='r')
+
+    line1, = plt.plot(x_in_down, y_in_down, marker='o', label='inner_down', color='C2')
+    line2, = plt.plot(x_in_up, y_in_up, marker='o', label='inner_up', color='C2')
+    plt.legend(handler_map={line1: HandlerLine2D(numpoints=2), line2: HandlerLine2D(numpoints=2)})
+    equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
+    plt.text(np.min(x), np.max(y), equation)
+    plt.savefig(f"..\\..\\data\\{test_name}")
+    if get_report:
+        plt.show()
+    plt.close()
+
+
+def logarithm_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, test_name,
+                                     wrong_values_indices):
+    """
+    Функция для визуализации линии тренда, отображения выпадающих точек и доверительного коридора
+    для логарифмической зависимости
+
+    Args:
+        x(np.array(int)): массив с X значениями
+        y(np.array(int)): массив с Y значениями
+        a(int): коэффициент наклона
+        b(int): коэффициент сдвига от начала координат
+        r2(int): коэффициент детерминации r2
+        get_report(bool): флаг для отображения графика
+        x_name(string): название оси X
+        y_name(string): название оси Y
+        test_name(string): название теста
+        wrong_values_indices(np.ndarray):индексы выпадающих точек
+
+    Returns:
+        plt(file) - график зависимости
+    """
+
+    _, _, x_in_down, y_in_down, x_in_up, y_in_up = bourders_initializer(x, y)
+
+    x_trend = np.linspace(np.min(x), np.max(x), 100)
+    y_trend = np.exp(a * np.log(x_trend) + b)
 
     # Построение кроссплота
     plt.title(test_name)
