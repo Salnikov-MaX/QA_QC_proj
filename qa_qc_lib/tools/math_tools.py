@@ -3,6 +3,7 @@
 #########################################################################################################
 
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 
 def compute_variance(arr) -> float:
@@ -18,6 +19,7 @@ def compute_variance(arr) -> float:
     mean_val = np.mean(arr)
     variance = np.mean((arr - mean_val) ** 2)
     return variance
+
 
 def sameSign(x: float, y: float):
     """ Функция сравнивает знаки двух чисел
@@ -38,15 +40,15 @@ def sameSign(x: float, y: float):
 
 def linear_dependence_function(x, y):
     """
-    Строит линию тренда по линейной зависимсоти
+    Строит линию тренда по линейной зависимости
 
     Args:
         x (np.ndarray): Массив чисел.
         y( np.ndarray): Массив чисел.
 
     Returns:
-        a(int): коэффицент наклона
-        b(int): коэффицент сдвига от начала координат
+        a(int): коэффициент наклона
+        b(int): коэффициент сдвига от начала координат
     """
     x = list(x)
     y = list(y)
@@ -58,7 +60,27 @@ def linear_dependence_function(x, y):
 
 def exponential_function(x, y):
     """
-    Строит линию тренда по экспоненциальной зависимсоти
+    Строит линию тренда по экспоненциальной зависимости
+
+    Args:
+        x (numpy.ndarray): Массив чисел.
+        y( numpy.ndarray): Массив чисел.
+
+    Returns:
+        a: коэффициент наклона
+        b: коэффициент сдвига от начала координат
+    """
+    x = list(x)
+    y = list(y)
+    coefficients = np.polyfit(x, np.log(y), 1)
+    a = coefficients[0]
+    b = coefficients[1]
+    return a, b
+
+
+def logarithmic_function(x, y):
+    """
+    Строит линию тренда по логарифмической зависимости
 
     Args:
         x (numpy.ndarray): Массив чисел.
@@ -68,11 +90,14 @@ def exponential_function(x, y):
         a: коэффицент наклона
         b: коэффицент сдвига от начала координат
     """
-    x = list(x)
-    y = list(y)
-    coefficients = np.polyfit(x, np.log(y), 1)
-    a = coefficients[0]
-    b = coefficients[1]
+    x_log = np.log(x)
+    y_log = np.log(y)
+
+    # Линейная регрессия в пространстве логарифмов
+    model = LinearRegression()
+    model.fit(x_log.reshape(-1, 1), y_log)
+    a = model.coef_[0]
+    b = model.intercept_
     return a, b
 
 
@@ -291,7 +316,7 @@ class Anomaly_Search_Stat_Methods():
             # Извлекаем данные внутри текущего окна
             window_data = data[start:start + current_window_size]
 
-            if len(window_data)>0:
+            if len(window_data) > 0:
                 # Вычисляем первый и третий квартили для текущего окна
                 Q1 = np.percentile(window_data, 25)
                 Q3 = np.percentile(window_data, 75)

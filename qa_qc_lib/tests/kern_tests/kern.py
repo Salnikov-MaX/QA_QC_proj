@@ -5,8 +5,8 @@ from sklearn.metrics import r2_score
 from qa_qc_lib.tests.base_test import QA_QC_main
 from qa_qc_lib.tests.kern_tests.data_kern import DataKern
 from qa_qc_lib.tests.kern_tests.kern_consts import KernConsts
-from qa_qc_lib.tools.math_tools import linear_dependence_function, exponential_function
-from qa_qc_lib.tools.kern_tools import linear_function_visualization
+from qa_qc_lib.tools.math_tools import linear_dependence_function, exponential_function, logarithmic_function
+from qa_qc_lib.tools.kern_tools import linear_function_visualization, logarithm_function_visualization
 from qa_qc_lib.tools.kern_tools import dropdown_search
 
 
@@ -1470,6 +1470,83 @@ class QA_QC_kern(QA_QC_main):
                                             result_masks, final_text, well_name, md,
                                             "test_data_tampering", [list(self.parameters_to_compare.keys())])
 
+    def test_kvo_vs_kpr(self, get_report=True, filters=None):
+        """
+        Тест применяется для сравнения двух аппроксимаций:
+        характерной (эталонной для выбранного набора данных)
+        и текущей. Характерной зависимостью является линейная
+        по функции y=a*ln(x)+b при этом a>0
+
+        Required data:
+            Кво; Кпр_абс
+
+        Args:
+            Кпр_абс(np.ndarray[int/float]): массив с данными абсолютной проницаемости для проверки
+            Кво(np.ndarray[int/float]): массив с данными коэффициент остаточной водонасыщенности для проверки
+
+        Returns:
+            Словарь, specification словарь где, result_mask - словарь с результатом
+            {"название параметра/пары параметров":маска с результатом}, test_name - название теста,
+            param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+            MD - массив с глубинами
+        """
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(param=[self.consts.kvo, self.consts.kpr_abs],
+                                                                        filters=filters)
+        kvo = np.array(clear_df[self.consts.kvo])
+        kpr = np.array(clear_df[self.consts.kpr_abs])
+        check_result_for_kvo, wrong_for_kvo, check_text_for_kvo = self.__check_data(
+            kvo, get_report)
+        check_result_for_kpr, wrong_for_kpr, check_text_for_kpr = self.__check_data(
+            kpr, get_report)
+        result_dict = {}
+        if check_result_for_kvo and check_result_for_kpr:
+            r2 = self.test_general_dependency_checking(np.log(kpr), np.log(kvo))["specification"]["r2"]
+            result = True
+            a, b = logarithmic_function(kpr, kvo)
+            if a <= 0 or r2 < 0.7:
+                result = False
+
+            wrong_values = dropdown_search(np.log(kpr), np.log(kvo),
+                                           a, b)
+            logarithm_function_visualization(kpr, kvo,
+                                             a, b,
+                                             r2,
+                                             get_report,
+                                             self.consts.kvo,
+                                             self.consts.kpr_abs,
+                                             "test_kvo_vs_kpr",
+                                             wrong_values)
+            wrong_values = np.where(wrong_values, 1, result)
+
+            text = self.consts.dependency_accepted + str(wrong_values) if result \
+                else self.consts.dependency_wrong + str(wrong_values)
+
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(self.consts.kvo, "test_kvo_vs_kpr", text, wrong_values, index)
+            result_dict[self.consts.kvo] = wrong_values.tolist()
+            result_dict[self.consts.kpr_abs] = wrong_values.tolist()
+            return self.__generate_returns_dict(check_result_for_kvo and check_result_for_kpr, result,
+                                                result_dict, text, well_name, md,
+                                                "test_kvo_vs_kpr", [self.consts.kvo, self.consts.kpr_abs], r2=r2)
+        else:
+            if len(wrong_for_kvo) != 0:
+                param = self.consts.kvo
+                text = check_text_for_kvo
+                wrong = wrong_for_kvo
+            else:
+                param = self.consts.kpr_abs
+                text = check_text_for_kpr
+                wrong = wrong_for_kpr
+
+            self.data_kern.mark_errors(param, "test_kvo_vs_kpr",
+                                       text,
+                                       wrong, index)
+            return self.__generate_returns_dict(check_result_for_kvo and check_result_for_kpr, False,
+                                                wrong,
+                                                text,
+                                                well_name,
+                                                md,
+                                                "test_kvo_vs_kpr", [self.consts.kvo, self.consts.kpr_abs])
     def __create_errors_dict(self, param_names, wrong_arrays, check_texts) -> dict:
         """
         Метод предназначен для создания словаря с ошибками
@@ -1516,12 +1593,6 @@ class QA_QC_kern(QA_QC_main):
         Args:
             poro_name(string):название используемой пористости
             test_name(string): название теста
-
-        Returns:
-            Словарь, specification словарь где, result_mask - словарь с результатом
-            {"название параметра/пары параметров":маска с результатом}, test_name - название теста,
-            param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
-            MD - массив с глубинами
 
         """
         clear_df, index, well_name, md = self.__get_data_from_data_kern(
