@@ -20,6 +20,8 @@ class KernConsts:
         self.vp_vs_wrong = "Данные не лежат в интервале от 0.3 до 10 км/с"
         self.data_tampering_accepted = "Подлог данных не обнаружен"
         self.data_tampering_wrong = "Обнаружен подлог данных"
+        self.cut_off_accepted = "Все данные соответствуют критериям отсечения пористости и проницаемости"
+        self.cut_off_wrong = "Обнаружено несоответствие критериев отсечения пористости и проницаемости"
         self.kp_open = "Кп_откр"
         self.kp_tbu = "Кп_откр_TBU"
         self.kp_abs = "Кп_абс"

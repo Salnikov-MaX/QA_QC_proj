@@ -1547,3 +1547,147 @@ class QA_QC_kern(QA_QC_main):
                                                 well_name,
                                                 md,
                                                 "test_kvo_vs_kpr", [self.consts.kvo, self.consts.kpr_abs])
+    def __create_errors_dict(self, param_names, wrong_arrays, check_texts) -> dict:
+        """
+        Метод предназначен для создания словаря с ошибками
+        Args:
+            param_names(list[string]): массив с названиями проверяемых значений
+            wrong_arrays(list[np.ndarray[int]]): массив, содержащий массив с ошибочными значениями
+            check_texts(list[string]): массив с текстами ошибок
+
+        Returns:
+            dict({"string":tuple}) - словарь с ошибками, где ключ название параметра, а значение
+             пара из массива с ошибками и описанием ошибки
+
+        """
+        errors_dict = {}
+
+        for i, param_name in enumerate(param_names):
+            errors_dict[param_name] = (wrong_arrays[i], check_texts[i])
+        return errors_dict
+
+    def __get_first_wrong_array(self, param_names, wrong_arrays, check_texts) -> tuple[str, np.ndarray, str]:
+        """
+        Метод предназначен для поиска первого провалившего проверку параметра
+        Args:
+            param_names(list[string]): массив с названиями проверяемых значений
+            wrong_arrays(list[np.ndarray[int]]): массив, содержащий массив с ошибочными значениями
+            check_texts(list[string]): массив с текстами ошибок
+
+        Returns:
+            key(string): название ошибочного параметра
+            error_array(np.ndarray[int]): массив с ошибочными значениями
+            error_description(string): описание ошибки
+
+        """
+        errors_dict = self.__create_errors_dict(param_names, wrong_arrays, check_texts)
+        for key, (error_array, error_description) in errors_dict.items():
+            if len(error_array) > 0:
+                return key, error_array, error_description
+
+    def __main_poro_perm_cut_off(self, poro_name, test_name, get_report=True, filters=None) -> dict:
+        """
+        Основной тест для проверки соответствия ФЕС и критериев отсечения
+        Если Кп>Кп_cut_off то тогда Кпр>Кпр_cut_off
+
+        Args:
+            poro_name(string):название используемой пористости
+            test_name(string): название теста
+
+        """
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(
+            param=[poro_name, self.consts.kpr_abs],
+            filters=filters)
+
+        cut_off_df, _, _, _ = self.__get_data_from_data_kern(param=[self.consts.cut_off_poro, self.consts.cut_off_perm],
+                                                             filters=None)
+        result_dict = {}
+        poro_param = np.array(clear_df[poro_name])
+        kpr_param = np.array(clear_df[self.consts.kpr_abs])
+        poro_cut_off = np.array(cut_off_df[self.consts.cut_off_poro])
+        perm_cut_off = np.array(cut_off_df[self.consts.cut_off_perm])
+        check_result_for_poro_param, wrong_for_poro_param, check_text_for_poro_param = self.__check_data(
+            poro_param, get_report)
+        check_result_for_kpr_param, wrong_for_kpr_param, check_text_for_kpr_param = self.__check_data(
+            kpr_param, get_report)
+        check_result_for_poro_cut_off, wrong_for_poro_cut_off, check_text_for_poro_cut_off = self.__check_data(
+            poro_cut_off, get_report)
+        check_result_for_perm_cut_off, wrong_for_perm_cut_off, check_text_for_perm_cut_off = self.__check_data(
+            perm_cut_off, get_report)
+        check_result = check_result_for_poro_param and check_result_for_kpr_param \
+                       and check_result_for_poro_cut_off and check_result_for_perm_cut_off
+        if check_result:
+            indices_poro = np.where(poro_param > poro_cut_off)[0]
+            mask = (kpr_param[indices_poro] < perm_cut_off)
+            result_mask = np.zeros_like(poro_param)
+            result_mask[indices_poro[mask]] = 1
+            result = np.sum(result_mask) == 0
+            text = self.consts.cut_off_accepted if result else self.consts.cut_off_wrong
+            self.__generate_report(text, result, get_report)
+            self.data_kern.mark_errors(poro_name, test_name, text, result_mask, index)
+            self.data_kern.mark_errors(self.consts.kpr_abs, test_name, text, result_mask, index)
+            result_dict[poro_name] = result_mask.tolist()
+            result_dict[self.consts.kpr_abs] = result_mask.tolist()
+            return self.__generate_returns_dict(check_result, result,
+                                                result_dict, text, well_name, md,
+                                                test_name, [poro_name, self.consts.kpr_abs, self.consts.cut_off_poro,
+                                                            self.consts.cut_off_perm])
+
+        else:
+            param_name, result_mask, text = self.__get_first_wrong_array(
+                [poro_name, self.consts.kpr_abs, self.consts.cut_off_poro, self.consts.cut_off_perm],
+                [wrong_for_poro_param, wrong_for_kpr_param, wrong_for_poro_cut_off, wrong_for_perm_cut_off],
+                [check_text_for_poro_param, check_text_for_kpr_param, check_text_for_poro_cut_off,
+                 check_text_for_perm_cut_off])
+            self.data_kern.mark_errors(param_name, test_name, text, result_mask, index)
+            return self.__generate_returns_dict(check_result, False,
+                                                result_mask,
+                                                text,
+                                                well_name,
+                                                md,
+                                                test_name, [poro_name, self.consts.kpr_abs, self.consts.cut_off_poro,
+                                                            self.consts.cut_off_perm])
+
+    def test_cut_off_kp_open(self, get_report=True, filters=None) -> dict:
+        """
+        Тест предназначен для проверки соответствия ФЕС и критериев отсечения
+        Если Кп>Кп_cut_off то тогда Кпр>Кпр_cut_off
+
+        Required data:
+            Кпр_абс; Кп_откр; Cut-off_проницаемость; Cut-off_пористость
+
+        Args:
+            Кпр_абс(np.ndarray[int/float]): массив с данными абсолютной проницаемости для проверки
+            Кп_откр(np.ndarray[int/float]): массив с данными открытой пористости для проверки
+            Cut-off_проницаемость(np.ndarray[int/float]): значение критерия отсечения для проницаемости
+            Cut-off_пористость(F)(np.ndarray[int/float]): значения критерия отсечения для пористости
+
+        Returns:
+            Словарь, specification словарь где, result_mask - словарь с результатом
+            {"название параметра/пары параметров":маска с результатом}, test_name - название теста,
+            param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+            MD - массив с глубинами
+        """
+        return self.__main_poro_perm_cut_off(self.consts.kp_open, "cut_off_kp_open", get_report, filters)
+
+    def test_cut_off_kp_abs(self, get_report=True, filters=None) -> dict:
+        """
+        Тест предназначен для проверки соответствия ФЕС и критериев отсечения
+        Если Кп>Кп_cut_off то тогда Кпр>Кпр_cut_off
+
+        Required data:
+            Кпр_абс; Кп_откр; Cut-off_проницаемость; Cut-off_пористость
+
+        Args:
+            Кпр_абс(np.ndarray[int/float]): массив с данными абсолютной проницаемости для проверки
+            Кп_откр(np.ndarray[int/float]): массив с данными открытой пористости для проверки
+            Cut-off_проницаемость(np.ndarray[int/float]): значение критерия отсечения для проницаемости
+            Cut-off_пористость(F)(np.ndarray[int/float]): значения критерия отсечения для пористости
+
+        Returns:
+            Словарь, specification словарь где, result_mask - словарь с результатом
+            {"название параметра/пары параметров":маска с результатом}, test_name - название теста,
+            param_name - названия параметров, error_decr -краткое описание ошибки, well_name- название скважины,
+            MD - массив с глубинами
+        """
+        return self.__main_poro_perm_cut_off(self.consts.kp_abs, "cut_off_kp_abs", get_report, filters)
