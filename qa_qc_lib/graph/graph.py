@@ -95,7 +95,7 @@ class Graph:
 
             inner_data = row['Входные данные'].split(',')
             inner_data = [i_d.split('/') for i_d in inner_data]
-            if len(inner_data) != sum([len(arr) for arr in inner_data]):
+            if len(inner_data) > 1:
                 inner_data = [combination for combination in product(*inner_data)]
 
             code_tests = [code_test.strip() for code_test in row['Название теста в коде'].split(',')]

@@ -51,8 +51,8 @@ class KernLauncher(BaseLauncher):
         kern_qa_qc = self.init_kern(self.kern_data)
 
         test_names: List[str] = []
-        for tests in self.kern_config.group_test:
-            test_names += [t_info.test_name_code for t_info in tests.group_test if t_info.ready_for_launch]
+        for group in self.kern_config.test_groups:
+            test_names += [t_info.test_name_code for t_info in group.tests if t_info.ready_for_launch]
 
         if not self.kern_data.group_by_columns:
             kern_report_data = kern_qa_qc.start_tests(test_names)
@@ -68,6 +68,6 @@ class KernLauncher(BaseLauncher):
                                                 for g in group_filter]
 
                     tests_with_filters.append((test_name, test_filters))
-            kern_report_data = kern_qa_qc.start_tests_with_filters(tests_with_filters)
+            kern_report_data = kern_qa_qc.start_tests_with_filters(tests_with_filters, get_report=False)
 
         return kern_report_data

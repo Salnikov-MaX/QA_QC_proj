@@ -89,7 +89,7 @@ class QA_QC_wells(QA_QC_main):
         """
 
         return {"result_mask": result_mask,
-                "time_scale": self.nodes_obj.time_scale,
+                "time_scale": [str(d) for d in self.nodes_obj.time_scale],
                 "test_name": test_name,
                 "error_decr": error_decr,
                 "well_name": well_name,
@@ -144,7 +144,7 @@ class QA_QC_wells(QA_QC_main):
         if get_report:
             self.report_function['test_limit_0_1'](report_text, specification)
 
-        return {"data_availability": True, "result": result, "specification": specification}
+        return {"data_availability": True, "result": bool(result), "specification": specification}
 
     def test_monotony(self, node, node_name: str, well_name: str, get_report=True) -> dict:
         """

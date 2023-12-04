@@ -96,9 +96,9 @@ class QA_QC_main():
         for method_name, filters in list_of_tests:
             try:
                 method = getattr(self, method_name)
-                results.append({"test": method(get_report=get_report, filters=filters), "filters": filters})
+                results.append({**method(get_report=get_report, filters=filters), "data_filters": filters})
             except Exception as e:
-                results.append({"test_name": method_name, "filters": filters, 'error': str(e)})
+                results.append({"test_name": method_name, "data_filters": filters, 'error': str(e)})
                 print(e)
 
         return results
