@@ -65,8 +65,7 @@ class Graph:
 
     @staticmethod
     def convert_graph_from_csv_to_json(csv_paths: [str],
-                                       save_path: str,
-                                       data_valid_keys: Optional[List[str]] = None):
+                                       save_path: str):
         """
         Сохраняет конфигурационный файл содержащий граф тестирования данных
 
@@ -111,7 +110,9 @@ class Graph:
             if len(code_tests) == 1 and len(inner_data) > 1:
                 code_tests = [code_tests[0] for _ in range(len(inner_data))]
 
-            all_test += [(t if 'test' in t else row['test_code_name'], test_groups_map.get(row['Источник данных'].lower())) for t in code_tests]
+            all_test += [
+                (t if 'test' in t else row['test_code_name'], test_groups_map.get(row['Источник данных'].lower())) for t
+                in code_tests]
 
             for code_test, data in zip(code_tests, inner_data):
                 data = [d.strip() for d in data]
@@ -123,15 +124,15 @@ class Graph:
         with open(save_path, 'w+', encoding='utf-8') as file:
             json.dump([d.__dict__ for d in all_data], file, ensure_ascii=False)
 
-        invalid_tests = [{"test_name": row['test_code_name'], "data_key": row['Название теста в коде']}
+        invalid_tests = [row['test_code_name'] + ' : ' + row['Название теста в коде']
                          for _, row in df.iterrows()
                          if row['Название теста в коде'][:4] != 'test']
 
-        # print(f'Количество невалидных тестов {len(invalid_tests)}.\n', invalid_tests)
+        print(f'Количество невалидных тестов {len(invalid_tests)}')
+        print('\n'.join(invalid_tests))
+        print()
 
-        if data_valid_keys:
-            ignore_keys = list(set(keys) - set(data_valid_keys))
-            # print(f'Количество невалидных ключей {len(ignore_keys)} из CSV.\n', ignore_keys)
+        print(f'Не существующие тесты:')
 
         for test_name, group in set(all_test):
             if group == EnumQAQCClass.Kern:
