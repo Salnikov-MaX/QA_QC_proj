@@ -54,10 +54,10 @@ class CubeLauncher(BaseLauncher):
 
         test_names: List[str] = []
 
-        for g in self.cube_config.group_test:
+        for g in self.cube_config.test_groups:
             test_names += [t.test_name_code for t in g.tests]
 
         qa_qc_cube = self.init_cubes(self.cube_data)
 
-        reports = qa_qc_cube.start_tests(test_names)
+        reports = qa_qc_cube.start_tests(test_names, get_report=False)
         return reports

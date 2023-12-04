@@ -8,6 +8,10 @@ import dacite
 import pandas as pd
 
 from qa_qc_lib.graph.edges import edges
+from qa_qc_lib.tests.cubes_tests.cubes import QA_QC_cubes
+from qa_qc_lib.tests.kern_tests.kern import QA_QC_kern
+from qa_qc_lib.tests.seismic_tests.seismic import QA_QC_seismic
+from qa_qc_lib.tests.wells.wells_tests import QA_QC_wells
 
 
 class EnumQAQCClass(str, Enum):
@@ -15,6 +19,7 @@ class EnumQAQCClass(str, Enum):
     Seismic = "Seismic"
     Gis = "Gis"
     Cubes = "Cubes"
+    Wells = "Wells"
 
 
 @dataclass
@@ -60,8 +65,7 @@ class Graph:
 
     @staticmethod
     def convert_graph_from_csv_to_json(csv_paths: [str],
-                                       save_path: str,
-                                       data_valid_keys: Optional[List[str]] = None):
+                                       save_path: str):
         """
         Сохраняет конфигурационный файл содержащий граф тестирования данных
 
@@ -74,9 +78,10 @@ class Graph:
 
         test_groups_map = {
             "керн/": EnumQAQCClass.Kern,
-            "cейсморазведка/": EnumQAQCClass.Seismic,
+            "сейсморазведка/": EnumQAQCClass.Seismic,
             "гис/": EnumQAQCClass.Gis,
             "геология/": EnumQAQCClass.Cubes,
+            "разработка/": EnumQAQCClass.Wells
         }
 
         dfs = [pd.read_csv(csv_path, delimiter=',') for csv_path in csv_paths]
@@ -84,16 +89,16 @@ class Graph:
         df['test_code_name'] = df['Источник данных'].astype(str) + df['№'].astype(str)
         df['test_code_name'] = df['test_code_name'].apply(lambda v: v.replace('.0', ''))
         df['Название теста в коде'] = df['Название теста в коде'].astype(str)
-        print(df['test_code_name'])
 
         keys = []
         all_data = list()
+        all_test = list()
 
         for _, row in df.iterrows():
 
             inner_data = row['Входные данные'].split(',')
             inner_data = [i_d.split('/') for i_d in inner_data]
-            if len(inner_data) != sum([len(arr) for arr in inner_data]):
+            if len(inner_data) > 1:
                 inner_data = [combination for combination in product(*inner_data)]
 
             code_tests = [code_test.strip() for code_test in row['Название теста в коде'].split(',')]
@@ -105,6 +110,10 @@ class Graph:
             if len(code_tests) == 1 and len(inner_data) > 1:
                 code_tests = [code_tests[0] for _ in range(len(inner_data))]
 
+            all_test += [
+                (t if 'test' in t else row['test_code_name'], test_groups_map.get(row['Источник данных'].lower())) for t
+                in code_tests]
+
             for code_test, data in zip(code_tests, inner_data):
                 data = [d.strip() for d in data]
                 node = GraphEdge(row['test_code_name'], code_test, test_group, data)
@@ -115,12 +124,33 @@ class Graph:
         with open(save_path, 'w+', encoding='utf-8') as file:
             json.dump([d.__dict__ for d in all_data], file, ensure_ascii=False)
 
-        invalid_tests = [{"test_name": row['test_code_name'], "data_key": row['Название теста в коде']}
+        invalid_tests = [row['test_code_name'] + ' : ' + row['Название теста в коде']
                          for _, row in df.iterrows()
                          if row['Название теста в коде'][:4] != 'test']
 
-        print(f'Количество невалидных тестов {len(invalid_tests)}.\n', invalid_tests)
+        print(f'Количество невалидных тестов {len(invalid_tests)}')
+        print('\n'.join(invalid_tests))
+        print()
 
-        if data_valid_keys:
-            ignore_keys = list(set(keys) - set(data_valid_keys))
-            print(f'Количество невалидных ключей {len(ignore_keys)} из CSV.\n', ignore_keys)
+        print(f'Не существующие тесты:')
+
+        for test_name, group in set(all_test):
+            if group == EnumQAQCClass.Kern:
+                if not hasattr(QA_QC_kern, test_name):
+                    print(group, test_name)
+                    continue
+
+            if group == EnumQAQCClass.Cubes:
+                if not hasattr(QA_QC_cubes, test_name):
+                    print(group, test_name)
+                    continue
+
+            if group == EnumQAQCClass.Wells:
+                if not hasattr(QA_QC_wells, test_name):
+                    print(group, test_name)
+                    continue
+
+            if group == EnumQAQCClass.Seismic:
+                if not hasattr(QA_QC_seismic, test_name):
+                    print(group, test_name)
+                    continue

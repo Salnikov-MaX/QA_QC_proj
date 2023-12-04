@@ -60,6 +60,47 @@ class QA_QC_kern(QA_QC_main):
         result = np.sum(result_mask) == 0
         return result_mask, result
 
+    # def __generate_returns_dict(self, data_availability, result, result_masks, error_decr, well_name,
+    #                             md, test_name, param_name, r2=None) -> dict:
+    #     """
+    #     Args:
+    #         data_availability(bool): наличие данных
+    #         result(bool): результат теста
+    #         result_mask(np.ndarray[bool]): маска с результатом
+    #         error_decr(string): описание ошибки
+    #         well_name(string): название скважины
+    #         md(np.ndarray[int/float]): массив с глубинами
+    #         test_name(string): название теста
+    #         param_name(array[string]): массив с названиями параметров
+    #
+    #     Returns:
+    #         dict: Словарь, specification cловарь где ,result_mask - маска с результатом ,test_name - название теста ,
+    #               param_name - название параметра ,error_decr -краткое описание ошибки
+    #
+    #     """
+    #     specification = {
+    #         "test_name": test_name,
+    #         "error_decr": error_decr,
+    #         "well_name": str(well_name),
+    #         "MD": md.tolist()
+    #     }
+    #     for index, param in enumerate(param_name):
+    #         key_name = f"param_name_{index + 1}"
+    #
+    #         if isinstance(param, np.ndarray):
+    #             param = param.tolist()
+    #
+    #         specification[key_name] = param
+    #
+    #     specification["result_masks"] = result_masks.tolist()
+    #     if r2 is not None:
+    #         specification["r2"] = r2
+    #     return {
+    #         "data_availability": data_availability,
+    #         "result": bool(result),
+    #         "specification": specification
+    #     }
+
     def __generate_returns_dict(self, data_availability, result, result_masks, error_decr, well_name,
                                 md, test_name, param_name, r2=None) -> dict:
         """
@@ -86,9 +127,13 @@ class QA_QC_kern(QA_QC_main):
         }
         for index, param in enumerate(param_name):
             key_name = f"param_name_{index + 1}"
+
+            if isinstance(param, np.ndarray):
+                param = param.tolist()
+
             specification[key_name] = param
 
-        specification["result_masks"] = result_masks
+        specification["result_masks"] = result_masks.tolist()
         if r2 is not None:
             specification["r2"] = r2
         return {

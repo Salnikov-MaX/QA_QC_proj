@@ -10,7 +10,7 @@ from qa_qc_lib.graph.graph import Graph
 
 @dataclass
 class KernTestConfig:
-    tests: List[DataGroupTests]
+    test_groups: List[DataGroupTests]
 
     @staticmethod
     def get_kern_section_config(data_map: DataMap, graph: Graph) -> Optional[KernTestConfig]:
