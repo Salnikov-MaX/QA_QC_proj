@@ -58,8 +58,6 @@ class QA_QC_wells(QA_QC_main):
 
         return nodes_anomalies
 
-    #def start_tests(self, list_of_tests: list, get_report=True) -> dict:
-
     def get_specification(self, result_mask: np.array, test_name: str, error_decr: str, well_name: str, node_names: list):
 
         """Возвращает спецификацию теста
@@ -93,7 +91,7 @@ class QA_QC_wells(QA_QC_main):
 
     def test_limit_0_1(self, node: np.array, node_name: str, well_name: str, get_report=True) -> dict:
         """
-        Метод проверяет ось времени на соответствие интервалу [0,1]
+        Метод проверяет коэф эксплуатации скважины на соответствие интервалу [0,1]
 
         Required data:
             node (np.array): временной ряд, по одному  из keywords_wefac показателю скважины\n
@@ -128,10 +126,10 @@ class QA_QC_wells(QA_QC_main):
         result = result_mask.sum() == 0
 
         if result:
-            text = 'Значения ряда находяься в интервале от 0 до 1'
+            text = 'Значения ряда находяться в интервале от 0 до 1'
             report_text = self.generate_report_text(text, 1)
         else:
-            text = 'Некоторые значения ряда находяься за пределами интервала от 0 до 1'
+            text = 'Некоторые значения ряда находяться за пределами интервала от 0 до 1'
             report_text = self.generate_report_text(text, 0)
 
         self.update_report(report_text)
