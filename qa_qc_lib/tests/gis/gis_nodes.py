@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from qa_qc_lib.readers.data_reader import Reader_gis_data_for_well
+from qa_qc_lib.readers.gis_reader import Reader_gis_data_for_well
 
 class Nodes_gis_data:
     def __init__(self, data_folder: str, las_files_name: str, reader_gis_data: Reader_gis_data_for_well):
