@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from qa_qc_lib.readers.data_reader import Reader_histor_well_data
+from qa_qc_lib.readers.well_reader import Reader_histor_well_data
 
 
 class Nodes_wells_data:
