@@ -6,7 +6,6 @@ import os
 import datetime
 import re
 
-
 class Reader_histor_well_data:
     def __init__(self, data_folder: str, files: tuple or str, keywords: dict):
         """
