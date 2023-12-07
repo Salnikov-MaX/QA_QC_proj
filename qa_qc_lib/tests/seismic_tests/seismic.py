@@ -80,11 +80,11 @@ class QA_QC_seismic(QA_QC_main):
 
         mask_2d = mask.reshape((self.seismic_cube.shape[0], self.seismic_cube.shape[1]))
 
-        specification = {"wrong_values": mask_2d,
+        specification = {"wrong_values": mask_2d.tolist(),
                          'test_name': 'test_miss_traces',
                          "percent_false": percent_false,
                          "error_decr": text}
 
         return {"data_availability": True,
-                "result": result,
+                "result": bool(result),
                 "specification": specification}

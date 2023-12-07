@@ -24,6 +24,9 @@ __pycache__
 venv
 report
 .idea
+build
+dist
+*.egg-info
 
 *.pyc
 

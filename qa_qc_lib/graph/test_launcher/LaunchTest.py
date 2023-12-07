@@ -11,6 +11,7 @@ from qa_qc_lib.graph.test_launcher.BaseLauncher import BaseLauncher
 from qa_qc_lib.graph.test_launcher.CubesLauncher import CubeLauncher
 from qa_qc_lib.graph.test_launcher.KernLauncher import KernLauncher
 from qa_qc_lib.graph.graph import Graph
+from qa_qc_lib.graph.test_launcher.SeismicLauncher import SeismicLauncher
 from qa_qc_lib.graph.test_launcher.WellLauncher import WellLauncher
 
 
@@ -20,16 +21,19 @@ class LaunchTest:
         self.main_test_config = main_test_config
 
     @staticmethod
-    def get_launchers(graph: Graph, main_test_config: MainTestConfig, temp_dir: str) -> List[BaseLauncher]:
+    def get_launchers(graph: Graph, config: MainTestConfig, temp_dir: str) -> List[BaseLauncher]:
         launchers: List[BaseLauncher] = []
-        if main_test_config.data.kern is not None:
-            launchers.append(KernLauncher(graph, main_test_config.kern_config, main_test_config.data.kern))
+        if config.data.kern and config.kern_config:
+            launchers.append(KernLauncher(graph, config.kern_config, config.data.kern))
 
-        if main_test_config.data.cube is not None:
-            launchers.append(CubeLauncher(graph, main_test_config.cubes_config, main_test_config.data.cube))
+        if config.data.cube and config.cubes_config:
+            launchers.append(CubeLauncher(graph, config.cubes_config, config.data.cube))
 
-        if main_test_config.data.well is not None:
-            launchers.append(WellLauncher(main_test_config.well_config, main_test_config.data.well, temp_dir))
+        if config.data.well and config.well_config:
+            launchers.append(WellLauncher(config.well_config, config.data.well, temp_dir))
+
+        if config.data.seismic is not None or config.seismic_config:
+            launchers.append(SeismicLauncher(config.seismic_config, config.data.seismic, graph))
 
         return launchers
 
@@ -62,13 +66,22 @@ class LaunchTest:
 
             keys_for_pop = None
             if report.get('specification'):
+                for k in report['specification'].keys():
+                    try:
+                        json.dumps({k: report['specification'][k]})
+                    except:
+                        report['specification'][k] = str(report['specification'][k])
+
                 keys_for_pop = [s_key for s_key in report.get('specification') if
                                 sys.getsizeof(report['specification'][s_key]) > 50]
 
             if keys_for_pop:
                 spec_file = os.path.join(detailed_reports_dir, f'{report_id}.json')
                 with open(spec_file, 'w+', encoding='utf-8') as file:
-                    json.dump(report, file, ensure_ascii=False)
+                    try:
+                        json.dump(report, file, ensure_ascii=False)
+                    except:
+                        json.dump(report, file, ensure_ascii=False)
 
                 report['specification_file'] = spec_file
                 [report['specification'].pop(s_key) for s_key in keys_for_pop]

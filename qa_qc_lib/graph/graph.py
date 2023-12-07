@@ -59,6 +59,9 @@ class Graph:
     def get_tests(self, data_key: str) -> List[GraphEdge]:
         return [test for test in self.graph_nodes if data_key in test.required_data]
 
+    def get_required_data_by_test_code_name(self, test_name_code: str) -> GraphEdge:
+        return [test for test in self.graph_nodes if test.test_name_code == test_name_code][0]
+
     @staticmethod
     def test_is_ready(graph_node: GraphEdge, available_data_keys: List[str]) -> bool:
         return all([req_data in available_data_keys for req_data in graph_node.required_data])
@@ -98,8 +101,7 @@ class Graph:
 
             inner_data = row['Входные данные'].split(',')
             inner_data = [i_d.split('/') for i_d in inner_data]
-            if len(inner_data) > 1:
-                inner_data = [combination for combination in product(*inner_data)]
+            inner_data = [combination for combination in product(*inner_data)]
 
             code_tests = [code_test.strip() for code_test in row['Название теста в коде'].split(',')]
             test_group = test_groups_map[row['Источник данных'].lower()]
