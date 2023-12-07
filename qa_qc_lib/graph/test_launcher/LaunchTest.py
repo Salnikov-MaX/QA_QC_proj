@@ -39,9 +39,6 @@ class LaunchTest:
 
     @staticmethod
     def make_report(result_dir: str, report_data: List[dict], report_name: str = 'reports'):
-        if type(report_data) is not List[dict]:
-            raise Exception(f'Неверный формат отчёта: {type(report_data)}')
-
         time_string = time.strftime("%d_%m_%Y_%H_%M_%S", time.localtime())
 
         report_dir = os.path.join(result_dir, f'{report_name}_{time_string}')

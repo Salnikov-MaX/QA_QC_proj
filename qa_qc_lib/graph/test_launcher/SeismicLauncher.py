@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from qa_qc_lib.graph.data_map.SeismicMap import SeismicData
 from qa_qc_lib.graph.graph import Graph
@@ -16,14 +16,16 @@ class SeismicLauncher(BaseLauncher):
     def init_qa_qc(self, file_path: str):
         QA_QC_seismic()
 
-    def start_qa_qc(self) -> [Optional[dict]]:
-
+    def start_qa_qc(self) -> List[dict]:
+        all_reports: List[dict] = []
         for group in self.config.test_groups:
             for test in group.tests:
                 graph_edge = self.graph.get_required_data_by_test_code_name(test.test_name_code)
-                if graph_edge.test_name_code is None:
+                if 'test' not in graph_edge.test_name_code:
                     continue
                 required_data_info = self.data.find_by_data_key(graph_edge.required_data[0])
                 qa_qc = QA_QC_seismic(file_path=required_data_info.file_path)
-                # report = qa_qc.start_tests([test])
-                pass
+                report = qa_qc.start_tests([test.test_name_code])
+                all_reports += report
+
+        return all_reports
