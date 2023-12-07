@@ -7,6 +7,7 @@ from qa_qc_lib.tests.base_test import QA_QC_main
 from qa_qc_lib.tools.math_tools import Anomaly_Search_Stat_Methods, sameSign
 from qa_qc_lib.tests.wells.wells_nodes import Nodes_wells_data
 
+
 class QA_QC_wells(QA_QC_main):
     def __init__(self, nodes_obj: Nodes_wells_data, folder_report: str):
         """
@@ -67,9 +68,9 @@ class QA_QC_wells(QA_QC_main):
         Required data:
             result_mask (np.array(int)): результат работы теста,\n
             test_name (str):  название теста
-            error_decr (str): описание ошибки   
+            error_decr (str): описание ошибки
             well_name (str): имя скважины
-            node name (list): список узлов, над которыми проводился тест   
+            node name (list): список узлов, над которыми проводился тест
 
         Returns:
 			specification: {
@@ -77,9 +78,9 @@ class QA_QC_wells(QA_QC_main):
                                                       1 - значение ошибочное,\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки   
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_names": list, список имен узлов                                               
+                        "node_names": list, список имен узлов
 					}
 			}
         """
@@ -98,7 +99,7 @@ class QA_QC_wells(QA_QC_main):
         Required data:
             node (np.array): временной ряд, по одному  из keywords_wefac показателю скважины\n
             node_name (str): имя типа узла (одно из keywords_wefac) \n
-            well_name (str): имя скважины, которо принадлежит узел 
+            well_name (str): имя скважины, которо принадлежит узел
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
@@ -106,15 +107,15 @@ class QA_QC_wells(QA_QC_main):
         Returns:
 			{
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int), 0 - значение временного ряда лежит в пределах интервала [0,1],\n
                                                        1 - значение временного ряда находится за пределами интервала [0,1],\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки   
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_names": list, список имен узлов                                                
+                        "node_names": list, список имен узлов
 					}
 			}
         """
@@ -150,7 +151,7 @@ class QA_QC_wells(QA_QC_main):
             self.nodes_obj (Nodes_historical_wells_data): обьект, содержащий узлы с историческими данными по скважинам\n
             node (np.array): временной ряд, по одному  из keywords_cumulative показателю скважины\n
             node_name (str): имя типа узла (одно из keywords_cumulative) \n
-            well_name (str): имя скважины, которо принадлежит узел 
+            well_name (str): имя скважины, которо принадлежит узел
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
@@ -158,15 +159,15 @@ class QA_QC_wells(QA_QC_main):
         Returns:
             {
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int), 0 - значение временного ряда больше предыдущего,\n
                                                        1 - значение временного ряда меньше или равно предыдущему,\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки   
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_name": str, имя узла                                                
+                        "node_name": str, имя узла
 					}
 			}
         """
@@ -197,13 +198,13 @@ class QA_QC_wells(QA_QC_main):
     def test_anomaly(self, node, node_name: str, well_name: str, get_report=True) -> dict:
         """
         Метод проверяет наличие аномалий типа "выброс" и "сдвиг" в передаваемом временном ряду.\n
-        Если аномалии обнаружены, то они записываются в словарь self.nodes_anomalies дл я соответсвующей скважины и узла. 
+        Если аномалии обнаружены, то они записываются в словарь self.nodes_anomalies дл я соответсвующей скважины и узла.
 
         Required data:
             self.nodes_obj (Nodes_historical_wells_data): обьект, содержащий узлы с историческими данными по скважинам\n
             node (np.array): временной ряд, по одному  из Nodes_historical_wells показателю скважины\n
             node_name (str): имя типа узла (одно из Nodes_historical_wells) \n
-            well_name (str): имя скважины, которо принадлежит узел 
+            well_name (str): имя скважины, которо принадлежит узел
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
@@ -211,15 +212,15 @@ class QA_QC_wells(QA_QC_main):
         Returns:
             {
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int), 0 - значение временного ряда больше предыдущего,\n
                                                        1 - значение временного ряда аномально,\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки   
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_name": str, имя узла                                                
+                        "node_name": str, имя узла
 					}
 			}
         """
@@ -238,7 +239,7 @@ class QA_QC_wells(QA_QC_main):
             text = 'В значениях ряда не наблюдаются аномалии'
             report_text = self.generate_report_text(text, 1)
         else:
-            text = 'В знаяениях ряда присутствуют аномалии' 
+            text = 'В значениях ряда присутствуют аномалии'
             report_text = self.generate_report_text(text, 0)
 
         self.update_report(report_text)
@@ -265,15 +266,15 @@ class QA_QC_wells(QA_QC_main):
         Returns:
             {
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int), 0 - значение узла LPR равно сумме значений в узлах OPR и WPR,\n
                                                        1 - значение узла LPR не  авно сумме значений в узлах OPR и WPR,\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки                                
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_names": list =  список имен узлов, над которыми проводился тест                                                
+                        "node_names": list =  список имен узлов, над которыми проводился тест
 					}
 			}
         """
@@ -318,17 +319,17 @@ class QA_QC_wells(QA_QC_main):
         Returns:
             {
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int) shape(len(nodes), len(nodes[0])), 0 - поведение ряда BHP согласовано с поведением рядов LPR и GPR,\n
                                                        1 - поведение ряда BHP не согласовано с поведением ряда nodes[j] ,\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки                                
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_names": list,  список имен узлов, над которыми проводился тест 
+                        "node_names": list,  список имен узлов, над которыми проводился тест
                         "segments" : list, список индексов точек изменения временного ряда
-                        "poly1d_segments" : list, список апроксимирующих кривых, для каждого сегмента                                               
+                        "poly1d_segments" : list, список апроксимирующих кривых, для каждого сегмента
 					}
 			}
         """
@@ -428,16 +429,16 @@ class QA_QC_wells(QA_QC_main):
         Returns:
             {
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int), 0 - поведение ряда BHP согласовано с поведением рядов LPR и GPR,\n
                                                        1 - поведение ряда BHP не согласовано с поведением ряда nodes[j],\n
 
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки                                
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_names": list,  список имен узлов, над которыми проводился тест                                              
+                        "node_names": list,  список имен узлов, над которыми проводился тест
 					}
 			}
         """
@@ -502,64 +503,64 @@ class QA_QC_wells(QA_QC_main):
 
         if get_report:
             self.report_function['test_imbalance_anomaly'](specification)
-                          
+
         return {"data_availability": True, "result": result, "specification": specification}
-    
+
     def get_report_first_order_test(self, specification: dict, saving: bool = True):
         """
         Визуализатор тестов первого порядка. \n
 
         Required data:
             specification (dict): спецификация полученная при выполнении теста\n
-            
+
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
-  
+
         """
-        
+
         well_name = specification['well_name']
         test_name = specification['test_name']
         node_name = specification['node_names'][0]
-        
 
-        print('\n'+specification['error_decr']+self.delimeter)
+        print('\n' + specification['error_decr'] + self.delimeter)
 
-        fig = plt.figure()        
+        fig = plt.figure()
         if node_name != 'DATE':
             node = self.nodes_obj.nodes_wells[well_name][node_name]
             time_scale = self.nodes_obj.time_scale
             x = time_scale
             plt.xlabel('date')
-        else: 
-            node = self.nodes_obj.time_scale 
+        else:
+            node = self.nodes_obj.time_scale
             x = np.arange(len(node))
             plt.ylabel('date')
-                    
+
         plt.plot(x, node)
         idxs = np.where(specification['result_mask'] == 1)[0]
         for i in range(len(idxs)):
             plt.axvspan(x[idxs[i]], x[idxs[i]], color='red', alpha=1)
 
         plt.title(f'{well_name}: {node_name}\n {test_name}')
-        plt.show() 
- 
+
         if saving:
             file_name = f'{test_name}_{well_name}_{node_name}.png'
-            path_out_file = os.path.join(self.folder_report,file_name)
+            path_out_file = os.path.join(self.folder_report, file_name)
             fig.savefig(path_out_file)
             plt.close()
-                
+        else:
+            plt.show()
+
     def get_report_test_LR_eq_sum_OR_and_WR(self, specification: dict, saving: bool = True):
         """
         Визуализатор для теста LPR = SUM(WPR +OPR). \n
 
         Required data:
             specification (dict): спецификация полученная при выполнении теста\n
-        
+
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
 
-        """    
+        """
         well_name = specification['well_name']
         test_name = specification['test_name']
         nodes_names = specification['node_names']
@@ -569,31 +570,32 @@ class QA_QC_wells(QA_QC_main):
         for name in nodes_names:
             nodes.append(self.nodes_obj.nodes_wells[well_name][name])
 
-        print('\n'+specification['error_decr']+self.delimeter)
+        print('\n' + specification['error_decr'] + self.delimeter)
 
         fig, ax = plt.subplots()
-        
+
         x = time_scale
         plt.xlabel('date')
 
         lines = []
         for i in range(len(nodes)):
-            lines.append(ax.plot(x, nodes[i], label = nodes_names[i]))
-        
+            lines.append(ax.plot(x, nodes[i], label=nodes_names[i]))
+
         idxs = np.where(specification['result_mask'] == 1)[0]
-        
+
         for i in range(len(idxs)):
             plt.axvspan(x[idxs[i]], x[idxs[i]], color='red', alpha=1)
 
         plt.title(f'{well_name}\n {test_name}')
         plt.legend()
-        plt.show() 
- 
+
         if saving:
             file_name = f'{test_name}_{well_name}.png'
-            path_out_file = os.path.join(self.folder_report,file_name)
+            path_out_file = os.path.join(self.folder_report, file_name)
             fig.savefig(path_out_file)
-            plt.close()  
+            plt.close()
+        else:
+            plt.show()
 
     def get_report_test_imbalance_trends_with_BHP(self, specification: dict, saving: bool = True):
         """
@@ -601,11 +603,11 @@ class QA_QC_wells(QA_QC_main):
 
         Required data:
             specification (dict): спецификация полученная при выполнении теста\n
-        
+
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
 
-        """ 
+        """
 
         well_name = specification['well_name']
         test_name = specification['test_name']
@@ -620,56 +622,57 @@ class QA_QC_wells(QA_QC_main):
             ind_last = 0
             x = np.arange(len(time_scale))
             for i in range(len(segments)):
-                ind_s = segments[i] 
+                ind_s = segments[i]
                 p = ps[i][num_node]
-                line = plt.plot(time_scale[ind_last:ind_s],p(x[ind_last:ind_s]), '--', c = clr)
+                line = plt.plot(time_scale[ind_last:ind_s], p(x[ind_last:ind_s]), '--', c=clr)
                 ind_last = ind_s
             return line
-            
 
         nodes = list()
         for name in nodes_names:
             nodes.append(self.nodes_obj.nodes_wells[well_name][name][idx_start:])
 
-        print('\n'+specification['error_decr']+self.delimeter)
+        print('\n' + specification['error_decr'] + self.delimeter)
 
         node_BHP = nodes[0]
         num_nodes = len(nodes)
-              
+
         for i in range(1, num_nodes):
-            fig, ax_BHP = plt.subplots(figsize = (8,5), layout='constrained')
+            fig, ax_BHP = plt.subplots(figsize=(8, 5), layout='constrained')
             plt.xlabel('date')
-            ax_BHP.set_ylim(node_BHP.min()-1, node_BHP.max())
-            plot_BHP = ax_BHP.plot(time_scale, node_BHP, color = 'red', label = nodes_names[0])
-            line_BHP = drow_poli1d(0, 'r')    
-         
+            ax_BHP.set_ylim(node_BHP.min() - 1, node_BHP.max())
+            plot_BHP = ax_BHP.plot(time_scale, node_BHP, color='red', label=nodes_names[0])
+            line_BHP = drow_poli1d(0, 'r')
+
             ax_i = ax_BHP.twinx()
             ax_i.set_ylim(nodes[i].min(), nodes[i].max())
-            plot_i = ax_i.plot(time_scale, nodes[i], color = 'blue', label = nodes_names[i]) 
-            line_i = drow_poli1d(i, 'blue')           
-            ax_BHP.legend(handles = plot_BHP+plot_i+line_BHP+line_i, loc = 'best')
+            plot_i = ax_i.plot(time_scale, nodes[i], color='blue', label=nodes_names[i])
+            line_i = drow_poli1d(i, 'blue')
+            ax_BHP.legend(handles=plot_BHP + plot_i + line_BHP + line_i, loc='best')
 
-            plt.fill_between(time_scale, max(nodes[i].max(), node_BHP.max()), 0, where=result_mask[i][idx_start:] == 1, facecolor='red', interpolate=False, alpha=0.2)
+            plt.fill_between(time_scale, max(nodes[i].max(), node_BHP.max()), 0, where=result_mask[i][idx_start:] == 1,
+                             facecolor='red', interpolate=False, alpha=0.2)
             plt.title(f'{test_name}\n скважина: {well_name}\n несогласованность {nodes_names[0]} и {nodes_names[i]}')
-            plt.show() 
 
             if saving:
                 file_name = f'{test_name}_{well_name}_{nodes_names[0]}_{nodes_names[i]}.png'
-                path_out_file = os.path.join(self.folder_report,file_name)
-                fig.savefig(path_out_file)             
-                plt.close()        
+                path_out_file = os.path.join(self.folder_report, file_name)
+                fig.savefig(path_out_file)
+                plt.close()
+            else:
+                plt.show()
 
-    def get_report_test_imbalance_anomaly(self, specification: dict,  saving: bool = True):
+    def get_report_test_imbalance_anomaly(self, specification: dict, saving: bool = True):
         """
         Визуализатор для теста несогласованное поведение рядов BHP, GPR, WPR. \n
 
         Required data:
             specification (dict): спецификация полученная при выполнении теста\n
-        
+
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
 
-        """ 
+        """
         well_name = specification['well_name']
         test_name = specification['test_name']
         nodes_names = specification['node_names']
@@ -680,31 +683,32 @@ class QA_QC_wells(QA_QC_main):
         for name in nodes_names:
             nodes.append(self.nodes_obj.nodes_wells[well_name][name])
 
-        print('\n'+specification['error_decr']+self.delimeter)
-        
+        print('\n' + specification['error_decr'] + self.delimeter)
+
         node_BHP = nodes[0]
         num_nodes = len(nodes_names)
-              
+
         for i in range(1, num_nodes):
-            fig, ax_BHP = plt.subplots(figsize = (8,5), layout='constrained')
+            fig, ax_BHP = plt.subplots(figsize=(8, 5), layout='constrained')
             plt.xlabel('date')
             ax_BHP.set_ylim(node_BHP.min(), node_BHP.max())
-            plot_BHP = ax_BHP.plot(time_scale, node_BHP, color = 'green', label = nodes_names[0])
+            plot_BHP = ax_BHP.plot(time_scale, node_BHP, color='green', label=nodes_names[0])
 
             idxs = np.where(result_mask[i] == 1)[0]
             for j in range(len(idxs)):
-                plt.axvspan(time_scale[idxs[j]], time_scale[idxs[j]], color='red', alpha=1) 
-                        
+                plt.axvspan(time_scale[idxs[j]], time_scale[idxs[j]], color='red', alpha=1)
+
             ax_i = ax_BHP.twinx()
-            ax_i.set_ylim(nodes[i].min(), nodes[i].max()+1)
-            plot_i = ax_i.plot(time_scale, nodes[i], color = 'blue', label = nodes_names[i]) 
-            ax_BHP.legend(handles = plot_BHP+plot_i, loc = 'best')
-            
+            ax_i.set_ylim(nodes[i].min(), nodes[i].max() + 1)
+            plot_i = ax_i.plot(time_scale, nodes[i], color='blue', label=nodes_names[i])
+            ax_BHP.legend(handles=plot_BHP + plot_i, loc='best')
+
             plt.title(f'{test_name}\n скважина: {well_name}\n несогласованность {nodes_names[0]} и {nodes_names[i]}')
-            plt.show() 
 
             if saving:
                 file_name = f'{test_name}_{well_name}_{nodes_names[0]}_{nodes_names[i]}.png'
-                path_out_file = os.path.join(self.folder_report,file_name)
-                fig.savefig(path_out_file)             
-                plt.close()                        
+                path_out_file = os.path.join(self.folder_report, file_name)
+                fig.savefig(path_out_file)
+                plt.close()
+            else:
+                plt.show()
