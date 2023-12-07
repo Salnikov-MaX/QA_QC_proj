@@ -1,7 +1,7 @@
 # Здесь реализуем классы для чтения всех требуемых форматов данных
 import pandas as pd
 import numpy as np
-from ecl.summary import EclSum
+from ecl.summary import EclSum 
 import os
 import datetime
 import re
@@ -36,7 +36,7 @@ class Reader_histor_well_data:
 
         if type(self.files) is tuple:
             _, f_extension = os.path.splitext(self.files[0])
-            # print(f_extension)
+            
             if f_extension == '.SMSPEC':
                 df_data = self.reading_smspec_unsmry(idx_spec=0)
             elif f_extension == '.UNSMRY':
@@ -173,3 +173,8 @@ class Reader_histor_well_data:
         df_data = df_data.drop(drop_list, axis=1)
 
         return df_data
+    
+
+   
+        
+          

@@ -47,7 +47,7 @@ class QA_QC_wells(QA_QC_main):
         Required data:
             self.nodes_obj.wells (list): список скважин,\n
             self.nodes_obj.nodes_wells (dict):  словарь узлов скважин с временными рядами
-            
+
         Returns:
 			nodes_anomalies: dict, словарь с узлами скважин.
                 {well_name (str): {name_node (str): value (np.zeros)}}
@@ -63,15 +63,14 @@ class QA_QC_wells(QA_QC_main):
 
     def get_specification(self, result_mask: np.array, test_name: str, error_decr: str, well_name: str,
                           node_names: list):
-
         """Возвращает спецификацию теста
 
         Required data:
             result_mask (np.array(int)): результат работы теста,\n
             test_name (str):  название теста
-            error_decr (str): описание ошибки   
+            error_decr (str): описание ошибки
             well_name (str): имя скважины
-            node name (list): список узлов, над которыми проводился тест   
+            node name (list): список узлов, над которыми проводился тест
 
         Returns:
 			specification: {
@@ -79,9 +78,9 @@ class QA_QC_wells(QA_QC_main):
                                                       1 - значение ошибочное,\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки   
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_names": list, список имен узлов                                               
+                        "node_names": list, список имен узлов
 					}
 			}
         """
@@ -100,7 +99,7 @@ class QA_QC_wells(QA_QC_main):
         Required data:
             node (np.array): временной ряд, по одному  из keywords_wefac показателю скважины\n
             node_name (str): имя типа узла (одно из keywords_wefac) \n
-            well_name (str): имя скважины, которо принадлежит узел 
+            well_name (str): имя скважины, которо принадлежит узел
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
@@ -108,15 +107,15 @@ class QA_QC_wells(QA_QC_main):
         Returns:
 			{
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int), 0 - значение временного ряда лежит в пределах интервала [0,1],\n
                                                        1 - значение временного ряда находится за пределами интервала [0,1],\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки   
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_names": list, список имен узлов                                                
+                        "node_names": list, список имен узлов
 					}
 			}
         """
@@ -152,7 +151,7 @@ class QA_QC_wells(QA_QC_main):
             self.nodes_obj (Nodes_historical_wells_data): обьект, содержащий узлы с историческими данными по скважинам\n
             node (np.array): временной ряд, по одному  из keywords_cumulative показателю скважины\n
             node_name (str): имя типа узла (одно из keywords_cumulative) \n
-            well_name (str): имя скважины, которо принадлежит узел 
+            well_name (str): имя скважины, которо принадлежит узел
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
@@ -160,15 +159,15 @@ class QA_QC_wells(QA_QC_main):
         Returns:
             {
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int), 0 - значение временного ряда больше предыдущего,\n
                                                        1 - значение временного ряда меньше или равно предыдущему,\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки   
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_name": str, имя узла                                                
+                        "node_name": str, имя узла
 					}
 			}
         """
@@ -199,13 +198,13 @@ class QA_QC_wells(QA_QC_main):
     def test_anomaly(self, node, node_name: str, well_name: str, get_report=True) -> dict:
         """
         Метод проверяет наличие аномалий типа "выброс" и "сдвиг" в передаваемом временном ряду.\n
-        Если аномалии обнаружены, то они записываются в словарь self.nodes_anomalies дл я соответсвующей скважины и узла. 
+        Если аномалии обнаружены, то они записываются в словарь self.nodes_anomalies дл я соответсвующей скважины и узла.
 
         Required data:
             self.nodes_obj (Nodes_historical_wells_data): обьект, содержащий узлы с историческими данными по скважинам\n
             node (np.array): временной ряд, по одному  из Nodes_historical_wells показателю скважины\n
             node_name (str): имя типа узла (одно из Nodes_historical_wells) \n
-            well_name (str): имя скважины, которо принадлежит узел 
+            well_name (str): имя скважины, которо принадлежит узел
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
@@ -213,15 +212,15 @@ class QA_QC_wells(QA_QC_main):
         Returns:
             {
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int), 0 - значение временного ряда больше предыдущего,\n
                                                        1 - значение временного ряда аномально,\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки   
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_name": str, имя узла                                                
+                        "node_name": str, имя узла
 					}
 			}
         """
@@ -240,7 +239,7 @@ class QA_QC_wells(QA_QC_main):
             text = 'В значениях ряда не наблюдаются аномалии'
             report_text = self.generate_report_text(text, 1)
         else:
-            text = 'В знаяениях ряда присутствуют аномалии'
+            text = 'В значениях ряда присутствуют аномалии'
             report_text = self.generate_report_text(text, 0)
 
         self.update_report(report_text)
@@ -267,15 +266,15 @@ class QA_QC_wells(QA_QC_main):
         Returns:
             {
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int), 0 - значение узла LPR равно сумме значений в узлах OPR и WPR,\n
                                                        1 - значение узла LPR не  авно сумме значений в узлах OPR и WPR,\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки                                
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_names": list =  список имен узлов, над которыми проводился тест                                                
+                        "node_names": list =  список имен узлов, над которыми проводился тест
 					}
 			}
         """
@@ -320,17 +319,17 @@ class QA_QC_wells(QA_QC_main):
         Returns:
             {
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int) shape(len(nodes), len(nodes[0])), 0 - поведение ряда BHP согласовано с поведением рядов LPR и GPR,\n
                                                        1 - поведение ряда BHP не согласовано с поведением ряда nodes[j] ,\n
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки                                
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_names": list,  список имен узлов, над которыми проводился тест 
+                        "node_names": list,  список имен узлов, над которыми проводился тест
                         "segments" : list, список индексов точек изменения временного ряда
-                        "poly1d_segments" : list, список апроксимирующих кривых, для каждого сегмента                                               
+                        "poly1d_segments" : list, список апроксимирующих кривых, для каждого сегмента
 					}
 			}
         """
@@ -430,16 +429,16 @@ class QA_QC_wells(QA_QC_main):
         Returns:
             {
 				"data_availability": bool (выполнялся или нет тест)
-				"result": bool 
+				"result": bool
 				"specification": {
 						"result_mask" : np.array(int), 0 - поведение ряда BHP согласовано с поведением рядов LPR и GPR,\n
                                                        1 - поведение ряда BHP не согласовано с поведением ряда nodes[j],\n
 
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
-                        "error_decr": text, описание ошибки                                
+                        "error_decr": text, описание ошибки
                         "well_name": str, имя скважины
-                        "node_names": list,  список имен узлов, над которыми проводился тест                                              
+                        "node_names": list,  список имен узлов, над которыми проводился тест
 					}
 			}
         """
