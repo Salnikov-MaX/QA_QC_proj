@@ -61,8 +61,6 @@ class QA_QC_wells(QA_QC_main):
 
         return nodes_anomalies
 
-    # def start_tests(self, list_of_tests: list, get_report=True) -> dict:
-
     def get_specification(self, result_mask: np.array, test_name: str, error_decr: str, well_name: str,
                           node_names: list):
 
@@ -97,7 +95,7 @@ class QA_QC_wells(QA_QC_main):
 
     def test_limit_0_1(self, node: np.array, node_name: str, well_name: str, get_report=True) -> dict:
         """
-        Метод проверяет ось времени на соответствие интервалу [0,1]
+        Метод проверяет коэф эксплуатации скважины на соответствие интервалу [0,1]
 
         Required data:
             node (np.array): временной ряд, по одному  из keywords_wefac показателю скважины\n
@@ -132,10 +130,10 @@ class QA_QC_wells(QA_QC_main):
         result = result_mask.sum() == 0
 
         if result:
-            text = 'Значения ряда находяься в интервале от 0 до 1'
+            text = 'Значения ряда находяться в интервале от 0 до 1'
             report_text = self.generate_report_text(text, 1)
         else:
-            text = 'Некоторые значения ряда находяься за пределами интервала от 0 до 1'
+            text = 'Некоторые значения ряда находяться за пределами интервала от 0 до 1'
             report_text = self.generate_report_text(text, 0)
 
         self.update_report(report_text)
@@ -261,7 +259,7 @@ class QA_QC_wells(QA_QC_main):
         Required data:
             self.nodes_obj (Nodes_historical_wells_data): обьект, содержащий узлы с историческими данными по скважинам\n
             well_name (str): имя скважины, которо принадлежат узелы \n
-            
+
 
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
@@ -315,7 +313,7 @@ class QA_QC_wells(QA_QC_main):
         Required data:
             self.nodes_obj (Nodes_historical_wells_data): обьект, содержащий узлы с историческими данными по скважинам\n
             well_name (str): имя скважины, которо принадлежат узелы \n
-     
+
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
 
@@ -425,7 +423,7 @@ class QA_QC_wells(QA_QC_main):
         Required data:
             self.nodes_obj (Nodes_historical_wells_data): обьект, содержащий узлы с историческими данными по скважинам\n
             well_name (str): имя скважины, которо принадлежат узелы \n
-     
+
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
 
@@ -436,7 +434,7 @@ class QA_QC_wells(QA_QC_main):
 				"specification": {
 						"result_mask" : np.array(int), 0 - поведение ряда BHP согласовано с поведением рядов LPR и GPR,\n
                                                        1 - поведение ряда BHP не согласовано с поведением ряда nodes[j],\n
-                                                       
+
                         "time_scale" : np.array(datetime.date), шкала времени для временного ряда
                         "test_name" : str, название теста
                         "error_decr": text, описание ошибки                                
@@ -515,10 +513,10 @@ class QA_QC_wells(QA_QC_main):
 
         Required data:
             specification (dict): спецификация полученная при выполнении теста\n
-            
+
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
-  
+
         """
 
         well_name = specification['well_name']
@@ -544,7 +542,6 @@ class QA_QC_wells(QA_QC_main):
             plt.axvspan(x[idxs[i]], x[idxs[i]], color='red', alpha=1)
 
         plt.title(f'{well_name}: {node_name}\n {test_name}')
-        # plt.show()
 
         if saving:
             file_name = f'{test_name}_{well_name}_{node_name}.png'
@@ -560,7 +557,7 @@ class QA_QC_wells(QA_QC_main):
 
         Required data:
             specification (dict): спецификация полученная при выполнении теста\n
-        
+
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
 
@@ -592,7 +589,6 @@ class QA_QC_wells(QA_QC_main):
 
         plt.title(f'{well_name}\n {test_name}')
         plt.legend()
-        # plt.show()
 
         if saving:
             file_name = f'{test_name}_{well_name}.png'
@@ -608,7 +604,7 @@ class QA_QC_wells(QA_QC_main):
 
         Required data:
             specification (dict): спецификация полученная при выполнении теста\n
-        
+
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
 
@@ -673,7 +669,7 @@ class QA_QC_wells(QA_QC_main):
 
         Required data:
             specification (dict): спецификация полученная при выполнении теста\n
-        
+
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
 
