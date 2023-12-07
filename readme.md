@@ -12,3 +12,8 @@
 - **scenarios_for_testing**: Все сценарии для тестирования кода
     - **{domain}_scenarios**: Агрегация сценариев по сфере использования (керн, сейсмика ...)
         - **scenario_name.ipynb** (**scenario_name.py**): Сценарий
+
+
+## Ссылки
+[Данные для тестирования](https://disk.yandex.ru/d/rjSbfjDl5_3Y4Q)
+
