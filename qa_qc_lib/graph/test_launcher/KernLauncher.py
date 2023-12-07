@@ -3,7 +3,7 @@ from typing import Optional, List
 from qa_qc_lib.graph.test_config import KernTestConfig
 from qa_qc_lib.graph.test_launcher.BaseLauncher import BaseLauncher
 from qa_qc_lib.graph.data_map.DataMap import KernData
-from qa_qc_lib.graph.data_map.KernMap import KernPathInfo, DataFilter
+from qa_qc_lib.graph.data_map.KernMap import KernDataInfo, DataFilter
 from qa_qc_lib.graph.graph import Graph
 from qa_qc_lib.tests.kern_tests.data_kern import DataKern
 from qa_qc_lib.tests.kern_tests.data_preprocessing_kern import DataPreprocessing
@@ -17,7 +17,7 @@ class KernLauncher(BaseLauncher):
         self.kern_data = kern_data
 
     @staticmethod
-    def kern_data_path_generate(file_path: str, kern_data: KernPathInfo):
+    def kern_data_path_generate(file_path: str, kern_data: KernDataInfo):
         path_items = [file_path, kern_data.sheet_name, kern_data.data_column]
         return "->".join([p_i for p_i in path_items if p_i is not None])
 

@@ -11,7 +11,7 @@ class DataFilter:
 
 
 @dataclass
-class KernPathInfo:
+class KernDataInfo:
     data_key: str
     data_column: str
     sheet_name: Optional[str]
@@ -20,7 +20,7 @@ class KernPathInfo:
 @dataclass
 class KernFileMap:
     data_path: str
-    map: List[KernPathInfo]
+    map: List[KernDataInfo]
 
     def __post_init__(self):
         if not os.path.isfile(self.data_path):

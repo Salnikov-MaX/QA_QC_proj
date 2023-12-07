@@ -8,6 +8,7 @@ from dacite import from_dict
 
 from qa_qc_lib.graph.data_map.CubeMap import CubeData
 from qa_qc_lib.graph.data_map.KernMap import KernData
+from qa_qc_lib.graph.data_map.SeismicMap import SeismicData
 from qa_qc_lib.graph.data_map.WellMap import WellData
 
 
@@ -46,6 +47,7 @@ class DataMap:
     kern: Optional[KernData]
     cube: Optional[CubeData]
     well: Optional[WellData]
+    seismic: Optional[SeismicData]
 
     @staticmethod
     def read_map(path: str) -> DataMap:

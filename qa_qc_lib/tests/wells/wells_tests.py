@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import ruptures as rpt
 import os
@@ -88,7 +90,7 @@ class QA_QC_wells(QA_QC_main):
 			}
         """
 
-        return {"result_mask": result_mask,
+        return {"result_mask": result_mask.tolist(),
                 "time_scale": [str(d) for d in self.nodes_obj.time_scale],
                 "test_name": test_name,
                 "error_decr": error_decr,
@@ -196,7 +198,7 @@ class QA_QC_wells(QA_QC_main):
         if get_report:
             self.report_function['test_monotony'](specification)
 
-        return {"data_availability": True, "result": result, "specification": specification}
+        return {"data_availability": True, "result": bool(result), "specification": specification}
 
     def test_anomaly(self, node, node_name: str, well_name: str, get_report=True) -> dict:
         """
@@ -251,7 +253,7 @@ class QA_QC_wells(QA_QC_main):
         if get_report:
             self.report_function['test_anomaly'](specification)
 
-        return {"data_availability": True, "result": result, "specification": specification}
+        return {"data_availability": True, "result": bool(result), "specification": specification}
 
     def test_LR_eq_sum_OR_and_WR(self, well_name: str, get_report=True) -> dict:
         """
@@ -306,7 +308,7 @@ class QA_QC_wells(QA_QC_main):
         if get_report:
             self.report_function['test_LR_eq_sum_OR_and_WR'](report_text, specification)
 
-        return {"data_availability": True, "result": result, "specification": specification}
+        return {"data_availability": True, "result": bool(result), "specification": specification}
 
     def test_imbalance_trends_with_BHP(self, well_name: str, get_report=True) -> dict:
         """
@@ -416,7 +418,7 @@ class QA_QC_wells(QA_QC_main):
         if get_report:
             self.report_function['test_imbalance_trends_with_BHP'](specification)
 
-        return {"data_availability": True, "result": result, "specification": specification}
+        return {"data_availability": True, "result": bool(result), "specification": specification}
 
     def test_imbalance_anomaly(self, well_name: str, get_report=True) -> dict:
         """
@@ -507,9 +509,9 @@ class QA_QC_wells(QA_QC_main):
         if get_report:
             self.report_function['test_imbalance_anomaly'](specification)
 
-        return {"data_availability": True, "result": result, "specification": specification}
+        return {"data_availability": True, "result": bool(result), "specification": specification}
 
-    def get_report_first_order_test(self, specification: dict, saving: bool = True):
+    def get_report_first_order_test(self, specification: dict, saving: bool = True) -> Optional[str]:
         """
         Визуализатор тестов первого порядка. \n
 
@@ -518,7 +520,7 @@ class QA_QC_wells(QA_QC_main):
             
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
-  
+            Optional[str] если сохраняется изображение возвращается путь до файла
         """
 
         well_name = specification['well_name']
@@ -544,17 +546,17 @@ class QA_QC_wells(QA_QC_main):
             plt.axvspan(x[idxs[i]], x[idxs[i]], color='red', alpha=1)
 
         plt.title(f'{well_name}: {node_name}\n {test_name}')
-        # plt.show()
 
         if saving:
             file_name = f'{test_name}_{well_name}_{node_name}.png'
             path_out_file = os.path.join(self.folder_report, file_name)
             fig.savefig(path_out_file)
             plt.close()
+            return path_out_file
         else:
             plt.show()
 
-    def get_report_test_LR_eq_sum_OR_and_WR(self, specification: dict, saving: bool = True):
+    def get_report_test_LR_eq_sum_OR_and_WR(self, specification: dict, saving: bool = True) -> Optional[str]:
         """
         Визуализатор для теста LPR = SUM(WPR +OPR). \n
 
@@ -563,6 +565,9 @@ class QA_QC_wells(QA_QC_main):
         
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
+            Optional[str] если сохраняется изображение возвращается путь до файла
+        Returns:
+
 
         """
         well_name = specification['well_name']
@@ -599,10 +604,12 @@ class QA_QC_wells(QA_QC_main):
             path_out_file = os.path.join(self.folder_report, file_name)
             fig.savefig(path_out_file)
             plt.close()
+            return path_out_file
+
         else:
             plt.show()
 
-    def get_report_test_imbalance_trends_with_BHP(self, specification: dict, saving: bool = True):
+    def get_report_test_imbalance_trends_with_BHP(self, specification: dict, saving: bool = True) -> Optional[str]:
         """
         Визуализатор для теста несогласованное поведение рядов BHP, GPR, WPR. \n
 
@@ -611,7 +618,8 @@ class QA_QC_wells(QA_QC_main):
         
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
-
+        Returns:
+            Optional[str] если сохраняется изображение возвращается путь до файла
         """
 
         well_name = specification['well_name']
@@ -664,10 +672,11 @@ class QA_QC_wells(QA_QC_main):
                 path_out_file = os.path.join(self.folder_report, file_name)
                 fig.savefig(path_out_file)
                 plt.close()
+                return path_out_file
             else:
                 plt.show()
 
-    def get_report_test_imbalance_anomaly(self, specification: dict, saving: bool = True):
+    def get_report_test_imbalance_anomaly(self, specification: dict, saving: bool = True) -> Optional[str]:
         """
         Визуализатор для теста несогласованное поведение рядов BHP, GPR, WPR. \n
 
@@ -676,7 +685,7 @@ class QA_QC_wells(QA_QC_main):
         
         Args:
             saving (bool): если True, то сохраняем рисунок в папке с отчетами.  Defaults to True.
-
+            Optional[str] если сохраняется изображение возвращается путь до файла
         """
         well_name = specification['well_name']
         test_name = specification['test_name']
@@ -715,5 +724,6 @@ class QA_QC_wells(QA_QC_main):
                 path_out_file = os.path.join(self.folder_report, file_name)
                 fig.savefig(path_out_file)
                 plt.close()
+                return path_out_file
             else:
                 plt.show()
