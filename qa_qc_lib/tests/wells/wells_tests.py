@@ -40,7 +40,7 @@ class QA_QC_wells(QA_QC_main):
                                 'test_imbalance_anomaly': self.get_report_test_imbalance_anomaly}
 
         self.nodes_anomalies = self.init_nodes_anomalies()
-        
+
     def init_nodes_anomalies(self):
         """Используется при инициализации класса, для первоначального заполнения сведений об аномалиях в каждом узле
 
@@ -61,8 +61,8 @@ class QA_QC_wells(QA_QC_main):
 
         return nodes_anomalies
 
-    def get_specification(self, result_mask: np.array, test_name: str, error_decr: str, well_name: str, node_names: list):
-
+    def get_specification(self, result_mask: np.array, test_name: str, error_decr: str, well_name: str,
+                          node_names: list):
         """Возвращает спецификацию теста
 
         Required data:

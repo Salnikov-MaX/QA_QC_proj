@@ -1,5 +1,7 @@
 import datetime
 import inspect
+import os
+from typing import List, Optional
 
 
 class QA_QC_main():
@@ -34,7 +36,7 @@ class QA_QC_main():
         else:
             return "Метод не найден."
 
-    def start_tests(self, list_of_tests: list, get_report=True) -> dict:
+    def start_tests(self, list_of_tests: List[str], get_report=True) -> List[dict]:
         """
         Метод который запускает все тесты, которые переданы в виде списка list_of_tests
 
@@ -45,10 +47,60 @@ class QA_QC_main():
         Returns:
             dict: результаты выбранных тестов
         """
-        results = {}
+        results = []
+        for method_name in list_of_tests:
+
+            try:
+                method = getattr(self, method_name)
+
+                try:
+                    report = method(get_report=get_report)
+                except TypeError as _:
+                    report = method()
+                results.append({**report, 'test_name': method_name})
+
+            except Exception as e:
+                results.append({"test_name": method_name, 'error': str(e)})
+                print(method_name, e)
+
+        return results
+
+    def start_tests_debug(self, list_of_tests: List[str], get_report=True) -> List[dict]:
+        results = []
+
         for method_name in list_of_tests:
             method = getattr(self, method_name)
-            results[method_name] = method(get_report=get_report)
+
+            try:
+                report = method(get_report=get_report)
+            except TypeError as _:
+                report = method()
+
+            results.append(report)
+        return results
+
+    def start_tests_with_filters(self, list_of_tests: List[tuple[str, Optional[List[dict]]]], get_report=True) \
+            -> List[dict]:
+        """
+        Метод который запускает все тесты вместе с фильтрами, которые переданы в виде списка list_of_tests
+        List[tuple[str- (имя теста), List[dict] - фильтры теста]]
+
+        Args:
+            list_of_tests (list): список названий тестов которые должны быть проведены
+            get_report (bool, optional): _description_. Defaults to True.
+
+        Returns:
+            dict: результаты выбранных тестов
+        """
+        results: List[dict] = []
+        for method_name, filters in list_of_tests:
+            try:
+                method = getattr(self, method_name)
+                results.append({**method(get_report=get_report, filters=filters), "data_filters": filters})
+            except Exception as e:
+                results.append({"test_name": method_name, "data_filters": filters, 'error': str(e)})
+                print(e)
+
         return results
 
     def generate_test_report(self, file_name='test_report', file_path='report', data_name=None):
@@ -61,7 +113,10 @@ class QA_QC_main():
             data_name (str, optional): название данных который подвергались тестированию. 
                                        Данное название отобразится в итоговом отчете. Defaults to self.file_name.
         """
-        data_name = self.file_name if not data_name else data_name
+        if not os.path.isdir(file_path):
+            os.mkdir(file_path)
+
+        data_name = file_name if not data_name else data_name
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
         report = f"Отчет о тестировании от {timestamp}{self.ident}Название тестируемого файла: '{data_name}'\n\n{self.report_text} "
         with open(f"{file_path}/{file_name}.txt", "w") as file:

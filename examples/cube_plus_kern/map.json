@@ -1,0 +1,14 @@
+{
+  "settings": {
+    "only_ready_for_launch_test": true
+  },
+  "well": {
+    "well_dir": "/mnt/c/Projects/QAQC/QA_QC_proj/data/wells_data",
+    "well_files": [
+      "FULL_TNAV__626.SMSPEC",
+      "FULL_TNAV__626.UNSMRY"
+    ]
+  }
+}
+
+
