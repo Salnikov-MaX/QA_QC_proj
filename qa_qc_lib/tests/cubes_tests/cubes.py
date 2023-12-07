@@ -32,6 +32,7 @@ class QA_QC_cubes(QA_QC_main):
                  ntg_file_path: str or None = None,
                  so_file_path: str or None = None,
                  sg_file_path: str or None = None,
+                 j_function_file_path: str or None = None,
                  h_abs_ascii_path: str or None = None,
                  h_eff_ascii_path: str or None = None,
                  heffo_ascii_path: str or None = None,
@@ -59,6 +60,7 @@ class QA_QC_cubes(QA_QC_main):
         self.ntg_file_path = ntg_file_path
         self.so_file_path = so_file_path
         self.sg_file_path = sg_file_path
+        self.j_function_file_path = j_function_file_path
         self.save_wrong_data_path = save_wrong_data_path
         self.h_abs_ascii_path = h_abs_ascii_path
         self.h_eff_ascii_path = h_eff_ascii_path
@@ -103,6 +105,8 @@ class QA_QC_cubes(QA_QC_main):
     def generate_report_tests(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
         CubesTools().generate_wrong_actnum(np.array(returns_dict["specification"]["wrong_data"]),self.grid_head, save_path, name)
 
+    def generate_report_tests_ascii(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        CubesTools().generate_wrong_map(np.array(returns_dict["specification"]["wrong_data"]),returns_dict["specification"]["head"], save_path, name)
     def __generate_returns_dict(self, data_availability: bool, result: bool or None,
                                 wrong_data: np.array or None) -> dict:
         wrong_list = None if wrong_data is None else CubesTools().conver_n3d_to_n1d(wrong_data).tolist()
@@ -111,6 +115,18 @@ class QA_QC_cubes(QA_QC_main):
             "result": result,
             "specification": {
                 "wrong_data": wrong_list
+            }
+        }
+
+    def __generate_returns_dict_ascii(self, data_availability: bool, result: bool or None,head:str,
+                                wrong_data: np.array or None) -> dict:
+        wrong_list = None if wrong_data is None else CubesTools().conver_n3d_to_n1d(wrong_data).tolist()
+        return {
+            "data_availability": data_availability,
+            "result": result,
+            "specification": {
+                "wrong_data": wrong_list,
+                "head": head
             }
         }
 
@@ -274,6 +290,35 @@ class QA_QC_cubes(QA_QC_main):
 
             return self.__generate_returns_dict(True, False, wrong_data)
 
+    def __abstract_test_permeability_ascii(self, file_path: str) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Args:
+                file_path: str: путь к файлу
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование, head - описание файла
+        """
+        data, head = QA_QC_asciigrid_parser().parse_to_dataframe(file_path)
+        flag, wrong_data = self.__test_range_data(
+            data['z'],
+            [lambda x: x >= 0],
+            sum
+        )
+
+        if flag:
+            r_text = f"Данные > 0"
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict_ascii(True, True,"", None)
+        else:
+            r_text = f"Данные < 0"
+            self.update_report(self.generate_report_text(
+                r_text,
+                0))
+
+            return self.__generate_returns_dict_ascii(True, False,head, wrong_data)
+
     def generate_report_tests_permeability_permX(self, returns_dict: dict, save_path: str = '.',
                                                  name: str = "QA-QC"):
         self.generate_report_tests(returns_dict, save_path, name)
@@ -329,6 +374,113 @@ class QA_QC_cubes(QA_QC_main):
             self.update_report(self.generate_report_text("Данные PermZ отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
         return self.__abstract_test_permeability(file_path=self.open_perm_z_file_path)
+
+    def generate_report_tests_permeability_Jfunction(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
+    def test_permeability_Jfunction(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+                J-function;
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.j_function_file_path is None:
+            return self.__generate_returns_dict(False, None, None)
+        return self.__abstract_test_permeability(file_path=self.j_function_file_path)
+
+    def generate_report_tests_permeability_h_abs(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
+    def test_permeability_h_abs(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+               Абсолютные_толщины(h_abs);
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.h_abs_ascii_path is None:
+            return self.__generate_returns_dict_ascii(False, None,"", None)
+
+
+        return self.__abstract_test_permeability_ascii(file_path=self.h_abs_ascii_path)
+
+    def generate_report_tests_permeability_h_eff(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
+    def test_permeability_h_eff(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+               Эффективные_толщины(h_eff);
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.h_eff_ascii_path is None:
+            return self.__generate_returns_dict_ascii(False, None,"", None)
+
+
+        return self.__abstract_test_permeability_ascii(file_path=self.h_eff_ascii_path)
+
+    def generate_report_tests_permeability_heffo(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
+    def test_permeability_heffo(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+               Эффективные_нефтенасыщенные_толщины(heffo);
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.heffo_ascii_path is None:
+            return self.__generate_returns_dict_ascii(False, None, "", None)
+
+
+        return self.__abstract_test_permeability_ascii(file_path=self.heffo_ascii_path)
+
+    def generate_report_tests_permeability_heffg(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
+    def test_permeability_heffg(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+               Эффективные_газонасыщенные_толщины(heffg);
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.heffg_ascii_path is None:
+            return self.__generate_returns_dict_ascii(False, None, "", None)
+
+
+        return self.__abstract_test_permeability_ascii(file_path=self.heffg_ascii_path)
+
+    def test_permeability_Jfunction(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+                J-function;
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.j_function_file_path is None:
+            return self.__generate_returns_dict(False, None, None)
+        return self.__abstract_test_permeability(file_path=self.j_function_file_path)
 
     def __abstract_test_range_data(self, file_path: str) -> dict:
         """
