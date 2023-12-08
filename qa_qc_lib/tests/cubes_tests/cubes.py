@@ -106,7 +106,11 @@ class QA_QC_cubes(QA_QC_main):
         CubesTools().generate_wrong_actnum(np.array(returns_dict["specification"]["wrong_data"]),self.grid_head, save_path, name)
 
     def generate_report_tests_ascii(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
-        CubesTools().generate_wrong_map(np.array(returns_dict["specification"]["wrong_data"]),returns_dict["specification"]["head"], save_path, name)
+        CubesTools().generate_wrong_map(
+            np.array(returns_dict["specification"]["wrong_data"]),
+            np.array(returns_dict["specification"]["x"]),
+            np.array(returns_dict["specification"]["y"]),
+            returns_dict["specification"]["head"], save_path, name)
     def __generate_returns_dict(self, data_availability: bool, result: bool or None,
                                 wrong_data: np.array or None) -> dict:
         wrong_list = None if wrong_data is None else CubesTools().conver_n3d_to_n1d(wrong_data).tolist()
@@ -119,14 +123,18 @@ class QA_QC_cubes(QA_QC_main):
         }
 
     def __generate_returns_dict_ascii(self, data_availability: bool, result: bool or None,head:str,
-                                wrong_data: np.array or None) -> dict:
+                                wrong_data: np.array or None, x: np.array or None, y: np.array or None) -> dict:
         wrong_list = None if wrong_data is None else CubesTools().conver_n3d_to_n1d(wrong_data).tolist()
+        x_list = None if x is None else x.tolist()
+        y_list = None if y is None else y.tolist()
         return {
             "data_availability": data_availability,
             "result": result,
             "specification": {
                 "wrong_data": wrong_list,
-                "head": head
+                "head": head,
+                "x": x_list,
+                "y": y_list,
             }
         }
 
@@ -184,6 +192,26 @@ class QA_QC_cubes(QA_QC_main):
             copy_actnum = copy.deepcopy(self.grid_model.get_grid().get_actnum())
             copy_actnum.values[np.where(self.actnum == 1)] = (mask_array == False)
             return False, copy_actnum.values
+
+    def __test_range_data_ascii(self, _array, lambda_list: list[any], f) -> tuple[
+        bool,
+        np.array or None]:
+        """
+        Функция для проверки данных в диапазоне
+
+            Args:
+               array: список с тестируемыми данными
+               lambda_list: list[any]: список с вырожениями для проверки
+
+            Returns:
+                bool: результат тестирования
+                np.array or None: массив со значениями для wrong actnum
+        """
+        mask_array = (f([func(_array) for func in lambda_list])).astype(dtype=bool)
+        if np.all(mask_array):
+            return True, None
+        else:
+            return False, mask_array == False
 
 
     def __test_value_conditions(self, prop_name: str, lambda_list: list[any], f) -> tuple[
@@ -269,7 +297,7 @@ class QA_QC_cubes(QA_QC_main):
                 file_path: str: путь к файлу
 
             Returns:
-                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+                 dict: Словарь, specification cловарь где , wrong_data - список значений которые не прошли тестирование
         """
         _, key = CubesTools().find_key(file_path)
         flag, wrong_data = self.__test_value_conditions(
@@ -298,10 +326,10 @@ class QA_QC_cubes(QA_QC_main):
                 file_path: str: путь к файлу
 
             Returns:
-                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование, head - описание файла
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование, head - описание файла, , x - X индексы, y - Y индексы
         """
         data, head = QA_QC_asciigrid_parser().parse_to_dataframe(file_path)
-        flag, wrong_data = self.__test_range_data(
+        flag, wrong_data = self.__test_range_data_ascii(
             data['z'],
             [lambda x: x >= 0],
             sum
@@ -317,7 +345,7 @@ class QA_QC_cubes(QA_QC_main):
                 r_text,
                 0))
 
-            return self.__generate_returns_dict_ascii(True, False,head, wrong_data)
+            return self.__generate_returns_dict_ascii(True, False, head, wrong_data, data['x'], data['y'])
 
     def generate_report_tests_permeability_permX(self, returns_dict: dict, save_path: str = '.',
                                                  name: str = "QA-QC"):
