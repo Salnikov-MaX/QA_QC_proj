@@ -1058,6 +1058,9 @@ class QA_QC_cubes(QA_QC_main):
 
             return self.__generate_returns_dict(True, False, wrong_data)
 
+    def generate_report_tests_inconsistencies_habs_heff(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
     def test_inconsistencies_habs_heff(self):
         """
         При сравнении двух карт, в каждой в ij-точке значение абсолютной толщины должно быть больше или равно значению эффективной толщины:
@@ -1073,11 +1076,11 @@ class QA_QC_cubes(QA_QC_main):
         """
         if self.h_abs_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_ABS отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         if self.h_eff_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_EFF отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         h_abs_data, head = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_abs_ascii_path)
         h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_eff_ascii_path)
@@ -1091,7 +1094,7 @@ class QA_QC_cubes(QA_QC_main):
         if flag:
             r_text = f"Данные H_ABS >= H_EFF"
             self.update_report(self.generate_report_text(r_text, 1))
-            return self.__generate_returns_dict(True, True, None)
+            return self.__generate_returns_dict_ascii(True, True,"", None, None, None)
         else:
             r_text = f"Данные H_ABS < H_EFF"
             self.update_report(
@@ -1099,8 +1102,11 @@ class QA_QC_cubes(QA_QC_main):
                     r_text,
                     0))
 
-            return self.__generate_returns_dict(True, False, wrong_data)
+            return self.__generate_returns_dict(True, False, head, wrong_data, h_abs_data['x'], h_abs_data['y'])
 
+    def generate_report_tests_inconsistencies_habs_heff_heffo(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
     def test_inconsistencies_habs_heff_heffo(self):
         """
         При сопоставлении трех карт в каждой в ij-точке значение абсолютной толщины должно быть больше или равно значению эффективной толщины, которое в свою очередь больше или равно значению эффективной нефтенасыщенной толщины
@@ -1117,15 +1123,15 @@ class QA_QC_cubes(QA_QC_main):
         """
         if self.h_abs_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_ABS отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         if self.h_eff_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_EFF отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         if self.heffo_ascii_path is None:
             self.update_report(self.generate_report_text("Данные HEFFO отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         h_abs_data, head = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_abs_ascii_path)
         h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_eff_ascii_path)
@@ -1147,7 +1153,7 @@ class QA_QC_cubes(QA_QC_main):
             if flag:
                 r_text = f"Данные H_EFF >= HEFFO"
                 self.update_report(self.generate_report_text(r_text, 1))
-                return self.__generate_returns_dict(True, True, None)
+                return self.__generate_returns_dict_ascii(True, True, "", None, None, None)
             else:
                 r_text = f"Данные H_EFF < HEFFO"
                 self.update_report(
@@ -1155,7 +1161,7 @@ class QA_QC_cubes(QA_QC_main):
                         r_text,
                         0))
 
-                return self.__generate_returns_dict(True, False, wrong_data)
+                return self.__generate_returns_dict_ascii(True, False, head, wrong_data, h_abs_data['x'], h_abs_data['Y'])
         else:
             r_text = f"Данные H_ABS < H_EFF"
             self.update_report(
@@ -1163,8 +1169,11 @@ class QA_QC_cubes(QA_QC_main):
                     r_text,
                     0))
 
-            return self.__generate_returns_dict(True, False, wrong_data)
+            return self.__generate_returns_dict_ascii(True, False,head, wrong_data, h_abs_data['x'], h_abs_data['Y'])
 
+    def generate_report_tests_inconsistencies_habs_heff_heffg(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
     def test_inconsistencies_habs_heff_heffg(self):
         """
         При сопоставлении трех карт в каждой в ij-точке значение абсолютной толщины должно быть больше или равно значению эффективной толщины, которое в свою очередь больше или равно значению эффективной газонасыщенной толщины
@@ -1181,15 +1190,15 @@ class QA_QC_cubes(QA_QC_main):
         """
         if self.h_abs_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_ABS отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         if self.h_eff_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_EFF отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         if self.heffg_ascii_path is None:
             self.update_report(self.generate_report_text("Данные HEFFG отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         h_abs_data, head = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_abs_ascii_path)
         h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_eff_ascii_path)
@@ -1211,7 +1220,7 @@ class QA_QC_cubes(QA_QC_main):
             if flag:
                 r_text = f"Данные H_EFF >= HEFFG"
                 self.update_report(self.generate_report_text(r_text, 1))
-                return self.__generate_returns_dict(True, True, None)
+                return self.__generate_returns_dict_ascii(True, True, "", None, None, None)
             else:
                 r_text = f"Данные H_EFF < HEFFG"
                 self.update_report(
@@ -1219,7 +1228,7 @@ class QA_QC_cubes(QA_QC_main):
                         r_text,
                         0))
 
-                return self.__generate_returns_dict(True, False, wrong_data)
+                return self.__generate_returns_dict(True, False,head, wrong_data, h_abs_data['x'], h_abs_data['y'])
         else:
             r_text = f"Данные H_ABS < H_EFF"
             self.update_report(
@@ -1227,7 +1236,7 @@ class QA_QC_cubes(QA_QC_main):
                     r_text,
                     0))
 
-            return self.__generate_returns_dict(True, False, wrong_data)
+            return self.__generate_returns_dict_ascii(True, False, head, wrong_data, h_abs_data['x'], h_abs_data['y'])
 
     def test_incorrect_values_sgu(self):
 
