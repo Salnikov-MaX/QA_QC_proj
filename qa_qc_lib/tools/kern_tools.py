@@ -2,7 +2,6 @@
 #######################| РЕАЛИЗАЦИЯ ВСПОМОГАТЕЛЬНЫХ ФУНКЦИЙ QA_QC_kern |##############################
 #########################################################################################################
 import numpy as np
-import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.legend_handler import HandlerLine2D
 from sklearn.linear_model import LinearRegression
@@ -156,24 +155,20 @@ def linear_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, te
     plt.legend(handler_map={line1: HandlerLine2D(numpoints=2), line2: HandlerLine2D(numpoints=2)})
     equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
     plt.text(np.min(x), np.max(y), equation)
-    plt.savefig(f"..\\..\\data\\{test_name}")
+    plt.savefig(f"../../data/core_data/{test_name}")
     if get_report:
         plt.show()
     plt.close()
 
 
-def logarithm_function_visualization(x, y, a, b, r2, get_report, x_name, y_name, test_name,
-                                     wrong_values_indices):
+def logarithm_function_visualization(x, y, r2, get_report, x_name, y_name, test_name, wrong_values_indices):
     """
-    Функция для визуализации линии тренда, отображения выпадающих точек и доверительного коридора
-    для логарифмической зависимости
+    Функция для визуализации преобразования логарифмической зависимости в линейную
 
     Args:
         x(np.array(int)): массив с X значениями
         y(np.array(int)): массив с Y значениями
-        a(int): коэффициент наклона
-        b(int): коэффициент сдвига от начала координат
-        r2(int): коэффициент детерминации r2
+        r2(int): коэффицент детерминации r2
         get_report(bool): флаг для отображения графика
         x_name(string): название оси X
         y_name(string): название оси Y
@@ -184,28 +179,39 @@ def logarithm_function_visualization(x, y, a, b, r2, get_report, x_name, y_name,
         plt(file) - график зависимости
     """
 
-    _, _, x_in_down, y_in_down, x_in_up, y_in_up = bourders_initializer(x, y)
+    # Преобразование данных логарифмической зависимости
+    x_log = np.log(x)
+    y_log = y
+    _, _, x_in_down, y_in_down, x_in_up, y_in_up = bourders_initializer(x_log, y_log)
 
-    x_trend = np.linspace(np.min(x), np.max(x), 100)
-    y_trend = np.exp(a * np.log(x_trend) + b)
+    # Линейная регрессия в пространстве логарифмов
+    model = np.polyfit(x_log, y_log, 1)
+    a_log = model[0]
+    b_log = model[1]
 
+    # Построение линии тренда на исходных данных с использованием логарифмической шкалы по обеим осям
+    x_trend = np.linspace(np.min(x_log), np.max(x_log), 100)
+    y_trend = a_log * x_trend + b_log
     # Построение кроссплота
     plt.title(test_name)
-    plt.scatter(x, y, color='b', label='Данные')
+    plt.scatter(x_log, y, color='b', label='Данные')
     plt.plot(x_trend, y_trend, color='r', label='Линия тренда')
     plt.xlabel(x_name)
     plt.ylabel(y_name)
     plt.legend()
 
     # Визуализация неправильных значений
-    plt.scatter(x[wrong_values_indices], y[wrong_values_indices], color='r')
+    plt.scatter(x_log[wrong_values_indices], y[wrong_values_indices], color='r')
 
     line1, = plt.plot(x_in_down, y_in_down, marker='o', label='inner_down', color='C2')
     line2, = plt.plot(x_in_up, y_in_up, marker='o', label='inner_up', color='C2')
     plt.legend(handler_map={line1: HandlerLine2D(numpoints=2), line2: HandlerLine2D(numpoints=2)})
-    equation = f'y = {a:.2f}x + {b:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
-    plt.text(np.min(x), np.max(y), equation)
-    plt.savefig(f"..\\..\\data\\{test_name}")
+
+    equation = f'y = {a_log:.2f}log(x) + {b_log:.2f}, r2={r2:.2f}'  # Форматирование чисел до двух знаков после запятой
+    plt.text(np.min(x_log), np.max(y), equation)
+    plt.savefig(f"../../data/core_data/{test_name}")
+
     if get_report:
         plt.show()
     plt.close()
+

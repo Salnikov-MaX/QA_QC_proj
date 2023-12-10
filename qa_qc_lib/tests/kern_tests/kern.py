@@ -180,6 +180,106 @@ class QA_QC_kern(QA_QC_main):
         result = np.sum(result_mask) == 0
         return result_mask, result
 
+    def __create_errors_dict(self, param_names, wrong_arrays, check_texts) -> dict:
+        """
+        Метод предназначен для создания словаря с ошибками
+        Args:
+            param_names(list[string]): массив с названиями проверяемых значений
+            wrong_arrays(list[np.ndarray[int]]): массив, содержащий массив с ошибочными значениями
+            check_texts(list[string]): массив с текстами ошибок
+
+        Returns:
+            dict({"string":tuple}) - словарь с ошибками, где ключ название параметра, а значение
+             пара из массива с ошибками и описанием ошибки
+
+        """
+        errors_dict = {}
+
+        for i, param_name in enumerate(param_names):
+            errors_dict[param_name] = (wrong_arrays[i], check_texts[i])
+        return errors_dict
+
+    def __get_first_wrong_array(self, param_names, wrong_arrays, check_texts) -> tuple[str, np.ndarray, str]:
+        """
+        Метод предназначен для поиска первого провалившего проверку параметра
+        Args:
+            param_names(list[string]): массив с названиями проверяемых значений
+            wrong_arrays(list[np.ndarray[int]]): массив, содержащий массив с ошибочными значениями
+            check_texts(list[string]): массив с текстами ошибок
+
+        Returns:
+            key(string): название ошибочного параметра
+            error_array(np.ndarray[int]): массив с ошибочными значениями
+            error_description(string): описание ошибки
+
+        """
+        errors_dict = self.__create_errors_dict(param_names, wrong_arrays, check_texts)
+        for key, (error_array, error_description) in errors_dict.items():
+            if len(error_array) > 0:
+                return key, error_array, error_description
+
+    def __find_duplicate_indices(self, arr) -> list[tuple]:
+        """
+        Находит индексы попарно одинаковых значений в массиве
+
+        Args:
+            arr (np.ndarray[int/float]): входной массив
+
+        Returns:
+            array[tuple]: список кортежей с индексами попарно одинаковых значений
+        """
+        # Создаем словарь для хранения индексов
+        index_dict = {value: [] for value in arr}
+
+        # Заполняем словарь индексами
+        for i, value in enumerate(arr):
+            index_dict[value].append(i)
+
+        # Формируем список кортежей с индексами попарно одинаковых значений
+        duplicate_indices = [(idx1, idx2) for indices in index_dict.values() for idx1, idx2 in
+                             zip(indices, indices[1:])]
+
+        return duplicate_indices
+
+    def __find_difference_in_duplicate_indices(self, duplicate_indices1, duplicate_indices2) -> list[tuple]:
+
+        """
+        Находит различия между двумя списками duplicate_indices и возвращает отличающиеся пары
+
+        Args:
+            duplicate_indices1 (array[tuple]): первый список кортежей с индексами
+            duplicate_indices2 (array[tuple]): второй список кортежей с индексами
+
+        Returns:
+             array[tuple]: отличающиеся пары индексов
+        """
+        set1 = set(duplicate_indices1)
+        set2 = set(duplicate_indices2)
+
+        difference = (set1 | set2) - (set1 & set2)
+        return list(difference)
+
+    def __create_mask(self, array, diff) -> np.ndarray:
+
+        """
+        Создает маску, где 1 помечены пары значений, которые не совпадают
+
+        Args:
+            array (np.ndarray[int/float]): массив для пометки совпадений
+            diff (array[tuple]): список кортежей с индексами повторяющихся значений
+
+        Returns:
+            mask(np.ndarray[int]): маска для array
+
+        """
+
+        mask = np.zeros_like(array)
+
+        for indices in diff:
+            mask[indices[0]] = 1
+            mask[indices[1]] = 1
+        return mask
+
     def __check_data(self, array, get_report=True) -> tuple[bool, np.array, str]:
         """
         Тест предназначен для проверки условия - все элементы массива должны быть числовыми.
@@ -258,12 +358,12 @@ class QA_QC_kern(QA_QC_main):
             result_mask, result = self.__check_poro_intervals(porosity_open)
             text = self.consts.porosity_interval_accepted if result else self.consts.porosity_interval_wrong
             self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(poro_name, test_name, text, result_mask, index)
+            self.data_kern.dict_array.append({test_name: [poro_name, text, result_mask, index]})
 
             return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
                                                 test_name, [poro_name])
         else:
-            self.data_kern.mark_errors(poro_name, test_name, check_text, wrong, index)
+            self.data_kern.dict_array.append({test_name: [poro_name, check_text, wrong, index]})
             return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
                                                 test_name, [poro_name])
 
@@ -290,12 +390,12 @@ class QA_QC_kern(QA_QC_main):
             result_mask, result = self.__zero_one_interval_check(param_name)
             text = self.consts.zero_one_interval_accepted if result else self.consts.zero_one_interval_wrong
             self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(param_name, test_name, text, result_mask, index)
+            self.data_kern.dict_array.append({test_name: [param_name, text, result_mask, index]})
 
             return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
                                                 test_name, [param_name])
         else:
-            self.data_kern.mark_errors(param_name, test_name, check_text, wrong, index)
+            self.data_kern.dict_array.append({test_name: [param_name, check_text, wrong, index]})
             return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
                                                 test_name, [param_name])
 
@@ -323,11 +423,12 @@ class QA_QC_kern(QA_QC_main):
             result_mask, result = self.__greater_than_zero_check(param)
             text = self.consts.greater_than_zero_accepted if result else self.consts.greater_than_zero_wrong
             self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(param_name, test_name, text, result_mask, index)
+            self.data_kern.dict_array.append({test_name: [param_name, text, result_mask, index]})
 
             return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
                                                 test_name, [param_name])
         else:
+            self.data_kern.dict_array.append({test_name: [param_name, check_text, wrong, index]})
             return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
                                                 test_name, [param_name])
 
@@ -356,14 +457,108 @@ class QA_QC_kern(QA_QC_main):
             result = sum(result_mask) == 0
             text = self.consts.vp_vs_accepted if result else self.consts.vp_vs_wrong
             self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(vp_or_vs_param, test_name, text, result_mask, index)
-
+            self.data_kern.dict_array.append({test_name: [vp_or_vs_param, text, result_mask, index]})
             return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
                                                 test_name, [vp_or_vs])
         else:
-            self.data_kern.mark_errors(vp_or_vs_param, test_name, check_text, wrong, index)
+            self.data_kern.dict_array.append({test_name: [vp_or_vs_param, check_text, wrong, index]})
             return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
                                                 test_name, [vp_or_vs])
+
+    def __main_poro_perm_cut_off(self, poro_name, test_name, get_report=True, filters=None) -> dict:
+        """
+        Основной тест для проверки соответствия ФЕС и критериев отсечения
+        Если Кп>Кп_cut_off то тогда Кпр>Кпр_cut_off
+
+        Args:
+            poro_name(string):название используемой пористости
+            test_name(string): название теста
+
+        """
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(
+            param=[poro_name, self.consts.kpr_abs],
+            filters=filters)
+
+        cut_off_df, _, _, _ = self.__get_data_from_data_kern(param=[self.consts.cut_off_poro, self.consts.cut_off_perm],
+                                                             filters=None)
+        result_dict = {}
+        poro_param = np.array(clear_df[poro_name])
+        kpr_param = np.array(clear_df[self.consts.kpr_abs])
+        poro_cut_off = np.array(cut_off_df[self.consts.cut_off_poro])
+        perm_cut_off = np.array(cut_off_df[self.consts.cut_off_perm])
+        check_result_for_poro_param, wrong_for_poro_param, check_text_for_poro_param = self.__check_data(
+            poro_param, get_report)
+        check_result_for_kpr_param, wrong_for_kpr_param, check_text_for_kpr_param = self.__check_data(
+            kpr_param, get_report)
+        check_result_for_poro_cut_off, wrong_for_poro_cut_off, check_text_for_poro_cut_off = self.__check_data(
+            poro_cut_off, get_report)
+        check_result_for_perm_cut_off, wrong_for_perm_cut_off, check_text_for_perm_cut_off = self.__check_data(
+            perm_cut_off, get_report)
+        check_result = check_result_for_poro_param and check_result_for_kpr_param \
+                       and check_result_for_poro_cut_off and check_result_for_perm_cut_off
+        if check_result:
+            indices_poro = np.where(poro_param > poro_cut_off)[0]
+            mask = (kpr_param[indices_poro] < perm_cut_off)
+            result_mask = np.zeros_like(poro_param)
+            result_mask[indices_poro[mask]] = 1
+            result = np.sum(result_mask) == 0
+            text = self.consts.cut_off_accepted if result else self.consts.cut_off_wrong
+            self.__generate_report(text, result, get_report)
+            self.data_kern.dict_array.append({test_name: [poro_name, text, result_mask, index]})
+            self.data_kern.dict_array.append({test_name: [self.consts.kpr_abs, text, result_mask, index]})
+
+            result_dict[poro_name] = result_mask.tolist()
+            result_dict[self.consts.kpr_abs] = result_mask.tolist()
+            return self.__generate_returns_dict(check_result, result,
+                                                result_dict, text, well_name, md,
+                                                test_name, [poro_name, self.consts.kpr_abs, self.consts.cut_off_poro,
+                                                            self.consts.cut_off_perm])
+
+        else:
+            param_name, result_mask, text = self.__get_first_wrong_array(
+                [poro_name, self.consts.kpr_abs, self.consts.cut_off_poro, self.consts.cut_off_perm],
+                [wrong_for_poro_param, wrong_for_kpr_param, wrong_for_poro_cut_off, wrong_for_perm_cut_off],
+                [check_text_for_poro_param, check_text_for_kpr_param, check_text_for_poro_cut_off,
+                 check_text_for_perm_cut_off])
+            self.data_kern.dict_array.append({test_name: [param_name, text, result_mask, index]})
+            return self.__generate_returns_dict(check_result, False,
+                                                result_mask,
+                                                text,
+                                                well_name,
+                                                md,
+                                                test_name, [poro_name, self.consts.kpr_abs, self.consts.cut_off_poro,
+                                                            self.consts.cut_off_perm])
+
+    def __main_data_tampering(self, first_param_name: str, second_param_name: str,
+                              filters) -> tuple[bool, np.ndarray, np.ndarray, str, np.ndarray]:
+
+        """
+        Основной тест для проверки подлога данных
+
+        Args:
+            first_param_name(string): название первого параметра
+            second_param_name(string): название второго параметра
+
+        Returns:
+            result(bool): результат проверки
+            mask(np.ndarray(int): маска с результатом
+            index(np.ndarray(int): индексы данных по глубине после удаления nan
+            well_name(string): название скважины
+            md(np.ndarray(int): массив с глубинами для которых взяты данные
+        """
+
+        clear_df, index, well_name, md = self.__get_data_from_data_kern(
+            param=[first_param_name, second_param_name],
+            filters=filters)
+        first_param = np.array(clear_df[first_param_name])
+        second_param = np.array(clear_df[second_param_name])
+        duplicate_indices_first_param = self.__find_duplicate_indices(first_param)
+        duplicate_indices_second_param = self.__find_duplicate_indices(second_param)
+        diff = self.__find_difference_in_duplicate_indices(duplicate_indices_first_param,
+                                                           duplicate_indices_second_param)
+        mask = self.__create_mask(first_param, diff)
+        result = np.sum(mask) == 0
+        return result, mask, index, well_name, md
 
     def test_monotony(self, get_report=True, filters=None) -> dict:
         """
@@ -391,13 +586,13 @@ class QA_QC_kern(QA_QC_main):
             result = sum(result_mask) == 0
             text = self.consts.monotony_accepted if result else self.consts.monotony_wrong
             self.__generate_report(text, result, get_report)
+            self.data_kern.dict_array.append({"test_monotony": [self.consts.md, text, result_mask, index]})
 
-            self.data_kern.mark_errors(self.consts.md, "test_monotony", text, result_mask, index)
             return self.__generate_returns_dict(check_result, result, result_mask, text, well_name, md,
                                                 "test_monotony", [self.consts.md])
 
         else:
-            self.data_kern.mark_errors(self.consts.md, "test_monotony", check_text, wrong, index)
+            self.data_kern.dict_array.append({"test_monotony": [self.consts.md, check_text, wrong, index]})
             return self.__generate_returns_dict(check_result, False, wrong, check_text, well_name, md,
                                                 "test_monotony", [self.consts.md])
 
@@ -473,7 +668,7 @@ class QA_QC_kern(QA_QC_main):
                       MD - массив с глубинами
         """
 
-        return self.__main_porosity_test(self.consts.kp_abs, "test_porosity_open", get_report, filters)
+        return self.__main_porosity_test(self.consts.kp_abs, "test_porosity_abs", get_report, filters)
 
     def test_porosity_din(self, get_report=True, filters=None) -> dict:
         """
@@ -769,7 +964,7 @@ class QA_QC_kern(QA_QC_main):
             r2 = self.test_general_dependency_checking(porosity, param)["specification"]["r2"]
             result = True
             a, b = linear_dependence_function(porosity, param)
-            if a >= 0 or r2 < 0.7:
+            if a >= 0 or r2 < self.__r2:
                 result = False
 
             wrong_values = dropdown_search(porosity,
@@ -790,16 +985,16 @@ class QA_QC_kern(QA_QC_main):
                 else self.consts.dependency_wrong + str(wrong_values)
 
             self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(poro_name, test_name, text, wrong_values, index)
+            self.data_kern.dict_array.append({test_name: [poro_name, text, wrong_values, index]})
 
             return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, result,
                                                 wrong_values, text, well_name, md,
                                                 test_name, [poro_name, param_name], r2=r2)
         else:
-            self.data_kern.mark_errors(param_name, test_name,
-                                       check_text_for_first_param + " " + check_text_for_second_param,
-                                       wrong_for_first_param if len(wrong_for_first_param) != 0
-                                       else wrong_for_second_param, index)
+            self.data_kern.dict_array.append({test_name: [poro_name, check_text_for_first_param,
+                                                          wrong_for_first_param, index]})
+            self.data_kern.dict_array.append({test_name: [param_name, check_text_for_second_param,
+                                                          wrong_for_second_param, index]})
             return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, False,
                                                 wrong_for_first_param if len(wrong_for_first_param) != 0
                                                 else wrong_for_second_param,
@@ -879,9 +1074,8 @@ class QA_QC_kern(QA_QC_main):
             if r2 >= self.__r2:
                 result = True
                 break
-
-        self.__generate_report(self.consts.general_dependency_checking_accepted if result
-                               else self.consts.general_dependency_checking_wrong, result, get_report)
+        text=self.consts.general_dependency_checking_accepted if result else self.consts.general_dependency_checking_wrong
+        self.__generate_report("Результат теста на оценку дисперсии данных: " + text, result, get_report)
         return {
             "result": result,
             "specification": {
@@ -1105,7 +1299,7 @@ class QA_QC_kern(QA_QC_main):
 
             result = True
 
-            if a_poro_vs_mineral >= a_poro_vs_volume or r2_volume < 0.7 or r2_mineral < 0.7:
+            if a_poro_vs_mineral >= a_poro_vs_volume or r2_volume < self.__r2 or r2_mineral < self.__r2:
                 result = False
 
             wrong_values_volume = self.__generate_dependency_result(volume_density,
@@ -1133,11 +1327,12 @@ class QA_QC_kern(QA_QC_main):
             text = self.consts.dependency_accepted + str(wrong_values_volume) + " " + str(
                 wrong_values_mineral) if result \
                 else self.consts.dependency_wrong + str(wrong_values_volume) + " " + str(wrong_values_mineral)
+            self.data_kern.dict_array.append({test_name: [volume_porosity, text,
+                                                          wrong_values_volume, index]})
+            self.data_kern.dict_array.append({test_name: [mineral_porosity, test_name,
+                                                          wrong_values_mineral, index]})
             self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(volume_porosity, test_name, text, wrong_values_volume, index)
             self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(mineral_porosity, test_name, text, wrong_values_mineral, index)
-
             return self.__generate_returns_dict(check_result, result,
                                                 wrong_values_volume + wrong_values_mineral,
                                                 text, well_name, md,
@@ -1146,31 +1341,48 @@ class QA_QC_kern(QA_QC_main):
                                                             self.consts.mineral_density],
                                                 r2=str(r2_volume) + " " + str(r2_mineral))
         else:
+            main_check_text = ""
+            main_wrong_values = []
             if len(wrong_for_poro_mineral) != 0:
                 check_text = check_text_for_poro_mineral
                 param_name = mineral_porosity
                 wrong_values = wrong_for_poro_mineral
-            elif len(wrong_for_poro_volume) != 0:
+                self.data_kern.dict_array.append({test_name: [param_name, check_text, wrong_values, index]})
+                main_check_text += check_text + " "
+                main_wrong_values.append(wrong_values)
+            if len(wrong_for_poro_volume) != 0:
                 check_text = check_text_for_poro_volume
                 param_name = volume_porosity
                 wrong_values = wrong_for_poro_mineral
-            elif len(wrong_for_volume_density) != 0:
+                self.data_kern.dict_array.append({test_name: [param_name, check_text, wrong_values, index]})
+                main_check_text += check_text + " "
+                main_wrong_values.append(wrong_values)
+            if len(wrong_for_volume_density) != 0:
                 check_text = check_text_for_volume_density
                 param_name = self.consts.volume_density
                 wrong_values = wrong_for_volume_density
-            else:
+                self.data_kern.dict_array.append({test_name: [param_name, check_text, wrong_values, index]})
+                main_check_text += check_text + " "
+                main_wrong_values.append(wrong_values)
+            if len(wrong_for_mineral_density) != 0:
                 check_text = check_text_for_mineral_density
                 param_name = self.consts.mineral_density
                 wrong_values = wrong_for_mineral_density
+                self.data_kern.dict_array.append({test_name: [param_name, check_text, wrong_values, index]})
+                main_check_text += check_text + " "
+                main_wrong_values.append(wrong_values)
 
-            self.data_kern.mark_errors(param_name, test_name, check_text,
-                                       wrong_values, index)
-            return self.__generate_returns_dict(check_result, False,
-                                                wrong_values,
-                                                check_text, well_name, md,
-                                                test_name, [poro_mineral, poro_volume,
-                                                            self.consts.volume_density,
-                                                            self.consts.mineral_density])
+            return self.__generate_returns_dict(check_result,
+                                                False,
+                                                main_wrong_values,
+                                                main_check_text,
+                                                well_name,
+                                                md,
+                                                test_name,
+                                                [poro_mineral,
+                                                 poro_volume,
+                                                 self.consts.volume_density,
+                                                 self.consts.mineral_density])
 
     def test_poro_abs_vs_density(self, get_report=True, filters=None):
         """
@@ -1301,7 +1513,7 @@ class QA_QC_kern(QA_QC_main):
             r2 = self.test_general_dependency_checking(porosity, np.log(perm))["specification"]["r2"]
             result = True
             a, b = exponential_function(porosity, perm)
-            if b <= 0 or r2 < 0.7:
+            if b <= 0 or r2 <self.__r2:
                 result = False
 
             wrong_values = dropdown_search(porosity,
@@ -1322,16 +1534,17 @@ class QA_QC_kern(QA_QC_main):
                 else self.consts.dependency_wrong + str(wrong_values)
 
             self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(poro_name, test_name, text, wrong_values, index)
+            self.data_kern.dict_array.append({test_name: [poro_name, text, wrong_values, index]})
 
             return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, result,
                                                 wrong_values, text, well_name, md,
                                                 test_name, [poro_name, perm], r2=r2)
         else:
-            self.data_kern.mark_errors(perm, test_name,
-                                       check_text_for_first_param + " " + check_text_for_second_param,
-                                       wrong_for_first_param if len(wrong_for_first_param) != 0
-                                       else wrong_for_second_param, index)
+            self.data_kern.dict_array.append(
+                {test_name: [porosity, check_text_for_first_param, wrong_for_first_param, index]})
+            self.data_kern.dict_array.append(
+                {test_name: [perm, check_text_for_second_param, wrong_for_second_param, index]})
+
             return self.__generate_returns_dict(check_result_for_first_param and check_text_for_second_param, False,
                                                 wrong_for_first_param if len(wrong_for_first_param) != 0
                                                 else wrong_for_second_param,
@@ -1382,99 +1595,6 @@ class QA_QC_kern(QA_QC_main):
         """
         return self.__main_poro_vs_perm_abs(self.consts.kp_abs, filters, "test_kpr_abs_vs_kp_abs", get_report)
 
-    def __find_duplicate_indices(self, arr) -> list[tuple]:
-        """
-        Находит индексы попарно одинаковых значений в массиве
-
-        Args:
-            arr (np.ndarray[int/float]): входной массив
-
-        Returns:
-            array[tuple]: список кортежей с индексами попарно одинаковых значений
-        """
-        # Создаем словарь для хранения индексов
-        index_dict = {value: [] for value in arr}
-
-        # Заполняем словарь индексами
-        for i, value in enumerate(arr):
-            index_dict[value].append(i)
-
-        # Формируем список кортежей с индексами попарно одинаковых значений
-        duplicate_indices = [(idx1, idx2) for indices in index_dict.values() for idx1, idx2 in
-                             zip(indices, indices[1:])]
-
-        return duplicate_indices
-
-    def __find_difference_in_duplicate_indices(self, duplicate_indices1, duplicate_indices2) -> list[tuple]:
-
-        """
-        Находит различия между двумя списками duplicate_indices и возвращает отличающиеся пары
-
-        Args:
-            duplicate_indices1 (array[tuple]): первый список кортежей с индексами
-            duplicate_indices2 (array[tuple]): второй список кортежей с индексами
-
-        Returns:
-             array[tuple]: отличающиеся пары индексов
-        """
-        set1 = set(duplicate_indices1)
-        set2 = set(duplicate_indices2)
-
-        difference = (set1 | set2) - (set1 & set2)
-        return list(difference)
-
-    def __create_mask(self, array, diff) -> np.ndarray:
-
-        """
-        Создает маску, где 1 помечены пары значений, которые не совпадают
-
-        Args:
-            array (np.ndarray[int/float]): массив для пометки совпадений
-            diff (array[tuple]): список кортежей с индексами повторяющихся значений
-
-        Returns:
-            mask(np.ndarray[int]): маска для array
-
-        """
-
-        mask = np.zeros_like(array)
-
-        for indices in diff:
-            mask[indices[0]] = 1
-            mask[indices[1]] = 1
-        return mask
-
-    def __main_data_tampering(self, first_param_name: str, second_param_name: str,
-                              filters) -> tuple[bool, np.ndarray, np.ndarray, str, np.ndarray]:
-
-        """
-        Основной тест для проверки подлога данных
-
-        Args:
-            first_param_name(string): название первого параметра
-            second_param_name(string): название второго параметра
-
-        Returns:
-            result(bool): результат проверки
-            mask(np.ndarray(int): маска с результатом
-            index(np.ndarray(int): индексы данных по глубине после удаления nan
-            well_name(string): название скважины
-            md(np.ndarray(int): массив с глубинами для которых взяты данные
-        """
-
-        clear_df, index, well_name, md = self.__get_data_from_data_kern(
-            param=[first_param_name, second_param_name],
-            filters=filters)
-        first_param = np.array(clear_df[first_param_name])
-        second_param = np.array(clear_df[second_param_name])
-        duplicate_indices_first_param = self.__find_duplicate_indices(first_param)
-        duplicate_indices_second_param = self.__find_duplicate_indices(second_param)
-        diff = self.__find_difference_in_duplicate_indices(duplicate_indices_first_param,
-                                                           duplicate_indices_second_param)
-        mask = self.__create_mask(first_param, diff)
-        result = np.sum(mask) == 0
-        return result, mask, index, well_name, md
-
     def test_data_tampering(self, get_report=True, filters=None):
         """
         Required data:
@@ -1505,8 +1625,8 @@ class QA_QC_kern(QA_QC_main):
             result_masks[key + " and " + value] = mask.tolist()
             final_result *= result
             text = self.consts.data_tampering_accepted if result else self.consts.data_tampering_wrong
-            self.data_kern.mark_errors(key, "test_data_tampering", text, mask, index)
-            self.data_kern.mark_errors(value, "test_data_tampering", text, mask, index)
+            self.data_kern.dict_array.append({"test_data_tampering": [key, text, mask, index]})
+            self.data_kern.dict_array.append({"test_data_tampering": [value, text, mask, index]})
 
         final_text = self.consts.data_tampering_accepted if final_result else self.consts.data_tampering_wrong
 
@@ -1545,20 +1665,19 @@ class QA_QC_kern(QA_QC_main):
             kpr, get_report)
         result_dict = {}
         if check_result_for_kvo and check_result_for_kpr:
-            r2 = self.test_general_dependency_checking(np.log(kpr), np.log(kvo))["specification"]["r2"]
+            r2 = self.test_general_dependency_checking(np.log(kpr), kvo)["specification"]["r2"]
             result = True
             a, b = logarithmic_function(kpr, kvo)
-            if a <= 0 or r2 < 0.7:
+            if a <= 0 or r2 < self.__r2:
                 result = False
 
-            wrong_values = dropdown_search(np.log(kpr), np.log(kvo),
+            wrong_values = dropdown_search(np.log(kpr), kvo,
                                            a, b)
             logarithm_function_visualization(kpr, kvo,
-                                             a, b,
                                              r2,
                                              get_report,
-                                             self.consts.kvo,
                                              self.consts.kpr_abs,
+                                             self.consts.kvo,
                                              "test_kvo_vs_kpr",
                                              wrong_values)
             wrong_values = np.where(wrong_values, 1, result)
@@ -1567,131 +1686,40 @@ class QA_QC_kern(QA_QC_main):
                 else self.consts.dependency_wrong + str(wrong_values)
 
             self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(self.consts.kvo, "test_kvo_vs_kpr", text, wrong_values, index)
+            self.data_kern.dict_array.append({"test_kvo_vs_kpr": [self.consts.kvo, text, wrong_values, index]})
             result_dict[self.consts.kvo] = wrong_values.tolist()
             result_dict[self.consts.kpr_abs] = wrong_values.tolist()
             return self.__generate_returns_dict(check_result_for_kvo and check_result_for_kpr, result,
                                                 result_dict, text, well_name, md,
                                                 "test_kvo_vs_kpr", [self.consts.kvo, self.consts.kpr_abs], r2=r2)
         else:
+            main_check_text = ""
+            main_wrong = []
             if len(wrong_for_kvo) != 0:
                 param = self.consts.kvo
                 text = check_text_for_kvo
                 wrong = wrong_for_kvo
-            else:
+                self.data_kern.dict_array.append({"test_kvo_vs_kpr": [param, text, wrong, index]})
+                main_check_text += text + " "
+                main_wrong.append(wrong)
+
+            if len(wrong_for_kpr) != 0:
                 param = self.consts.kpr_abs
                 text = check_text_for_kpr
                 wrong = wrong_for_kpr
+                self.data_kern.dict_array.append({"test_kvo_vs_kpr": [param, text, wrong, index]})
+                main_check_text += text + " "
+                main_wrong.append(wrong)
 
-            self.data_kern.mark_errors(param, "test_kvo_vs_kpr",
-                                       text,
-                                       wrong, index)
-            return self.__generate_returns_dict(check_result_for_kvo and check_result_for_kpr, False,
-                                                wrong,
-                                                text,
+            return self.__generate_returns_dict(check_result_for_kvo and check_result_for_kpr,
+                                                False,
+                                                main_wrong,
+                                                main_check_text,
                                                 well_name,
                                                 md,
-                                                "test_kvo_vs_kpr", [self.consts.kvo, self.consts.kpr_abs])
-    def __create_errors_dict(self, param_names, wrong_arrays, check_texts) -> dict:
-        """
-        Метод предназначен для создания словаря с ошибками
-        Args:
-            param_names(list[string]): массив с названиями проверяемых значений
-            wrong_arrays(list[np.ndarray[int]]): массив, содержащий массив с ошибочными значениями
-            check_texts(list[string]): массив с текстами ошибок
-
-        Returns:
-            dict({"string":tuple}) - словарь с ошибками, где ключ название параметра, а значение
-             пара из массива с ошибками и описанием ошибки
-
-        """
-        errors_dict = {}
-
-        for i, param_name in enumerate(param_names):
-            errors_dict[param_name] = (wrong_arrays[i], check_texts[i])
-        return errors_dict
-
-    def __get_first_wrong_array(self, param_names, wrong_arrays, check_texts) -> tuple[str, np.ndarray, str]:
-        """
-        Метод предназначен для поиска первого провалившего проверку параметра
-        Args:
-            param_names(list[string]): массив с названиями проверяемых значений
-            wrong_arrays(list[np.ndarray[int]]): массив, содержащий массив с ошибочными значениями
-            check_texts(list[string]): массив с текстами ошибок
-
-        Returns:
-            key(string): название ошибочного параметра
-            error_array(np.ndarray[int]): массив с ошибочными значениями
-            error_description(string): описание ошибки
-
-        """
-        errors_dict = self.__create_errors_dict(param_names, wrong_arrays, check_texts)
-        for key, (error_array, error_description) in errors_dict.items():
-            if len(error_array) > 0:
-                return key, error_array, error_description
-
-    def __main_poro_perm_cut_off(self, poro_name, test_name, get_report=True, filters=None) -> dict:
-        """
-        Основной тест для проверки соответствия ФЕС и критериев отсечения
-        Если Кп>Кп_cut_off то тогда Кпр>Кпр_cut_off
-
-        Args:
-            poro_name(string):название используемой пористости
-            test_name(string): название теста
-
-        """
-        clear_df, index, well_name, md = self.__get_data_from_data_kern(
-            param=[poro_name, self.consts.kpr_abs],
-            filters=filters)
-
-        cut_off_df, _, _, _ = self.__get_data_from_data_kern(param=[self.consts.cut_off_poro, self.consts.cut_off_perm],
-                                                             filters=None)
-        result_dict = {}
-        poro_param = np.array(clear_df[poro_name])
-        kpr_param = np.array(clear_df[self.consts.kpr_abs])
-        poro_cut_off = np.array(cut_off_df[self.consts.cut_off_poro])
-        perm_cut_off = np.array(cut_off_df[self.consts.cut_off_perm])
-        check_result_for_poro_param, wrong_for_poro_param, check_text_for_poro_param = self.__check_data(
-            poro_param, get_report)
-        check_result_for_kpr_param, wrong_for_kpr_param, check_text_for_kpr_param = self.__check_data(
-            kpr_param, get_report)
-        check_result_for_poro_cut_off, wrong_for_poro_cut_off, check_text_for_poro_cut_off = self.__check_data(
-            poro_cut_off, get_report)
-        check_result_for_perm_cut_off, wrong_for_perm_cut_off, check_text_for_perm_cut_off = self.__check_data(
-            perm_cut_off, get_report)
-        check_result = check_result_for_poro_param and check_result_for_kpr_param \
-                       and check_result_for_poro_cut_off and check_result_for_perm_cut_off
-        if check_result:
-            indices_poro = np.where(poro_param > poro_cut_off)[0]
-            mask = (kpr_param[indices_poro] < perm_cut_off)
-            result_mask = np.zeros_like(poro_param)
-            result_mask[indices_poro[mask]] = 1
-            result = np.sum(result_mask) == 0
-            text = self.consts.cut_off_accepted if result else self.consts.cut_off_wrong
-            self.__generate_report(text, result, get_report)
-            self.data_kern.mark_errors(poro_name, test_name, text, result_mask, index)
-            self.data_kern.mark_errors(self.consts.kpr_abs, test_name, text, result_mask, index)
-            result_dict[poro_name] = result_mask.tolist()
-            result_dict[self.consts.kpr_abs] = result_mask.tolist()
-            return self.__generate_returns_dict(check_result, result,
-                                                result_dict, text, well_name, md,
-                                                test_name, [poro_name, self.consts.kpr_abs, self.consts.cut_off_poro,
-                                                            self.consts.cut_off_perm])
-
-        else:
-            param_name, result_mask, text = self.__get_first_wrong_array(
-                [poro_name, self.consts.kpr_abs, self.consts.cut_off_poro, self.consts.cut_off_perm],
-                [wrong_for_poro_param, wrong_for_kpr_param, wrong_for_poro_cut_off, wrong_for_perm_cut_off],
-                [check_text_for_poro_param, check_text_for_kpr_param, check_text_for_poro_cut_off,
-                 check_text_for_perm_cut_off])
-            self.data_kern.mark_errors(param_name, test_name, text, result_mask, index)
-            return self.__generate_returns_dict(check_result, False,
-                                                result_mask,
-                                                text,
-                                                well_name,
-                                                md,
-                                                test_name, [poro_name, self.consts.kpr_abs, self.consts.cut_off_poro,
-                                                            self.consts.cut_off_perm])
+                                                "test_kvo_vs_kpr",
+                                                [self.consts.kvo,
+                                                 self.consts.kpr_abs])
 
     def test_cut_off_kp_open(self, get_report=True, filters=None) -> dict:
         """

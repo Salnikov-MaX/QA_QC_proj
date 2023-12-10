@@ -91,13 +91,12 @@ def logarithmic_function(x, y):
         b: коэффицент сдвига от начала координат
     """
     x_log = np.log(x)
-    y_log = np.log(y)
+    y_log = y
 
     # Линейная регрессия в пространстве логарифмов
-    model = LinearRegression()
-    model.fit(x_log.reshape(-1, 1), y_log)
-    a = model.coef_[0]
-    b = model.intercept_
+    model = np.polyfit(x_log, y_log, 1)
+    a = model[0]
+    b = model[1]
     return a, b
 
 
