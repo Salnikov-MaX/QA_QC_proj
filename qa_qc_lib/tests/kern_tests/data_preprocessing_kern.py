@@ -64,7 +64,7 @@ class DataPreprocessing:
             self.consts.md
         ]
 
-    def process_data(self, columns_mapping, path_to_save="..\\..\\data\\post_test_table.xlsx"):
+    def process_data(self, columns_mapping, path_to_save="../../data/core_data/post_test_table.xlsx"):
         """
             Проходится по файлам и из каждого файла берет нужный столбец. Собирает единую таблицу.
         Args:

@@ -83,11 +83,11 @@ class CubesTools:
 
         print(f"Файл WRONG_ACTNUM сохранён по пути: {save_path}")
 
-    def generate_wrong_map(self,wrong_list: np.array, head: str = "",save_path: str = '.', func_name:str = "QA-QC"):
+    def generate_wrong_map(self,wrong_list: np.array,x_list: np.array, y_list: np.array, head: str = "",save_path: str = '.', func_name:str = "QA-QC"):
         wrong_data = wrong_list.astype(dtype=int)
         result_data = f"{head}\n# Generated QA/QC\n"
-        for index in wrong_data:
-            result_data += "0 0 " + str(index) + " 0 0\n"
+        for index in range(len(wrong_data)):
+            result_data += f"{str(x_list[index])} {str(y_list[index])} {str(wrong_data[index])} 0 0\n"
 
         with open(f"{save_path}/{func_name}_WRONG_MAP.txt", 'w') as f:
             f.write(result_data)
