@@ -1425,7 +1425,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "DS(MDS)|las|ПЕТРОФИЗИКА|",
@@ -1434,7 +1434,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "DT|las|ПЕТРОФИЗИКА|",
@@ -1443,7 +1443,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "GR|las|ПЕТРОФИЗИКА|",
@@ -1452,7 +1452,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "IGR|las|ПЕТРОФИЗИКА|",
@@ -1461,7 +1461,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "MicrogradientSonde|las|ПЕТРОФИЗИКА|",
@@ -1470,7 +1470,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "MicroLateroLog|las|ПЕТРОФИЗИКА|",
@@ -1479,7 +1479,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "MicropotentialSonde|las|ПЕТРОФИЗИКА|",
@@ -1488,7 +1488,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Neutron|las|ПЕТРОФИЗИКА|",
@@ -1497,7 +1497,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "NTG(кол_некол)|las|ПЕТРОФИЗИКА|",
@@ -1506,7 +1506,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "PEF|las|ПЕТРОФИЗИКА|",
@@ -1515,7 +1515,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Sg|las|ПЕТРОФИЗИКА|",
@@ -1524,7 +1524,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "SGL|las|ПЕТРОФИЗИКА|",
@@ -1533,7 +1533,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "So|las|ПЕТРОФИЗИКА|",
@@ -1542,7 +1542,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Sogcr|las|ПЕТРОФИЗИКА|",
@@ -1551,7 +1551,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "SP|las|ПЕТРОФИЗИКА|",
@@ -1560,7 +1560,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Sw|las|ПЕТРОФИЗИКА|",
@@ -1569,7 +1569,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "VIKIZ|las|ПЕТРОФИЗИКА|",
@@ -1578,7 +1578,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Vsh|las|ПЕТРОФИЗИКА|",
@@ -1587,7 +1587,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "W|las|ПЕТРОФИЗИКА|",
@@ -1596,7 +1596,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Абсолютная_глубина(TVDSS)|las|ПЕТРОФИЗИКА|",
@@ -1605,7 +1605,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "ГГКп|las|ПЕТРОФИЗИКА|",
@@ -1614,7 +1614,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Индекс_свободного_флюида(FFI)|las|ПЕТРОФИЗИКА|",
@@ -1623,7 +1623,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Индукционно_электрический_каротаж|las|ПЕТРОФИЗИКА|",
@@ -1632,7 +1632,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Каротаж_сопротивления|las|ПЕТРОФИЗИКА|",
@@ -1641,7 +1641,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Кво(SWL)|las|ПЕТРОФИЗИКА|",
@@ -1650,7 +1650,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Кно(Sowcr)|las|ПЕТРОФИЗИКА|",
@@ -1659,7 +1659,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Кп_абс|las|ПЕТРОФИЗИКА|",
@@ -1668,7 +1668,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Кп_октр|las|ПЕТРОФИЗИКА|",
@@ -1677,7 +1677,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Кп_эфф|las|ПЕТРОФИЗИКА|",
@@ -1686,7 +1686,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Кпр_абс|las|ПЕТРОФИЗИКА|",
@@ -1695,7 +1695,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Литотип|las|ПЕТРОФИЗИКА|",
@@ -1704,7 +1704,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Содержание_связанной_воды_поверхности(BVI)|las|ПЕТРОФИЗИКА|",
@@ -1713,7 +1713,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Сопротивление_пласта(Rt)|las|ПЕТРОФИЗИКА|",
@@ -1722,7 +1722,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Сопротивление_промытой_зоны(Ro)|las|ПЕТРОФИЗИКА|",
@@ -1731,7 +1731,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "Фации|las|ПЕТРОФИЗИКА|",
@@ -1740,7 +1740,7 @@ edges = [
   },
   {
     "test_key": "ГИС/21",
-    "test_name_code": "test_repeat",
+    "test_name_code": "test_overlap_intervals",
     "test_group": "Gis",
     "required_data": [
       "ЯМК|las|ПЕТРОФИЗИКА|",

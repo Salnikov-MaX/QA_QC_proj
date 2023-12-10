@@ -63,8 +63,10 @@ class Graph:
         return [test for test in self.graph_nodes if test.test_name_code == test_name_code][0]
 
     @staticmethod
-    def test_is_ready(graph_node: GraphEdge, available_data_keys: List[str]) -> bool:
-        return all([req_data in available_data_keys for req_data in graph_node.required_data])
+    def test_is_ready(graph_edge: GraphEdge, available_data_keys: List[str]) -> bool:
+        result = set(available_data_keys) >= set(graph_edge.required_data)
+        return result
+
 
     @staticmethod
     def convert_graph_from_csv_to_json(csv_paths: [str],
