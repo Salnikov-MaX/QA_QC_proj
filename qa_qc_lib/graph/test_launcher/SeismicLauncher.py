@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List
 
 from qa_qc_lib.graph.data_map.SeismicMap import SeismicData
 from qa_qc_lib.graph.graph import Graph
