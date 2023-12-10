@@ -32,6 +32,7 @@ class QA_QC_cubes(QA_QC_main):
                  ntg_file_path: str or None = None,
                  so_file_path: str or None = None,
                  sg_file_path: str or None = None,
+                 j_function_file_path: str or None = None,
                  h_abs_ascii_path: str or None = None,
                  h_eff_ascii_path: str or None = None,
                  heffo_ascii_path: str or None = None,
@@ -59,6 +60,7 @@ class QA_QC_cubes(QA_QC_main):
         self.ntg_file_path = ntg_file_path
         self.so_file_path = so_file_path
         self.sg_file_path = sg_file_path
+        self.j_function_file_path = j_function_file_path
         self.save_wrong_data_path = save_wrong_data_path
         self.h_abs_ascii_path = h_abs_ascii_path
         self.h_eff_ascii_path = h_eff_ascii_path
@@ -103,6 +105,12 @@ class QA_QC_cubes(QA_QC_main):
     def generate_report_tests(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
         CubesTools().generate_wrong_actnum(np.array(returns_dict["specification"]["wrong_data"]),self.grid_head, save_path, name)
 
+    def generate_report_tests_ascii(self, returns_dict: dict, save_path: str = '.', name: str = "QA-QC"):
+        CubesTools().generate_wrong_map(
+            np.array(returns_dict["specification"]["wrong_data"]),
+            np.array(returns_dict["specification"]["x"]),
+            np.array(returns_dict["specification"]["y"]),
+            returns_dict["specification"]["head"], save_path, name)
     def __generate_returns_dict(self, data_availability: bool, result: bool or None,
                                 wrong_data: np.array or None) -> dict:
         wrong_list = None if wrong_data is None else CubesTools().conver_n3d_to_n1d(wrong_data).tolist()
@@ -111,6 +119,22 @@ class QA_QC_cubes(QA_QC_main):
             "result": result,
             "specification": {
                 "wrong_data": wrong_list
+            }
+        }
+
+    def __generate_returns_dict_ascii(self, data_availability: bool, result: bool or None,head:str,
+                                wrong_data: np.array or None, x: np.array or None, y: np.array or None) -> dict:
+        wrong_list = None if wrong_data is None else CubesTools().conver_n3d_to_n1d(wrong_data).tolist()
+        x_list = None if x is None else x.tolist()
+        y_list = None if y is None else y.tolist()
+        return {
+            "data_availability": data_availability,
+            "result": result,
+            "specification": {
+                "wrong_data": wrong_list,
+                "head": head,
+                "x": x_list,
+                "y": y_list,
             }
         }
 
@@ -168,6 +192,26 @@ class QA_QC_cubes(QA_QC_main):
             copy_actnum = copy.deepcopy(self.grid_model.get_grid().get_actnum())
             copy_actnum.values[np.where(self.actnum == 1)] = (mask_array == False)
             return False, copy_actnum.values
+
+    def __test_range_data_ascii(self, _array, lambda_list: list[any], f) -> tuple[
+        bool,
+        np.array or None]:
+        """
+        Функция для проверки данных в диапазоне
+
+            Args:
+               array: список с тестируемыми данными
+               lambda_list: list[any]: список с вырожениями для проверки
+
+            Returns:
+                bool: результат тестирования
+                np.array or None: массив со значениями для wrong actnum
+        """
+        mask_array = (f([func(_array) for func in lambda_list])).astype(dtype=bool)
+        if np.all(mask_array):
+            return True, None
+        else:
+            return False, mask_array == False
 
 
     def __test_value_conditions(self, prop_name: str, lambda_list: list[any], f) -> tuple[
@@ -253,7 +297,7 @@ class QA_QC_cubes(QA_QC_main):
                 file_path: str: путь к файлу
 
             Returns:
-                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+                 dict: Словарь, specification cловарь где , wrong_data - список значений которые не прошли тестирование
         """
         _, key = CubesTools().find_key(file_path)
         flag, wrong_data = self.__test_value_conditions(
@@ -273,6 +317,35 @@ class QA_QC_cubes(QA_QC_main):
                 0))
 
             return self.__generate_returns_dict(True, False, wrong_data)
+
+    def __abstract_test_permeability_ascii(self, file_path: str) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Args:
+                file_path: str: путь к файлу
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование, head - описание файла, , x - X индексы, y - Y индексы
+        """
+        data, head = QA_QC_asciigrid_parser().parse_to_dataframe(file_path)
+        flag, wrong_data = self.__test_range_data_ascii(
+            data['z'],
+            [lambda x: x >= 0],
+            sum
+        )
+
+        if flag:
+            r_text = f"Данные > 0"
+            self.update_report(self.generate_report_text(r_text, 1))
+            return self.__generate_returns_dict_ascii(True, True,"", None)
+        else:
+            r_text = f"Данные < 0"
+            self.update_report(self.generate_report_text(
+                r_text,
+                0))
+
+            return self.__generate_returns_dict_ascii(True, False, head, wrong_data, data['x'], data['y'])
 
     def generate_report_tests_permeability_permX(self, returns_dict: dict, save_path: str = '.',
                                                  name: str = "QA-QC"):
@@ -329,6 +402,113 @@ class QA_QC_cubes(QA_QC_main):
             self.update_report(self.generate_report_text("Данные PermZ отсутствуют", 2))
             return self.__generate_returns_dict(False, None, None)
         return self.__abstract_test_permeability(file_path=self.open_perm_z_file_path)
+
+    def generate_report_tests_permeability_Jfunction(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests(returns_dict, save_path, name)
+    def test_permeability_Jfunction(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+                J-function;
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.j_function_file_path is None:
+            return self.__generate_returns_dict(False, None, None)
+        return self.__abstract_test_permeability(file_path=self.j_function_file_path)
+
+    def generate_report_tests_permeability_h_abs(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
+    def test_permeability_h_abs(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+               Абсолютные_толщины(h_abs);
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.h_abs_ascii_path is None:
+            return self.__generate_returns_dict_ascii(False, None,"", None)
+
+
+        return self.__abstract_test_permeability_ascii(file_path=self.h_abs_ascii_path)
+
+    def generate_report_tests_permeability_h_eff(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
+    def test_permeability_h_eff(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+               Эффективные_толщины(h_eff);
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.h_eff_ascii_path is None:
+            return self.__generate_returns_dict_ascii(False, None,"", None)
+
+
+        return self.__abstract_test_permeability_ascii(file_path=self.h_eff_ascii_path)
+
+    def generate_report_tests_permeability_heffo(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
+    def test_permeability_heffo(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+               Эффективные_нефтенасыщенные_толщины(heffo);
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.heffo_ascii_path is None:
+            return self.__generate_returns_dict_ascii(False, None, "", None)
+
+
+        return self.__abstract_test_permeability_ascii(file_path=self.heffo_ascii_path)
+
+    def generate_report_tests_permeability_heffg(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
+    def test_permeability_heffg(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+               Эффективные_газонасыщенные_толщины(heffg);
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.heffg_ascii_path is None:
+            return self.__generate_returns_dict_ascii(False, None, "", None)
+
+
+        return self.__abstract_test_permeability_ascii(file_path=self.heffg_ascii_path)
+
+    def test_permeability_Jfunction(self) -> dict:
+        """
+        Функция для проверки данных на x >= 0
+
+            Required data:
+                J-function;
+
+            Returns:
+                 dict: Словарь, specification cловарь где ,wrong_data - список ячеек куба которые не прошли тестирование
+        """
+        if self.j_function_file_path is None:
+            return self.__generate_returns_dict(False, None, None)
+        return self.__abstract_test_permeability(file_path=self.j_function_file_path)
 
     def __abstract_test_range_data(self, file_path: str) -> dict:
         """
@@ -878,6 +1058,9 @@ class QA_QC_cubes(QA_QC_main):
 
             return self.__generate_returns_dict(True, False, wrong_data)
 
+    def generate_report_tests_inconsistencies_habs_heff(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
     def test_inconsistencies_habs_heff(self):
         """
         При сравнении двух карт, в каждой в ij-точке значение абсолютной толщины должно быть больше или равно значению эффективной толщины:
@@ -893,11 +1076,11 @@ class QA_QC_cubes(QA_QC_main):
         """
         if self.h_abs_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_ABS отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         if self.h_eff_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_EFF отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         h_abs_data, head = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_abs_ascii_path)
         h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_eff_ascii_path)
@@ -911,7 +1094,7 @@ class QA_QC_cubes(QA_QC_main):
         if flag:
             r_text = f"Данные H_ABS >= H_EFF"
             self.update_report(self.generate_report_text(r_text, 1))
-            return self.__generate_returns_dict(True, True, None)
+            return self.__generate_returns_dict_ascii(True, True,"", None, None, None)
         else:
             r_text = f"Данные H_ABS < H_EFF"
             self.update_report(
@@ -919,8 +1102,11 @@ class QA_QC_cubes(QA_QC_main):
                     r_text,
                     0))
 
-            return self.__generate_returns_dict(True, False, wrong_data)
+            return self.__generate_returns_dict(True, False, head, wrong_data, h_abs_data['x'], h_abs_data['y'])
 
+    def generate_report_tests_inconsistencies_habs_heff_heffo(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
     def test_inconsistencies_habs_heff_heffo(self):
         """
         При сопоставлении трех карт в каждой в ij-точке значение абсолютной толщины должно быть больше или равно значению эффективной толщины, которое в свою очередь больше или равно значению эффективной нефтенасыщенной толщины
@@ -937,15 +1123,15 @@ class QA_QC_cubes(QA_QC_main):
         """
         if self.h_abs_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_ABS отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         if self.h_eff_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_EFF отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         if self.heffo_ascii_path is None:
             self.update_report(self.generate_report_text("Данные HEFFO отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         h_abs_data, head = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_abs_ascii_path)
         h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_eff_ascii_path)
@@ -967,7 +1153,7 @@ class QA_QC_cubes(QA_QC_main):
             if flag:
                 r_text = f"Данные H_EFF >= HEFFO"
                 self.update_report(self.generate_report_text(r_text, 1))
-                return self.__generate_returns_dict(True, True, None)
+                return self.__generate_returns_dict_ascii(True, True, "", None, None, None)
             else:
                 r_text = f"Данные H_EFF < HEFFO"
                 self.update_report(
@@ -975,7 +1161,7 @@ class QA_QC_cubes(QA_QC_main):
                         r_text,
                         0))
 
-                return self.__generate_returns_dict(True, False, wrong_data)
+                return self.__generate_returns_dict_ascii(True, False, head, wrong_data, h_abs_data['x'], h_abs_data['Y'])
         else:
             r_text = f"Данные H_ABS < H_EFF"
             self.update_report(
@@ -983,8 +1169,11 @@ class QA_QC_cubes(QA_QC_main):
                     r_text,
                     0))
 
-            return self.__generate_returns_dict(True, False, wrong_data)
+            return self.__generate_returns_dict_ascii(True, False,head, wrong_data, h_abs_data['x'], h_abs_data['Y'])
 
+    def generate_report_tests_inconsistencies_habs_heff_heffg(self, returns_dict: dict, save_path: str = '.',
+                                                 name: str = "QA-QC"):
+        self.generate_report_tests_ascii(returns_dict, save_path, name)
     def test_inconsistencies_habs_heff_heffg(self):
         """
         При сопоставлении трех карт в каждой в ij-точке значение абсолютной толщины должно быть больше или равно значению эффективной толщины, которое в свою очередь больше или равно значению эффективной газонасыщенной толщины
@@ -1001,15 +1190,15 @@ class QA_QC_cubes(QA_QC_main):
         """
         if self.h_abs_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_ABS отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         if self.h_eff_ascii_path is None:
             self.update_report(self.generate_report_text("Данные H_EFF отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         if self.heffg_ascii_path is None:
             self.update_report(self.generate_report_text("Данные HEFFG отсутствуют", 2))
-            return self.__generate_returns_dict(False, None, None)
+            return self.__generate_returns_dict_ascii(False, None, "", None, None, None)
 
         h_abs_data, head = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_abs_ascii_path)
         h_eff_data, _ = QA_QC_asciigrid_parser().parse_to_dataframe(self.h_eff_ascii_path)
@@ -1031,7 +1220,7 @@ class QA_QC_cubes(QA_QC_main):
             if flag:
                 r_text = f"Данные H_EFF >= HEFFG"
                 self.update_report(self.generate_report_text(r_text, 1))
-                return self.__generate_returns_dict(True, True, None)
+                return self.__generate_returns_dict_ascii(True, True, "", None, None, None)
             else:
                 r_text = f"Данные H_EFF < HEFFG"
                 self.update_report(
@@ -1039,7 +1228,7 @@ class QA_QC_cubes(QA_QC_main):
                         r_text,
                         0))
 
-                return self.__generate_returns_dict(True, False, wrong_data)
+                return self.__generate_returns_dict(True, False,head, wrong_data, h_abs_data['x'], h_abs_data['y'])
         else:
             r_text = f"Данные H_ABS < H_EFF"
             self.update_report(
@@ -1047,7 +1236,7 @@ class QA_QC_cubes(QA_QC_main):
                     r_text,
                     0))
 
-            return self.__generate_returns_dict(True, False, wrong_data)
+            return self.__generate_returns_dict_ascii(True, False, head, wrong_data, h_abs_data['x'], h_abs_data['y'])
 
     def test_incorrect_values_sgu(self):
 
