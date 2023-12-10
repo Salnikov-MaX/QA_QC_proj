@@ -27,6 +27,7 @@ report
 build
 dist
 *.egg-info
+seismic_data
 
 *.pyc
 
