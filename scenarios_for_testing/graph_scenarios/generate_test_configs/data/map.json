@@ -1,0 +1,17 @@
+{
+  "settings": {
+    "only_ready_for_launch_test": true
+  },
+  "cube": {
+    "grid_dir": "C:/Users/KosachevIV/Desktop/Projects/Projects/QAQC/QA_QC_proj/data/grdecl_data",
+    "grid_name": "GRID",
+    "property_files": [
+      {
+        "data_key": "Porosity|GRDECL|ПЕТРОФИЗИКА|",
+        "data_path": "C:/Users/KosachevIV/Desktop/Projects/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Poro.GRDECL.grdecl"
+      }
+    ]
+  }
+}
+
+

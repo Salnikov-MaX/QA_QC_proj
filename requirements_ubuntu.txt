@@ -1,0 +1,16 @@
+notebook
+lasio==0.31
+matplotlib==3.8.1
+scipy==1.11.3
+plotly==5.18.0
+scikit-learn~=1.3.2
+openpyxl==3.1.2
+shapely
+segyio~=1.9
+pandas~=2.1.3
+xtgeo~=3.2.0
+pdoc3
+dacite~=1.8.1
+numpy~=1.26.2
+ecl
+ruptures

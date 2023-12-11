@@ -1,0 +1,33 @@
+{
+  "data": {
+    "settings": {
+      "only_ready_for_launch_test": true
+    },
+    "kern": null,
+    "cube": {
+      "property_files": [
+        {
+          "data_key": "Porosity|GRDECL|ПЕТРОФИЗИКА|",
+          "data_path": "C:/Users/KosachevIV/Desktop/Projects/Projects/QAQC/QA_QC_proj/data/grdecl_data/input/Poro.GRDECL.grdecl"
+        }
+      ],
+      "grid_dir": "C:/Users/KosachevIV/Desktop/Projects/Projects/QAQC/QA_QC_proj/data/grdecl_data",
+      "grid_name": "GRID"
+    }
+  },
+  "kern_config": null,
+  "cubes_config": {
+    "tests": [
+      {
+        "data_key": "Porosity|GRDECL|ПЕТРОФИЗИКА|",
+        "tests": [
+          {
+            "test_key": "ГЕОЛОГИЯ/1",
+            "test_name_code": "test_open_porosity",
+            "ready_for_launch": true
+          }
+        ]
+      }
+    ]
+  }
+}
