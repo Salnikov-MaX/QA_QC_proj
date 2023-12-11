@@ -87,7 +87,7 @@ class QA_QC_wells(QA_QC_main):
 			}
         """
 
-        return {"result_mask": result_mask.tolist(),
+        return {"result_mask": result_mask,
                 "time_scale": [str(d) for d in self.nodes_obj.time_scale],
                 "test_name": test_name,
                 "error_decr": error_decr,

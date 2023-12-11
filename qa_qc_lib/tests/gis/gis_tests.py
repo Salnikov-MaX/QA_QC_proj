@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import os
 
@@ -18,19 +20,19 @@ class QA_QC_gis(QA_QC_main):
         super().__init__()
         self.folder_report = folder_report
         self.nodes_obj = nodes_obj
-        self.types_of_nodes_for_test = {'test_limit_0_47':['Кп_абс', 'Кп_октр', 'Кп_эфф'],
-                                       'test_missing_intervals': list(nodes_obj.reader.mnemonics.keys()),
-                                       'test_overlap_intervals': list(nodes_obj.reader.mnemonics.keys())}
-        
+        self.types_of_nodes_for_test = {'test_limit_0_47': ['Кп_абс', 'Кп_октр', 'Кп_эфф'],
+                                        'test_missing_intervals': list(nodes_obj.reader.mnemonics.keys()),
+                                        'test_overlap_intervals': list(nodes_obj.reader.mnemonics.keys())}
+
         self.order_tests = {1: ['test_limit_0_47'],
                             2: ['test_missing_intervals', 'test_overlap_intervals']}
-        
-        
-        self.report_function = { 'test_limit_0_47': self.get_report_tests,
-                                 'test_missing_intervals': self.get_report_tests,
-                                 'test_overlap_intervals': self.get_report_tests}
-              
-    def get_specification(self, result_mask: np.array, test_name: str, error_decr: str, node_name: str, logs_names: list):
+
+        self.report_function = {'test_limit_0_47': self.get_report_tests,
+                                'test_missing_intervals': self.get_report_tests,
+                                'test_overlap_intervals': self.get_report_tests}
+
+    def get_specification(self, result_mask: np.array, test_name: str, error_decr: str, node_name: str,
+                          logs_names: list):
 
         """Возвращает спецификацию теста
 
@@ -56,11 +58,11 @@ class QA_QC_gis(QA_QC_main):
         """
 
         return {"result_mask": result_mask,
-                "depth" : self.nodes_obj.dept, 
+                "depth": self.nodes_obj.dept,
                 "test_name": test_name,
                 "error_decr": error_decr,
                 "well_name": self.nodes_obj.well_name,
-                "node_name" : node_name,
+                "node_name": node_name,
                 "logs_names": logs_names}
 
     def test_limit_0_47(self, node_name: str, get_report=True) -> dict:
@@ -91,15 +93,21 @@ class QA_QC_gis(QA_QC_main):
         """
 
         if not node_name in self.types_of_nodes_for_test['test_limit_0_47']:
-            return {"data_availability": False}
-        
+            return {"data_availability": False,
+                    'specification': {
+                        "node_name": node_name,
+                        'test_name': 'test_limit_0_47',
+                        "well_name": self.nodes_obj.well_name,
+                    },
+                    }
+
         logs = self.nodes_obj.gis_nodes[node_name]
         result_mask = []
         logs_names = []
         for name_log, val in logs.items():
-            mask_0 = val <=0 
+            mask_0 = val <= 0
             mask_1 = val > 47.6
-            result_mask.append((mask_0+mask_1).astype(int))
+            result_mask.append((mask_0 + mask_1).astype(int))
             logs_names.append(name_log)
 
         result_mask = np.array(result_mask)
@@ -115,11 +123,11 @@ class QA_QC_gis(QA_QC_main):
         self.update_report(report_text)
         specification = self.get_specification(result_mask, "test_limit_0_47", report_text, node_name, logs_names)
 
-        if get_report: 
+        if get_report:
             self.report_function['test_limit_0_47'](report_text, specification)
 
-        return {"data_availability": True, "result": result, "specification": specification}     
-    
+        return {"data_availability": True, "result": bool(result), "specification": specification}
+
     def test_missing_intervals(self, node_name: str, get_report=True) -> dict:
         """
         Метод проверяет пропуск записи ГИС в интервале пласта \n
@@ -148,8 +156,14 @@ class QA_QC_gis(QA_QC_main):
         """
 
         if not node_name in self.types_of_nodes_for_test['test_missing_intervals']:
-            return {"data_availability": False}
-        
+            return {"data_availability": False,
+                    'specification': {
+                        "node_name": node_name,
+                        'test_name': 'test_missing_intervals',
+                        "well_name": self.nodes_obj.well_name,
+                    },
+                    }
+
         logs = self.nodes_obj.gis_nodes[node_name]
         result_mask = []
         logs_names = []
@@ -168,13 +182,14 @@ class QA_QC_gis(QA_QC_main):
             report_text = self.generate_report_text(text, 0)
 
         self.update_report(report_text)
-        specification = self.get_specification(result_mask, "test_missing_intervals", report_text, node_name, logs_names)
+        specification = self.get_specification(result_mask, "test_missing_intervals", report_text, node_name,
+                                               logs_names)
 
-        if get_report: 
+        if get_report:
             self.report_function['test_missing_intervals'](report_text, specification)
 
-        return {"data_availability": True, "result": result, "specification": specification}     
-    
+        return {"data_availability": True, "result": bool(result), "specification": specification}
+
     def test_overlap_intervals(self, node_name: str, get_report=True) -> dict:
         """
         Метод проверяет перекрытие интервалов записи для основной и повторной записи ГИС  \n
@@ -203,14 +218,20 @@ class QA_QC_gis(QA_QC_main):
         """
 
         if not node_name in self.types_of_nodes_for_test['test_overlap_intervals']:
-            return {"data_availability": False}
-        
+            return {"data_availability": False,
+                    'specification': {
+                        "node_name": node_name,
+                        'test_name': 'test_overlap_intervals',
+                        "well_name": self.nodes_obj.well_name,
+                    },
+                    }
+
         logs = self.nodes_obj.gis_nodes[node_name]
         logs_names = list(logs.keys())
 
-        result_mask = (np.isnan(np.array(list(logs.values()))).astype(int)-1)*(-1)
-        result_mask = np.sum(result_mask, axis = 0) > 1    
-        result_mask = result_mask.astype(int)   
+        result_mask = (np.isnan(np.array(list(logs.values()))).astype(int) - 1) * (-1)
+        result_mask = np.sum(result_mask, axis=0) > 1
+        result_mask = result_mask.astype(int)
         result = result_mask.sum() == 0
 
         if result:
@@ -221,14 +242,15 @@ class QA_QC_gis(QA_QC_main):
             report_text = self.generate_report_text(text, 0)
 
         self.update_report(report_text)
-        specification = self.get_specification(result_mask, "test_overlap_intervals", report_text, node_name, logs_names)
+        specification = self.get_specification(result_mask, "test_overlap_intervals", report_text, node_name,
+                                               logs_names)
 
-        if get_report: 
+        if get_report:
             self.report_function['test_overlap_intervals'](report_text, specification)
 
-        return {"data_availability": True, "result": result, "specification": specification}     
-    
-    def get_report_tests(self, specification: dict, saving: bool = True):
+        return {"data_availability": True, "result": bool(result), "specification": specification}
+
+    def get_report_tests(self, specification: dict, saving: bool = True) -> Optional[str]:
         """
         Визуализатор для всех тестов. \n
 
@@ -247,11 +269,11 @@ class QA_QC_gis(QA_QC_main):
         result_mask = specification['result_mask']
         num_logs = len(logs_names)
 
-        print('\n'+specification['error_decr']+self.delimeter)
+        print('\n' + specification['error_decr'] + self.delimeter)
 
         fig, ax = plt.subplots(1, num_logs)
-        fig.tight_layout(w_pad = 3)
-        fig.suptitle(f'тест: {test_name}\n узел: {node_name}\n', y = 1.1)
+        fig.tight_layout(w_pad=3)
+        fig.suptitle(f'тест: {test_name}\n узел: {node_name}\n', y=1.1)
         if num_logs == 1:
             ax = [ax]
 
@@ -270,17 +292,18 @@ class QA_QC_gis(QA_QC_main):
             else:
                 error_mask = result_mask[i]
 
-            ax[i].fill_betweenx(depth, np.nan_to_num(log).max(),  min_x, where=error_mask == 1, facecolor='red', interpolate=False, alpha=0.2)
-            ax[i].set_title('каротаж: ' +logs_names[i], fontsize= 10)
-            ax[i].set_ylabel('depth') 
+            ax[i].fill_betweenx(depth, np.nan_to_num(log).max(), min_x, where=error_mask == 1, facecolor='red',
+                                interpolate=False, alpha=0.2)
+            ax[i].set_title('каротаж: ' + logs_names[i], fontsize=10)
+            ax[i].set_ylabel('depth')
             ax[i].invert_xaxis()
             ax[i].invert_yaxis()
             ax[i].set_ylim(depth.max(), depth.min())
-        
-        plt.show()
- 
+
         if saving:
             file_name = f'{test_name}_{well_name}_{node_name}.png'
-            path_out_file = os.path.join(self.folder_report,file_name)
+            path_out_file = os.path.join(self.folder_report, file_name)
             fig.savefig(path_out_file)
-            plt.close()
+            return path_out_file
+        else:
+            plt.show()

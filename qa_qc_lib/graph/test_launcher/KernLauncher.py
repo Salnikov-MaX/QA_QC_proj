@@ -1,3 +1,5 @@
+import os
+import shutil
 from typing import Optional, List
 
 from qa_qc_lib.graph.test_config import KernTestConfig
@@ -22,9 +24,9 @@ class KernLauncher(BaseLauncher):
         return "->".join([p_i for p_i in path_items if p_i is not None])
 
     @staticmethod
-    def init_kern(kern_data: KernData) -> QA_QC_kern:
+    def init_kern(kern_data: KernData, temp_dir: str) -> QA_QC_kern:
         data_pre = DataPreprocessing()
-        data_file_path = 'data/data_file.xlsx'
+        data_file_path = os.path.join(temp_dir, 'data_file.xlsx')
         for kern_data in kern_data.files:
             columns_map = {m.data_key.split('|')[0]: KernLauncher.kern_data_path_generate(kern_data.data_path, m) for m
                            in kern_data.map}
@@ -48,7 +50,13 @@ class KernLauncher(BaseLauncher):
         return filters
 
     def start_qa_qc(self) -> [Optional[dict]]:
-        kern_qa_qc = self.init_kern(self.kern_data)
+        temp_dir = 'tmp'
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+
+        os.mkdir(temp_dir)
+
+        kern_qa_qc = self.init_kern(self.kern_data, temp_dir)
 
         test_names: List[str] = []
         for group in self.kern_config.test_groups:
@@ -70,4 +78,5 @@ class KernLauncher(BaseLauncher):
                     tests_with_filters.append((test_name, test_filters))
             kern_report_data = kern_qa_qc.start_tests_with_filters(tests_with_filters, get_report=False)
 
+        shutil.rmtree(temp_dir)
         return kern_report_data

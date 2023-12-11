@@ -107,5 +107,4 @@ class DataPreprocessing:
         self.save_to_excel(path_to_save)
 
     def save_to_excel(self, path_save):
-        self.df_result.to_excel(path_save,
-                                sheet_name='Sheet1', index=False)
+        self.df_result.to_excel(path_save, sheet_name='Sheet1', index=False)

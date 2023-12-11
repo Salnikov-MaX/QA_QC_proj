@@ -8,23 +8,5 @@
       "FULL_TNAV__626.SMSPEC",
       "FULL_TNAV__626.UNSMRY"
     ]
-  },
-  "seismic": {
-    "data_files": [
-      {
-        "data_key": "Глубинный(TVDSS)_куб|SEG-Y|Сейсмика|",
-        "file_path": "../../data/seismic_data/Глубинный_куб_NP_cropped"
-      },
-      {
-        "data_key": "Поверхостные_атрибуты|Irap(CPS3)|Сейсмика|",
-        "file_path": "../../data/seismic_data/NP4_TVD_TOP"
-      },
-      {
-        "data_key": "Временной(TWT)_куб|SEG-Y|Сейсмика|",
-        "file_path": "../../data/seismic_data/Временной_куб_NP_cropped"
-      }
-    ]
   }
 }
-
-
