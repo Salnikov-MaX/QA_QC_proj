@@ -301,7 +301,7 @@ class QA_QC_wells(QA_QC_main):
                          
         return {"data_availability": True, "result": result, "specification": specification}
         
-    def test_imbalance_trends_with_BHP(self, well_name: str, get_report=True) -> dict:
+    def test_imbalance_trends_with_BHP(self, well_name: str, get_report=True, sensitivity = 0.5) -> dict:
         """
         Метод проверяет: при тренде на снижении ВНР должно наблюдаться рост LPR/GPR (и наоборот).\n
 
@@ -311,6 +311,7 @@ class QA_QC_wells(QA_QC_main):
      
         Args:
             get_report (bool, optional): Определяет, нужно ли отображать отчет. Defaults to True.
+            sensitivity (float, optional): Чувствительность алгоритма сегментации. Defaults 0.5
 
         Returns:
             {
@@ -357,11 +358,12 @@ class QA_QC_wells(QA_QC_main):
         result_mask = np.zeros((num_nodes, n))
         
         algo = rpt.Pelt(model="l2", min_size = 3).fit(node_BHP)
-        bic = 2*np.log(n)*(0.25*n)**(0.5)
-        if bic < 2:
+        #bic = 2*np.log(n)*(0.25*n)**(sensitivity)
+        penalty = 6**(2-2*sensitivity)
+        if penalty < 2:
              return {"data_availability": False}
 
-        segments = algo.predict(bic)
+        segments = algo.predict(penalty)
         
         p_segments = list()
         x = np.arange(n)

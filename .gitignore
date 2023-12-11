@@ -41,3 +41,8 @@ qa_qc_lib/tools/ECDF.py
 well_tests.ipynb
 
 
+data/wells_data/test_imbalance_trends_with_BHP_4508G_BHP_GPR.png
+data/wells_data/test_imbalance_trends_with_BHP_4508G_BHP_LPR.png
+.gitignore
+data/wells_data/test_imbalance_trends_with_BHP_4548G_BHP_GPR.png
+data/wells_data/test_imbalance_trends_with_BHP_4548G_BHP_LPR.png
