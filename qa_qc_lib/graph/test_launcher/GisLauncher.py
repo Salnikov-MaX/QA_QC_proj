@@ -1,4 +1,3 @@
-import itertools
 import os.path
 from typing import Optional
 
@@ -40,9 +39,10 @@ class GisLauncher(BaseLauncher):
 
             tests_gis = QA_QC_gis(gis_nodes_for_well, report_data_dir)
 
-            test_groups = [node.test_groups for node in self.gis_config.gis_nodes]
+            test_group = [node.test_groups for node in self.gis_config.gis_nodes
+                          if node.well_name == gis_nodes_for_well.well_name][0]
 
-            for group in itertools.chain(*test_groups):
+            for group in test_group:
                 for test in group.tests:
                     test_f = getattr(tests_gis, test.test_name_code)
                     report = test_f(group.data_key.split('|')[0], get_report=False)
