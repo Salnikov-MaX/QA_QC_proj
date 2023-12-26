@@ -185,7 +185,14 @@ class QA_QC_cubes(QA_QC_main):
                 bool: результат тестирования
                 np.array or None: массив со значениями для wrong actnum
         """
-        mask_array = (f([func(_array[self.actnum == 1]) for func in lambda_list])).astype(dtype=bool)
+
+        if isinstance(_array[0], np.ndarray):
+            data_filter = self.actnum == 1
+        else:
+            data_filter = self.actnum.ravel() == 1
+
+        mask_array = (f([func(_array[data_filter]) for func in lambda_list])).astype(dtype=bool)
+
         if np.all(mask_array):
             return True, None
         else:
