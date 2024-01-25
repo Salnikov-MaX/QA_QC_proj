@@ -2,7 +2,7 @@ edges = [
   {
     "test_key": "Керн/1",
     "test_name_code": "test_porosity_open",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_откр|txt(xlsx)|Керн|"
     ]
@@ -10,7 +10,7 @@ edges = [
   {
     "test_key": "Керн/1",
     "test_name_code": "test_porosity_abs",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_абс|txt(xlsx)|Керн|"
     ]
@@ -18,7 +18,7 @@ edges = [
   {
     "test_key": "Керн/1",
     "test_name_code": "test_porosity_din",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_дин|txt(xlsx)|Керн|"
     ]
@@ -26,7 +26,7 @@ edges = [
   {
     "test_key": "Керн/1",
     "test_name_code": "test_porosity_eff",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_эфф|txt(xlsx)|Керн|"
     ]
@@ -34,7 +34,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Cut-off_водонасыщенность|txt(xlsx)|Керн|"
     ]
@@ -42,7 +42,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Cut-off_глинистость|txt(xlsx)|Керн|"
     ]
@@ -50,7 +50,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Cut-off_пористость|txt(xlsx)|Керн|"
     ]
@@ -58,7 +58,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Cut-off_проницаемость|txt(xlsx)|Керн|"
     ]
@@ -66,7 +66,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "DT_matrix|txt(xlsx)|Керн|"
     ]
@@ -74,7 +74,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "DT_mud|txt(xlsx)|Керн|"
     ]
@@ -82,7 +82,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "DT_shale|txt(xlsx)|Керн|"
     ]
@@ -90,7 +90,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "J-|txt(xlsx)|Керн|"
     ]
@@ -98,7 +98,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "ro_matrix|txt(xlsx)|Керн|"
     ]
@@ -106,7 +106,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "ro_mud|txt(xlsx)|Керн|"
     ]
@@ -114,7 +114,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "ro_shale|txt(xlsx)|Керн|"
     ]
@@ -122,7 +122,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Sg|txt(xlsx)|Керн|"
     ]
@@ -130,7 +130,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Sgl|txt(xlsx)|Керн|"
     ]
@@ -138,7 +138,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "So|txt(xlsx)|Керн|"
     ]
@@ -146,7 +146,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Sogcr|txt(xlsx)|Керн|"
     ]
@@ -154,7 +154,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Sw|txt(xlsx)|Керн|"
     ]
@@ -162,7 +162,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Водородосодержаниеглин|txt(xlsx)|Керн|"
     ]
@@ -170,7 +170,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Вынос_керна|txt(xlsx)|Керн|"
     ]
@@ -178,7 +178,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Вынос_керна%|txt(xlsx)|Керн|"
     ]
@@ -186,7 +186,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Глубина_отбора_керна|txt(xlsx)|Керн|"
     ]
@@ -194,7 +194,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Данные_фракционного_потока|txt(xlsx)|Керн|"
     ]
@@ -202,7 +202,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Интервалы_отбора(долбления)керна|txt(xlsx)|Керн|"
     ]
@@ -210,7 +210,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Капиллярометрия|txt(xlsx)|Керн|"
     ]
@@ -218,7 +218,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Карбонатность|txt(xlsx)|Керн|"
     ]
@@ -226,7 +226,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кво|txt(xlsx)|Керн|"
     ]
@@ -234,7 +234,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кно(Sowcr)|txt(xlsx)|Керн|"
     ]
@@ -242,7 +242,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Константы_уравнения_Humble|txt(xlsx)|Керн|"
     ]
@@ -250,7 +250,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Константы_уравнения_Арчи|txt(xlsx)|Керн|"
     ]
@@ -258,7 +258,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Коэффициент_Пуассона|txt(xlsx)|Керн|"
     ]
@@ -266,7 +266,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_абс|txt(xlsx)|Керн|"
     ]
@@ -274,7 +274,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_дин|txt(xlsx)|Керн|"
     ]
@@ -282,7 +282,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_откр|txt(xlsx)|Керн|"
     ]
@@ -290,7 +290,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_откр_TBU|txt(xlsx)|Керн|"
     ]
@@ -298,7 +298,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_эфф|txt(xlsx)|Керн|"
     ]
@@ -306,7 +306,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_абс|txt(xlsx)|Керн|"
     ]
@@ -314,7 +314,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_абс_Y|txt(xlsx)|Керн|"
     ]
@@ -322,7 +322,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_абс_Z|txt(xlsx)|Керн|"
     ]
@@ -330,7 +330,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_отн|txt(xlsx)|Керн|"
     ]
@@ -338,7 +338,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_фазовая|txt(xlsx)|Керн|"
     ]
@@ -346,7 +346,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кровля_интервала_отбора|txt(xlsx)|Керн|"
     ]
@@ -354,7 +354,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Место_отбора(ниже_кровли).м|txt(xlsx)|Керн|"
     ]
@@ -362,7 +362,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Минералогическая_плотность|txt(xlsx)|Керн|"
     ]
@@ -370,7 +370,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Объемная_плотность|txt(xlsx)|Керн|"
     ]
@@ -378,7 +378,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Параметр_насыщенности(RI)|txt(xlsx)|Керн|"
     ]
@@ -386,7 +386,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Параметр_пористости(F)|txt(xlsx)|Керн|"
     ]
@@ -394,7 +394,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Плотность_абсолютно_сухого_образца|txt(xlsx)|Керн|"
     ]
@@ -402,7 +402,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Плотность_максимально_увлажненного_образца|txt(xlsx)|Керн|"
     ]
@@ -410,7 +410,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Подошва_интервала_отбора|txt(xlsx)|Керн|"
     ]
@@ -418,7 +418,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Скорость_поперечной_волны(Vs)|txt(xlsx)|Керн|"
     ]
@@ -426,7 +426,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Скорость_продольной_волны(Vp)|txt(xlsx)|Керн|"
     ]
@@ -434,7 +434,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Смачиваемость_угол_смачиваемости|txt(xlsx)|Керн|"
     ]
@@ -442,7 +442,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Сопротивление_пластовой_воды(Rw)|txt(xlsx)|Керн|"
     ]
@@ -450,7 +450,7 @@ edges = [
   {
     "test_key": "Керн/12",
     "test_name_code": "__check_data",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Эффективная_проницаемость|txt(xlsx)|Керн|"
     ]
@@ -458,7 +458,7 @@ edges = [
   {
     "test_key": "Керн/13",
     "test_name_code": "test_monotony",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Место_отбора_(ниже_кровли)м|txt(xlsx)|Керн|"
     ]
@@ -466,7 +466,7 @@ edges = [
   {
     "test_key": "Керн/6",
     "test_name_code": "test_sw_residual",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кво|txt(xlsx)|Керн|"
     ]
@@ -474,7 +474,7 @@ edges = [
   {
     "test_key": "Керн/6",
     "test_name_code": "test_sowcr",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кно(Sowcr)|txt(xlsx)|Керн|"
     ]
@@ -482,7 +482,7 @@ edges = [
   {
     "test_key": "Керн/67",
     "test_name_code": "test_data_tampering",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_абс|txt(xlsx)|Керн|"
     ]
@@ -490,7 +490,7 @@ edges = [
   {
     "test_key": "Керн/67",
     "test_name_code": "test_data_tampering",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_откр|txt(xlsx)|Керн|"
     ]
@@ -498,7 +498,7 @@ edges = [
   {
     "test_key": "Керн/67",
     "test_name_code": "test_data_tampering",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кво|txt(xlsx)|Керн|"
     ]
@@ -506,7 +506,7 @@ edges = [
   {
     "test_key": "Керн/67",
     "test_name_code": "test_data_tampering",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Параметр_пористости(F)|txt(xlsx)|Керн|"
     ]
@@ -514,7 +514,7 @@ edges = [
   {
     "test_key": "Керн/67",
     "test_name_code": "test_data_tampering",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Параметр_насыщенности(RI)|txt(xlsx)|Керн|"
     ]
@@ -522,7 +522,7 @@ edges = [
   {
     "test_key": "Керн/67",
     "test_name_code": "test_data_tampering",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Плотность_абсолютно_сухого_образца|txt(xlsx)|Керн|"
     ]
@@ -530,7 +530,7 @@ edges = [
   {
     "test_key": "Керн/67",
     "test_name_code": "test_data_tampering",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Плотность_максимально_увлажненного_образца|txt(xlsx)|Керн|"
     ]
@@ -538,7 +538,7 @@ edges = [
   {
     "test_key": "Керн/68",
     "test_name_code": "test_sg",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Sg|txt(xlsx)|Керн|"
     ]
@@ -546,7 +546,7 @@ edges = [
   {
     "test_key": "Керн/68",
     "test_name_code": "test_sgl",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Sgl|txt(xlsx)|Керн|"
     ]
@@ -554,7 +554,7 @@ edges = [
   {
     "test_key": "Керн/68",
     "test_name_code": "test_so",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "So|txt(xlsx)|Керн|"
     ]
@@ -562,7 +562,7 @@ edges = [
   {
     "test_key": "Керн/68",
     "test_name_code": "test_sogcr",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Sogcr|txt(xlsx)|Керн|"
     ]
@@ -570,7 +570,7 @@ edges = [
   {
     "test_key": "Керн/8",
     "test_name_code": "test_kpr_abs",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_абс|txt(xlsx)|Керн|"
     ]
@@ -578,7 +578,7 @@ edges = [
   {
     "test_key": "Керн/8",
     "test_name_code": "test_kpr_abs_Y",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_абс_Y|txt(xlsx)|Керн|"
     ]
@@ -586,7 +586,7 @@ edges = [
   {
     "test_key": "Керн/8",
     "test_name_code": "test_kpr_abs_Z",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_абс_Z|txt(xlsx)|Керн|"
     ]
@@ -594,7 +594,7 @@ edges = [
   {
     "test_key": "Керн/8",
     "test_name_code": "test_kpr_rel",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_отн|txt(xlsx)|Керн|"
     ]
@@ -602,7 +602,7 @@ edges = [
   {
     "test_key": "Керн/8",
     "test_name_code": "test_kpr_phase",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_фазовая|txt(xlsx)|Керн|"
     ]
@@ -610,7 +610,7 @@ edges = [
   {
     "test_key": "Керн/8",
     "test_name_code": "test_kpr_eff",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_эфф|txt(xlsx)|Керн|"
     ]
@@ -618,7 +618,7 @@ edges = [
   {
     "test_key": "Керн/14",
     "test_name_code": "test_kp_abs_vs_swl",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кво|txt(xlsx)|Керн|",
       "Кп_абс|txt(xlsx)|Керн|"
@@ -627,7 +627,7 @@ edges = [
   {
     "test_key": "Керн/14",
     "test_name_code": "test_porosity_open_vs_swl",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кво|txt(xlsx)|Керн|",
       "Кп_откр|txt(xlsx)|Керн|"
@@ -636,7 +636,7 @@ edges = [
   {
     "test_key": "Керн/15",
     "test_name_code": "test_kp_open_vs_density_dry",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_откр|txt(xlsx)|Керн|",
       "Плотность_абсолютно_сухого_образца|txt(xlsx)|Керн|"
@@ -645,7 +645,7 @@ edges = [
   {
     "test_key": "Керн/15",
     "test_name_code": "test_kp_open_vs_density_wet",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_откр|txt(xlsx)|Керн|",
       "Плотность_максимально_увлажненного_образца|txt(xlsx)|Керн|"
@@ -654,7 +654,7 @@ edges = [
   {
     "test_key": "Керн/15",
     "test_name_code": "test_kp_abs_vs_density_dry",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_абс|txt(xlsx)|Керн|",
       "Плотность_абсолютно_сухого_образца|txt(xlsx)|Керн|"
@@ -663,7 +663,7 @@ edges = [
   {
     "test_key": "Керн/15",
     "test_name_code": "test_kp_abs_vs_density_wet",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кп_абс|txt(xlsx)|Керн|",
       "Плотность_максимально_увлажненного_образца|txt(xlsx)|Керн|"
@@ -672,7 +672,7 @@ edges = [
   {
     "test_key": "Керн/16",
     "test_name_code": "test_general_dependency_checking",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Для тестов",
       "где проверяются зависимости"
@@ -681,7 +681,7 @@ edges = [
   {
     "test_key": "Керн/18",
     "test_name_code": "test_poro_abs_vs_volume_density",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Объемная_плотность|txt(xlsx)|Керн|",
       "Кп_абс|txt(xlsx)|Керн|"
@@ -690,7 +690,7 @@ edges = [
   {
     "test_key": "Керн/18",
     "test_name_code": "test_poro_abs_vs_volume_density",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Объемная_плотность|txt(xlsx)|Керн|",
       "Кп_откр|txt(xlsx)|Керн|"
@@ -699,7 +699,7 @@ edges = [
   {
     "test_key": "Керн/19",
     "test_name_code": "test_poro_abs_vs_mineral_density",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Минералогическая_плотность|txt(xlsx)|Керн|",
       "Кп_абс|txt(xlsx)|Керн|"
@@ -708,7 +708,7 @@ edges = [
   {
     "test_key": "Керн/19",
     "test_name_code": "test_poro_abs_vs_mineral_density",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Минералогическая_плотность|txt(xlsx)|Керн|",
       "Кп_откр|txt(xlsx)|Керн|"
@@ -717,7 +717,7 @@ edges = [
   {
     "test_key": "Керн/55",
     "test_name_code": "nan",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Cut-off_пористость|txt(xlsx)|Керн|",
       "Cut-off_проницаемость|txt(xlsx)|Керн|",
@@ -728,7 +728,7 @@ edges = [
   {
     "test_key": "Керн/55",
     "test_name_code": "nan",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Cut-off_пористость|txt(xlsx)|Керн|",
       "Cut-off_проницаемость|txt(xlsx)|Керн|",
@@ -739,7 +739,7 @@ edges = [
   {
     "test_key": "Керн/61",
     "test_name_code": "test_kpr_abs_vs_kp_abs",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_абс|txt(xlsx)|Керн|",
       "Кп_абс|txt(xlsx)|Керн|"
@@ -748,7 +748,7 @@ edges = [
   {
     "test_key": "Керн/61",
     "test_name_code": "test_kpr_abs_vs_kp_open",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кпр_абс|txt(xlsx)|Керн|",
       "Кп_откр|txt(xlsx)|Керн|"
@@ -757,7 +757,7 @@ edges = [
   {
     "test_key": "Керн/63",
     "test_name_code": "test_dependence_kvo_kpr",
-    "test_group": "Kern",
+    "test_group": "Core",
     "required_data": [
       "Кво|txt(xlsx)|Керн|",
       "Кпр_абс|txt(xlsx)|Керн|"

@@ -12,6 +12,10 @@ xtgeo~=3.2.0
 pdoc3
 dacite~=1.8.1
 numpy~=1.26.2
-ruptures
+ruptures~=1.1.9
 ecl_data_io
-cwrap
+cwrap~=1.6.5
+six~=1.16.0
+setuptools~=69.0.2
+elara~=0.5.5
+pymongo~=4.6.1

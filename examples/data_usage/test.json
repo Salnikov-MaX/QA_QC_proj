@@ -1,0 +1,18 @@
+{
+  "_id": "65af6c0400f5fb67555317f4",
+  "name": "Wells",
+  "specification_modules": {
+    "reader": {
+      "name_module": "well_reader.py",
+      "class_name": "Reader_histor_well_data"
+    },
+    "nodes": {
+      "name_module": "wells_nodes.py",
+      "class_name": "Nodes_wells_data"
+    },
+    "tests": {
+      "name_module": "wells_tests.py",
+      "class_name": "QA_QC_wells"
+    }
+  }
+}

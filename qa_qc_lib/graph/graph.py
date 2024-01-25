@@ -15,11 +15,11 @@ from qa_qc_lib.tests.wells.wells_tests import QA_QC_wells
 
 
 class EnumQAQCClass(str, Enum):
-    Kern = "Kern"
+    Core = "Core"
     Seismic = "Seismic"
     Gis = "Gis"
-    Cubes = "Cubes"
-    Wells = "Wells"
+    Cubes = "Cube"
+    Well = "Well"
 
 
 @dataclass
@@ -82,11 +82,11 @@ class Graph:
         """
 
         test_groups_map = {
-            "керн/": EnumQAQCClass.Kern,
+            "керн/": EnumQAQCClass.Core,
             "сейсморазведка/": EnumQAQCClass.Seismic,
             "гис/": EnumQAQCClass.Gis,
             "геология/": EnumQAQCClass.Cubes,
-            "разработка/": EnumQAQCClass.Wells
+            "разработка/": EnumQAQCClass.Well
         }
 
         dfs = [pd.read_csv(csv_path, delimiter=',') for csv_path in csv_paths]
@@ -139,7 +139,7 @@ class Graph:
         print(f'Не существующие тесты:')
 
         for test_name, group in set(all_test):
-            if group == EnumQAQCClass.Kern:
+            if group == EnumQAQCClass.Core:
                 if not hasattr(QA_QC_kern, test_name):
                     print(group, test_name)
                     continue
@@ -149,7 +149,7 @@ class Graph:
                     print(group, test_name)
                     continue
 
-            if group == EnumQAQCClass.Wells:
+            if group == EnumQAQCClass.Well:
                 if not hasattr(QA_QC_wells, test_name):
                     print(group, test_name)
                     continue
