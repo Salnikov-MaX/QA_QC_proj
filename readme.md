@@ -14,6 +14,4 @@
         - **scenario_name.ipynb** (**scenario_name.py**): Сценарий
 
 
-## Ссылки
-[Данные для тестирования](https://disk.yandex.ru/d/rjSbfjDl5_3Y4Q)
 
